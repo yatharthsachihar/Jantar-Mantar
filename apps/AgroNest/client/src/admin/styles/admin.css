@@ -1,0 +1,112 @@
+@import "./theme.css";
+@import "./sidebar.css";
+@import "./topbar.css";
+@import "./dashboard.css";
+@import "./cards.css";
+@import "./tables.css";
+@import "./forms.css";
+@import "./modal.css";
+@import "./responsive.css";
+
+/* ── CSS Custom Properties — Dark (default) ── */
+:root {
+  --bg:             #090909;
+  --bg-secondary:   #111111;
+  --card:           #171717;
+  --card-hover:     #1d1d1d;
+  --border:         #262626;
+  --text:           #ffffff;
+  --text-secondary: #bdbdbd;
+  --text-muted:     #7f7f7f;
+  --primary:        #d6a46a;
+  --primary-dark:   #b97b39;
+  --success:        #22c55e;
+  --warning:        #f59e0b;
+  --danger:         #ef4444;
+  --info:           #3b82f6;
+  --shadow:         0 8px 32px rgba(0,0,0,.4);
+  --glass:          linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+}
+
+[data-theme="light"] {
+  --bg:             #f4f5f7;
+  --bg-secondary:   #ffffff;
+  --card:           #ffffff;
+  --card-hover:     #fafafa;
+  --border:         #e6e6e6;
+  --text:           #121212;
+  --text-secondary: #4b5563;
+  --text-muted:     #8b8b8b;
+  --primary:        #a97449;
+  --primary-dark:   #8b5e34;
+  --shadow:         0 10px 30px rgba(0,0,0,.08);
+}
+
+/* ── Layout shell ── */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* admin-main — default width beside expanded sidebar */
+.admin-main {
+  margin-left: 280px;
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s;
+  overflow-x: hidden;
+}
+
+/* When sidebar is collapsed — driven by data attribute on body */
+body[data-sidebar="collapsed"] .admin-main {
+  margin-left: 90px;
+}
+
+/* Topbar stays sticky */
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+}
+
+/* main scroll area fills remaining height */
+.admin-main main {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ── RBAC View-Only Mode ── */
+.role-viewer button[type="submit"],
+.role-viewer .btn-create,
+.role-viewer .btn-delete,
+.role-viewer .btn-action,
+.role-viewer .btn-edit,
+.role-viewer button:not(.btn-view):not(.plp-filter-toggle):not(.btn-secondary):not(.plp-cat-chip) {
+  /* Attempting to target most "action" buttons generically */
+}
+
+/* Explicitly disable known modification buttons across the admin panel for viewers */
+.role-viewer button[type="submit"],
+.role-viewer .btn-delete,
+.role-viewer .btn-danger,
+.role-viewer [class*="submit"],
+.role-viewer [class*="create"],
+.role-viewer [class*="delete"] {
+  opacity: 0.5;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+
+/* Disable pointer events on toggle switches and actionable inputs */
+.role-viewer input[type="checkbox"],
+.role-viewer .table-actions button:not(.btn-view) {
+  opacity: 0.5;
+  pointer-events: none !important;
+}

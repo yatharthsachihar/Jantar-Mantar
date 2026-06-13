@@ -1,0 +1,711 @@
+/* Secure Payment Checkout Portal */
+
+.payment-page-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 16px;
+  color: var(--site-text);
+}
+
+.payment-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--site-border);
+  border-top-color: var(--site-primary);
+  animation: secure-spin 0.8s linear infinite;
+}
+
+@keyframes secure-spin {
+  to { transform: rotate(360deg); }
+}
+
+.payment-page-main {
+  padding: 100px 0 80px;
+  background: var(--site-bg);
+  min-height: 70vh;
+}
+
+.payment-container {
+  max-width: var(--site-max-width);
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.payment-layout-cols {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* Payment Portal Card */
+.payment-portal-card {
+  background: var(--site-card);
+  border: 1px solid var(--site-border);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: var(--site-shadow-sm);
+}
+
+.portal-header {
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--site-border);
+  padding-bottom: 20px;
+}
+
+.secure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #1F7A3D;
+  background: var(--site-green-light);
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.portal-header h2 {
+  font-family: var(--site-font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--site-text);
+  margin-bottom: 6px;
+}
+
+.portal-header p {
+  color: var(--site-text-muted);
+  font-size: 14px;
+}
+
+/* Provider Branding & Instructions */
+.portal-provider-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #12344d;
+}
+
+.portal-provider-logo.phonepe {
+  color: #5f259f;
+}
+
+.logo-accent {
+  background: linear-gradient(135deg, var(--site-primary), #27a350);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.portal-provider-logo.phonepe .logo-accent {
+  background: linear-gradient(135deg, #5f259f, #7a3fc2);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.payment-instructions {
+  font-size: 14px;
+  color: var(--site-text-muted);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+/* Custom Portal Buttons */
+.pay-now-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--site-primary);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(31, 122, 61, 0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pay-now-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+  box-shadow: 0 6px 20px rgba(31, 122, 61, 0.35);
+}
+
+.pay-now-btn.phonepe-color {
+  background: #5f259f;
+  box-shadow: 0 4px 14px rgba(95, 37, 159, 0.25);
+}
+
+.pay-now-btn.phonepe-color:hover {
+  box-shadow: 0 6px 20px rgba(95, 37, 159, 0.35);
+}
+
+.gateway-hints {
+  font-size: 11px;
+  color: var(--site-text-muted);
+  text-align: center;
+  margin-top: 14px;
+}
+
+/* PhonePe Tabs styling */
+.phonepe-tabs {
+  display: flex;
+  background: var(--site-bg);
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--site-text-muted);
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.tab-btn.active {
+  background: var(--site-card);
+  color: var(--site-text);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* PhonePe QR code layout */
+.phonepe-qr-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-box-wrapper {
+  background: #5f259f;
+  padding: 24px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(95, 37, 159, 0.15);
+}
+
+.phonepe-qr-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.phonepe-qr-logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: #5f259f;
+  letter-spacing: -0.5px;
+}
+
+.qr-container-graphics {
+  border: 2px solid #5f259f;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.qr-svg {
+  display: block;
+}
+
+.phonepe-qr-footer {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.qr-instructions {
+  text-align: center;
+  margin-bottom: 24px;
+  max-width: 320px;
+}
+
+.timer-countdown {
+  font-size: 15px;
+  color: var(--site-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.timer-countdown strong {
+  color: #ef4444;
+  font-family: monospace;
+  font-size: 16px;
+}
+
+.qr-subtext {
+  font-size: 13px;
+  color: var(--site-text-muted);
+  line-height: 1.5;
+}
+
+.simulate-payment-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  background: var(--site-primary);
+  color: white;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 4px 12px rgba(31, 122, 61, 0.2);
+}
+
+.simulate-payment-btn:hover {
+  filter: brightness(1.1);
+}
+
+.simulate-payment-btn.purple {
+  background: #5f259f;
+  box-shadow: 0 4px 12px rgba(95, 37, 159, 0.2);
+}
+
+/* PhonePe UPI Form */
+.upi-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.upi-input-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--site-text-muted);
+  text-transform: uppercase;
+}
+
+.upi-input-group input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-bg);
+  color: var(--site-text);
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.25s;
+}
+
+.upi-input-group input:focus {
+  border-color: #5f259f;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: var(--site-text-muted);
+}
+
+/* Invoice Sidebar */
+.payment-invoice-sidebar {
+  background: var(--site-card);
+  border: 1px solid var(--site-border);
+  border-radius: 24px;
+  padding: 32px;
+}
+
+.payment-invoice-sidebar h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--site-border);
+  padding-bottom: 12px;
+}
+
+.invoice-recipient {
+  font-size: 13px;
+  color: var(--site-text-muted);
+  background: var(--site-bg);
+  border: 1px solid var(--site-border);
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+
+.invoice-recipient strong {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--site-text);
+  margin-bottom: 6px;
+}
+
+.invoice-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.invoice-item-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  color: var(--site-text);
+  gap: 12px;
+}
+
+.invoice-item-row strong {
+  color: var(--site-text-muted);
+}
+
+.invoice-divider {
+  border-top: 1px solid var(--site-border);
+  margin: 16px 0;
+}
+
+.invoice-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invoice-total-row span {
+  font-weight: 600;
+  color: var(--site-text-muted);
+}
+
+.invoice-total-row .total-price {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--site-text);
+}
+
+/* Success Card Screen */
+.payment-success-card-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 80px 20px;
+  background: var(--site-bg);
+}
+
+.payment-success-card {
+  max-width: 480px;
+  width: 100%;
+  background: var(--site-card);
+  border: 1px solid var(--site-border);
+  border-radius: 28px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: var(--site-shadow-md);
+}
+
+.success-icon-wrap {
+  width: 80px;
+  height: 80px;
+  background: var(--site-green-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.payment-success-card h2 {
+  font-family: var(--site-font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--site-text);
+}
+
+.payment-success-sub {
+  color: var(--site-text-muted);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.receipt-details {
+  background: var(--site-bg);
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+}
+
+.receipt-row span {
+  color: var(--site-text-muted);
+}
+
+.receipt-row strong {
+  color: var(--site-text);
+}
+
+.receipt-row .paid-amount {
+  color: var(--site-primary);
+  font-size: 15px;
+}
+
+.receipt-row .ref-id {
+  font-family: monospace;
+}
+
+/* Simulation Modal Overlays */
+.simulation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.sim-modal {
+  background: var(--site-card);
+  border-radius: 20px;
+  max-width: 440px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  animation: sim-modal-zoom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sim-modal-zoom {
+  from { transform: scale(0.9) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.sim-modal-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.sim-modal-header.razorpay-theme {
+  background: #0f1c30;
+  border-bottom: 2px solid #3399cc;
+}
+
+.sim-modal-header.phonepe-theme {
+  background: #5f259f;
+}
+
+.sim-modal-header .brand-name {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sim-modal-header .close-btn {
+  font-size: 24px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.sim-modal-header .close-btn:hover {
+  opacity: 1;
+}
+
+.sim-modal-body {
+  padding: 24px;
+}
+
+.sim-order-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1.5px dashed var(--site-border);
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--site-text-muted);
+}
+
+.sim-order-summary strong {
+  color: var(--site-text);
+}
+
+.sim-order-summary .sim-amount {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--site-text);
+}
+
+.sim-card-form h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--site-text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-field-row {
+  margin-bottom: 12px;
+}
+
+.sim-field-row.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-group label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--site-text-muted);
+  text-transform: uppercase;
+}
+
+.field-group input {
+  padding: 10px 12px;
+  border: 1px solid var(--site-border);
+  background: var(--site-bg);
+  color: var(--site-text);
+  border-radius: 8px;
+  font-size: 13.5px;
+  outline: none;
+  font-family: inherit;
+}
+
+.field-group input:focus {
+  border-color: #3399cc;
+}
+
+.simulation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sim-action-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sim-action-btn:hover {
+  opacity: 0.9;
+}
+
+.sim-action-btn.success {
+  background: #1f7a3d;
+  color: white;
+}
+
+.sim-action-btn.success.phonepe-accent {
+  background: #5f259f;
+}
+
+.sim-action-btn.fail {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.2);
+}
+
+/* PhonePe direct simulator details */
+.sim-alert-message {
+  text-align: center;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sim-alert-message svg {
+  color: #5f259f;
+  animation: secure-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes secure-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+.sim-alert-message p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--site-text);
+}
+
+.sim-instruction-card {
+  background: var(--site-bg);
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 12.5px;
+  color: var(--site-text-muted);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.sim-instruction-card p {
+  margin-bottom: 6px;
+  color: var(--site-text);
+}
+
+.sim-instruction-card ol {
+  margin-left: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .payment-layout-cols { grid-template-columns: 1fr; }
+  .payment-container { padding: 0 20px; }
+}

@@ -1,0 +1,392 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  FiUser, FiPhone, FiMail, FiLock,
+  FiEye, FiEyeOff, FiMapPin, FiArrowRight, FiAlertCircle, FiArrowLeft,
+} from "react-icons/fi";
+import { useUser } from "../../context/UserContext";
+import "../../styles/site.css";
+import "./AuthPage.css";
+
+/* ── Indian states list ── */
+const INDIAN_STATES = [
+  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh",
+  "Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka",
+  "Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram",
+  "Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana",
+  "Tripura","Uttar Pradesh","Uttarakhand","West Bengal",
+  "Andaman & Nicobar Islands","Chandigarh","Dadra & Nagar Haveli and Daman & Diu",
+  "Delhi","Jammu & Kashmir","Ladakh","Lakshadweep","Puducherry",
+];
+
+/* ── Account types matching the design ── */
+const ACCOUNT_TYPES = [
+  { value: "farmer",             label: "Farmer",             icon: "👨‍🌾" },
+  { value: "retail_customer",    label: "Retail Customer",    icon: "🛒" },
+  { value: "dealer_distributor", label: "Dealer / Distributor", icon: "🏪" },
+  { value: "best_pricer",        label: "Best Pricer",        icon: "💰" },
+  { value: "business_buyer",     label: "Business Buyer",     icon: "🏢" },
+];
+
+const TRUST_ITEMS = [
+  { icon: "🌱", label: "Premium Quality Products"  },
+  { icon: "👨‍🌾", label: "Expert Guidance and Support" },
+  { icon: "💸", label: "Best Prices Guaranteed"    },
+  { icon: "🚚", label: "Fast & Reliable Delivery"  },
+];
+
+const INIT = {
+  fullName:    "",
+  mobile:      "",
+  email:       "",
+  accountType: "farmer",
+  state:       "",
+  district:    "",
+  city:        "",
+  password:    "",
+  confirmPassword: "",
+  agreeTerms:  false,
+  agreePrivacy: false,
+};
+
+export default function RegisterPage() {
+  const { register } = useUser();
+  const navigate = useNavigate();
+
+  const [form,    setForm]    = useState(INIT);
+  const [showPw,  setShowPw]  = useState(false);
+  const [showCPw, setShowCPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState("");
+  const [errors,  setErrors]  = useState({});
+
+  const set = (field, val) => {
+    setForm(prev => ({ ...prev, [field]: val }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
+  };
+
+  /* ── Client-side validation ── */
+  const validate = () => {
+    const e = {};
+    if (!form.fullName.trim())        e.fullName    = "Full name is required.";
+    if (!/^\d{10}$/.test(form.mobile)) e.mobile     = "Enter a valid 10-digit mobile number.";
+    if (!/\S+@\S+\.\S+/.test(form.email)) e.email   = "Enter a valid email address.";
+    if (!form.state)                  e.state       = "Please select your state.";
+    if (!form.city.trim())            e.city        = "Village / City is required.";
+    if (form.password.length < 6)     e.password    = "Password must be at least 6 characters.";
+    if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
+    if (!form.agreeTerms)             e.agreeTerms  = "You must agree to the Terms & Conditions.";
+    if (!form.agreePrivacy)           e.agreePrivacy = "You must agree to the Privacy Policy.";
+    return e;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    setLoading(true);
+    try {
+      await register({
+        fullName:    form.fullName.trim(),
+        mobile:      form.mobile.trim(),
+        email:       form.email.trim().toLowerCase(),
+        accountType: form.accountType,
+        state:       form.state,
+        district:    form.district,
+        city:        form.city.trim(),
+        password:    form.password,
+      });
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-page register">
+
+      {/* ── LEFT SIDEBAR ── */}
+      <aside className="auth-sidebar">
+
+        {/* Brand */}
+        <div className="auth-sidebar-brand">
+          <div style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: "linear-gradient(135deg,#1F7A3D,#2EA855)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontWeight: 900, fontSize: 17, color: "white",
+          }}>AN</div>
+          <div className="auth-sidebar-logo-text">
+            <strong>AgroNest</strong>
+            <span>Grow Better, Harvest More.</span>
+          </div>
+        </div>
+
+        {/* Center headline */}
+        <div className="auth-sidebar-headline">
+          <h2>Begin Your Agro Journey Today!</h2>
+          <p>Join thousands of farmers and grow with confidence.</p>
+          <div className="auth-sidebar-chips">
+            {TRUST_ITEMS.map(t => (
+              <div key={t.label} className="auth-sidebar-chip">
+                <div className="auth-sidebar-chip-icon">{t.icon}</div>
+                {t.label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Switch link */}
+        <p className="auth-switch" style={{ color: "rgba(255,255,255,0.8)" }}>
+          Have an account?
+          <Link to="/login" style={{ color: "#4ABA72", marginLeft: 4 }}>Login Here</Link>
+        </p>
+
+      </aside>
+
+      {/* ── RIGHT FORM PANEL ── */}
+      <main className="auth-form-panel">
+        <div className="auth-form-inner">
+
+          <Link to="/" className="auth-back-btn">
+            <FiArrowLeft size={16} /> Back to Home
+          </Link>
+
+          <h1 className="auth-form-heading">Create Your Account</h1>
+          <p className="auth-form-sub">Join AgroNest and start your journey</p>
+
+          {/* Error banner */}
+          {error && (
+            <div className="auth-error-banner">
+              <FiAlertCircle size={16} />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} noValidate>
+
+            {/* ── Account Type ── */}
+            <div className="auth-type-label">I am a</div>
+            <div className="auth-type-grid">
+              {ACCOUNT_TYPES.slice(0, 3).map(t => (
+                <button
+                  key={t.value}
+                  type="button"
+                  className={`auth-type-btn${form.accountType === t.value ? " selected" : ""}`}
+                  onClick={() => set("accountType", t.value)}
+                >
+                  <span className="auth-type-icon">{t.icon}</span>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <div className="auth-type-grid-2">
+              {ACCOUNT_TYPES.slice(3).map(t => (
+                <button
+                  key={t.value}
+                  type="button"
+                  className={`auth-type-btn${form.accountType === t.value ? " selected" : ""}`}
+                  onClick={() => set("accountType", t.value)}
+                >
+                  <span className="auth-type-icon">{t.icon}</span>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* ── Personal Information ── */}
+            <div className="auth-section-title">Personal Information</div>
+
+            {/* Full Name */}
+            <div className="auth-field">
+              <label className="auth-label">Full Name <span style={{ color:"#EF4444" }}>*</span></label>
+              <div className={`auth-input-wrap${errors.fullName ? " error" : ""}`}>
+                <span className="auth-input-icon"><FiUser size={17} /></span>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={form.fullName}
+                  onChange={e => set("fullName", e.target.value)}
+                  autoComplete="name"
+                />
+              </div>
+              {errors.fullName && <div className="auth-field-error">{errors.fullName}</div>}
+            </div>
+
+            {/* Mobile */}
+            <div className="auth-field">
+              <label className="auth-label">Mobile Number <span style={{ color:"#EF4444" }}>*</span></label>
+              <div className={`auth-input-wrap${errors.mobile ? " error" : ""}`}>
+                <span className="auth-input-icon"><FiPhone size={17} /></span>
+                <input
+                  type="tel"
+                  placeholder="Enter your mobile number"
+                  value={form.mobile}
+                  onChange={e => set("mobile", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  autoComplete="tel"
+                  maxLength={10}
+                />
+              </div>
+              {errors.mobile && <div className="auth-field-error">{errors.mobile}</div>}
+            </div>
+
+            {/* Email */}
+            <div className="auth-field">
+              <label className="auth-label">Email Address <span style={{ color:"#EF4444" }}>*</span></label>
+              <div className={`auth-input-wrap${errors.email ? " error" : ""}`}>
+                <span className="auth-input-icon"><FiMail size={17} /></span>
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={form.email}
+                  onChange={e => set("email", e.target.value)}
+                  autoComplete="email"
+                />
+              </div>
+              {errors.email && <div className="auth-field-error">{errors.email}</div>}
+            </div>
+
+            {/* ── Location Details ── */}
+            <div className="auth-section-title">Location Details</div>
+
+            <div className="auth-row">
+              {/* State */}
+              <div className="auth-field">
+                <label className="auth-label">State <span style={{ color:"#EF4444" }}>*</span></label>
+                <div className={`auth-input-wrap${errors.state ? " error" : ""}`}>
+                  <span className="auth-input-icon"><FiMapPin size={17} /></span>
+                  <select
+                    value={form.state}
+                    onChange={e => set("state", e.target.value)}
+                  >
+                    <option value="">Select State</option>
+                    {INDIAN_STATES.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                {errors.state && <div className="auth-field-error">{errors.state}</div>}
+              </div>
+
+              {/* District */}
+              <div className="auth-field">
+                <label className="auth-label">District <span style={{ color:"#EF4444" }}>*</span></label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><FiMapPin size={17} /></span>
+                  <input
+                    type="text"
+                    placeholder="Select District"
+                    value={form.district}
+                    onChange={e => set("district", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Village / City */}
+            <div className="auth-field">
+              <label className="auth-label">Village / City <span style={{ color:"#EF4444" }}>*</span></label>
+              <div className={`auth-input-wrap${errors.city ? " error" : ""}`}>
+                <span className="auth-input-icon"><FiMapPin size={17} /></span>
+                <input
+                  type="text"
+                  placeholder="Enter your village or city"
+                  value={form.city}
+                  onChange={e => set("city", e.target.value)}
+                />
+              </div>
+              {errors.city && <div className="auth-field-error">{errors.city}</div>}
+            </div>
+
+            {/* ── Account Security ── */}
+            <div className="auth-section-title">Account Security</div>
+
+            {/* Password */}
+            <div className="auth-field">
+              <label className="auth-label">Password <span style={{ color:"#EF4444" }}>*</span></label>
+              <div className={`auth-input-wrap${errors.password ? " error" : ""}`}>
+                <span className="auth-input-icon"><FiLock size={17} /></span>
+                <input
+                  type={showPw ? "text" : "password"}
+                  placeholder="Create a strong password"
+                  value={form.password}
+                  onChange={e => set("password", e.target.value)}
+                  autoComplete="new-password"
+                />
+                <button type="button" className="auth-pw-toggle" onClick={() => setShowPw(p => !p)} tabIndex={-1}>
+                  {showPw ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+                </button>
+              </div>
+              {errors.password && <div className="auth-field-error">{errors.password}</div>}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="auth-field">
+              <label className="auth-label">Confirm Password <span style={{ color:"#EF4444" }}>*</span></label>
+              <div className={`auth-input-wrap${errors.confirmPassword ? " error" : ""}`}>
+                <span className="auth-input-icon"><FiLock size={17} /></span>
+                <input
+                  type={showCPw ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={form.confirmPassword}
+                  onChange={e => set("confirmPassword", e.target.value)}
+                  autoComplete="new-password"
+                />
+                <button type="button" className="auth-pw-toggle" onClick={() => setShowCPw(p => !p)} tabIndex={-1}>
+                  {showCPw ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+                </button>
+              </div>
+              {errors.confirmPassword && <div className="auth-field-error">{errors.confirmPassword}</div>}
+            </div>
+
+            {/* ── Terms & Conditions ── */}
+            <div className="auth-section-title">Terms &amp; Conditions</div>
+
+            <div className="auth-terms">
+              <label className="auth-terms-row">
+                <input
+                  type="checkbox"
+                  checked={form.agreeTerms}
+                  onChange={e => set("agreeTerms", e.target.checked)}
+                />
+                I agree to the <Link to="/policies/terms" target="_blank">Terms &amp; Conditions</Link>
+              </label>
+              {errors.agreeTerms && <div className="auth-field-error" style={{ marginTop: -4 }}>{errors.agreeTerms}</div>}
+
+              <label className="auth-terms-row">
+                <input
+                  type="checkbox"
+                  checked={form.agreePrivacy}
+                  onChange={e => set("agreePrivacy", e.target.checked)}
+                />
+                I agree to the <Link to="/policies/privacy" target="_blank">Privacy Policy</Link>
+              </label>
+              {errors.agreePrivacy && <div className="auth-field-error" style={{ marginTop: -4 }}>{errors.agreePrivacy}</div>}
+            </div>
+
+            {/* Submit */}
+            <button type="submit" className="auth-submit" disabled={loading}>
+              {loading
+                ? <span className="auth-btn-spinner" />
+                : <>Create My Account <FiArrowRight size={18} /></>
+              }
+            </button>
+
+          </form>
+
+          {/* Switch to login */}
+          <p className="auth-switch">
+            Already have an account?
+            <Link to="/login">Login Here</Link>
+          </p>
+
+        </div>
+      </main>
+
+    </div>
+  );
+}
