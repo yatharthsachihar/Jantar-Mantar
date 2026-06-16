@@ -1,5 +1,5 @@
 # AgroNest — Project Audit & Memory File
-> Last updated: Multer fix + navbar flicker fix + SettingsContext localStorage cache + Dynamic Role Permission Matrix
+> Last updated: Real-time Roles & Permissions + 403 Interceptor Fix + Comprehensive RBAC in Middleware
 
 ---
 
@@ -188,6 +188,9 @@
 - ✅ Fixed header overlapping on orders history, profile, and forgot password pages (increased top padding to 120px on .site-container)
 - ✅ Global Dynamic Permission Enforcement — Replaced hardcoded viewer role checks with dynamic DB-based `RolePermission` matrix evaluation in `authStore` and pages (`BannersPage`, `SettingsPage`, `UsersPage`, `AdminLayout`)
 - ✅ Fixed viewer role button styling override — Removed global button disabling rule from `admin.css` that was overriding React dynamic states for viewers
+- ✅ Real-time Permissions Polling — Added a 5s interval to `AdminLayout` so that if an admin's role or the permission matrix changes, the UI reacts immediately without page refresh.
+- ✅ Axios 403 Interceptor Fix — Prevented the global 403 error handler from kicking admins out to `/deactivated` when they trigger a permission-denied action inside the admin panel.
+- ✅ Comprehensive RBAC Coverage — Added all missing admin modules (`seo`, `media`, `enquiries`, `website_builder`) to `authMiddleware.js` for strict "view-only" enforcement.
 
 ---
 
