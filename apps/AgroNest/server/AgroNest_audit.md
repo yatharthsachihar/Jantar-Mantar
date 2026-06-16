@@ -1,5 +1,5 @@
 # AgroNest — Project Audit & Memory File
-> Last updated: Multer fix + navbar flicker fix + SettingsContext localStorage cache
+> Last updated: Multer fix + navbar flicker fix + SettingsContext localStorage cache + Dynamic Role Permission Matrix
 
 ---
 
@@ -43,6 +43,7 @@
 | Coupon    | models/Coupon.js      | type percentage/fixed, usageLimit          |
 | Media     | models/Media.js       | folder, url, mimeType, filename, size      |
 | Settings  | models/Settings.js    | Everything — hero, theme, social, smtp, pageVisibility, section flags |
+| RolePermission | models/RolePermission.js | Dynamic role-permission matrix array    |
 
 ---
 
@@ -61,8 +62,9 @@
 | /api/blogs           | routes/blogRoutes.js        | Mixed                   |
 | /api/pages           | routes/pageRoutes.js        | Mixed                   |
 | /api/media           | routes/mediaRoutes.js       | Public upload + delete  |
-| /api/seo             | routes/seoRoutes.js         | Admin JWT               |
+| GET  /api/seo        | routes/seoRoutes.js         | Admin JWT               |
 | /api/settings        | routes/settingsRoutes.js    | GET public, PUT admin   |
+| /api/roles/matrix    | routes/roleRoutes.js        | Admin JWT protect GET/PUT |
 
 ---
 
@@ -184,6 +186,8 @@
 - ✅ Added "View Orders" button to desktop actions panel in Navbar.jsx
 - ✅ Hidden wishlist and view orders buttons on mobile navbar (added hide-on-mobile class)
 - ✅ Fixed header overlapping on orders history, profile, and forgot password pages (increased top padding to 120px on .site-container)
+- ✅ Global Dynamic Permission Enforcement — Replaced hardcoded viewer role checks with dynamic DB-based `RolePermission` matrix evaluation in `authStore` and pages (`BannersPage`, `SettingsPage`, `UsersPage`, `AdminLayout`)
+- ✅ Fixed viewer role button styling override — Removed global button disabling rule from `admin.css` that was overriding React dynamic states for viewers
 
 ---
 

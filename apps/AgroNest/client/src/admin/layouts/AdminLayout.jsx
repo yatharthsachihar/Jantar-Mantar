@@ -8,7 +8,14 @@ export default function AdminLayout() {
   const { loading, token, admin, init } = useAuthStore();
   const navigate = useNavigate();
 
-  useEffect(() => { init(); }, []); // eslint-disable-line
+  useEffect(() => { 
+    init(); 
+    // Poll every 5 seconds to keep admin role and permissions matrix up to date in real time
+    const intervalId = setInterval(() => {
+      init();
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, []); // eslint-disable-line
 
   useEffect(() => {
     // Once loading is done, if still no token → send to login
@@ -41,11 +48,7 @@ export default function AdminLayout() {
     <div className={`admin-layout role-${admin?.role || 'viewer'}`}>
       <Sidebar />
       <div className="admin-main">
-        {admin?.role === 'viewer' && (
-          <div className="viewer-banner" style={{ background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", padding: "8px 20px", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid rgba(239, 68, 68, 0.2)" }}>
-            ⚠️ You are in View-Only mode. Changes cannot be saved.
-          </div>
-        )}
+
         <Topbar />
         <main style={{ overflowY: "auto" }}>
           <Outlet />

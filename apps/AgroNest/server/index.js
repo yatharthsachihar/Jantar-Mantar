@@ -4,12 +4,17 @@ const cors      = require('cors');
 const path      = require('path');
 const connectDB = require('./config/db');
 
+const { activityLogger } = require('./middleware/activityLogger');
+
 const app = express();
 connectDB();
 
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Global activity logger — intercepts all /api mutations after auth
+app.use('/api', activityLogger);
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -27,6 +32,7 @@ function mount(app, path, routeFile) {
 
 // Auth
 mount(app, '/api/auth',       './routes/auth');
+mount(app, '/api/roles',      './routes/roleRoutes');
 
 // Users (site customers)
 mount(app, '/api/users',      './routes/userRoutes');
@@ -51,6 +57,7 @@ mount(app, '/api/seo',        './routes/seoRoutes');
 
 // System
 mount(app, '/api/settings',   './routes/settingsRoutes');
+mount(app, '/api/logs',       './routes/logsRoute');
 
 // Health check
 app.get('/', (req, res) => res.json({ message: 'AgroNest API running ✅', time: new Date() }));

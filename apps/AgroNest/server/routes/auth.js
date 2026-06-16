@@ -36,7 +36,17 @@ router.get('/users', protect, async (req, res) => {
 // POST /api/auth/users
 router.post('/users', protect, async (req, res) => {
   try {
+    const requesterRole = req.admin.role;
+    if (requesterRole !== 'super_admin' && requesterRole !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to create admins.' });
+    }
+
     const { name, email, password, role, isActive } = req.body;
+
+    if (requesterRole === 'admin' && role === 'super_admin') {
+      return res.status(403).json({ message: 'Admins cannot create super_admin accounts.' });
+    }
+
     const exists = await Admin.findOne({ email: email.toLowerCase() });
     if (exists) return res.status(400).json({ message: 'User already exists' });
     const user = await Admin.create({ name, email: email.toLowerCase(), password, role, isActive });
@@ -50,6 +60,20 @@ router.put('/users/:id', protect, async (req, res) => {
     const { name, email, role, isActive, password } = req.body;
     const user = await Admin.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const requesterRole = req.admin.role;
+    if (requesterRole !== 'super_admin' && requesterRole !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to manage admins.' });
+    }
+
+    if (requesterRole === 'admin') {
+      if (user.role === 'super_admin') {
+        return res.status(403).json({ message: 'Admins cannot modify super_admin accounts.' });
+      }
+      if (role === 'super_admin') {
+        return res.status(403).json({ message: 'Admins cannot set role to super_admin.' });
+      }
+    }
 
     if (name) user.name = name;
     if (email) user.email = email.toLowerCase();
@@ -65,6 +89,18 @@ router.put('/users/:id', protect, async (req, res) => {
 // DELETE /api/auth/users/:id
 router.delete('/users/:id', protect, async (req, res) => {
   try {
+    const user = await Admin.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const requesterRole = req.admin.role;
+    if (requesterRole !== 'super_admin' && requesterRole !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to delete admins.' });
+    }
+
+    if (requesterRole === 'admin' && user.role === 'super_admin') {
+      return res.status(403).json({ message: 'Admins cannot delete super_admin accounts.' });
+    }
+
     await Admin.findByIdAndDelete(req.params.id);
     res.json({ message: 'User deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }

@@ -99,8 +99,8 @@ function BannerForm({ banner, onSuccess }) {
 // ── Main Banners Page ───────────────────────────────────────
 export default function BannersPage() {
   const pageRef     = useRef();
-  const { admin }   = useAuthStore();
-  const isViewer    = admin?.role === 'viewer';
+  const { hasPermission } = useAuthStore();
+  const canEdit = hasPermission('banners', 'full');
   const queryClient = useQueryClient();
   const [modal,    setModal]    = useState(null);  // null | 'create' | banner object
   const [deleting, setDeleting] = useState(null);
@@ -143,7 +143,7 @@ export default function BannersPage() {
         title="Banners"
         subtitle={`${banners.length} banners`}
         actions={
-          !isViewer && (
+          canEdit && (
             <Button size="sm" onClick={() => setModal("create")}>
               <FiPlus /> Add Banner
             </Button>
@@ -162,7 +162,7 @@ export default function BannersPage() {
             <FiImage />
             <h3>No Banners Yet</h3>
             <p>Create your first homepage banner</p>
-            {!isViewer && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> Add Banner</Button>}
+            {canEdit && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> Add Banner</Button>}
           </div>
         </div>
       ) : (
@@ -214,7 +214,7 @@ export default function BannersPage() {
 
               {/* Actions */}
               <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
-                {!isViewer ? (
+                {canEdit ? (
                   <>
                     <Button variant="secondary" size="sm" onClick={() => setModal(banner)}><FiEdit /> Edit</Button>
                     <Button

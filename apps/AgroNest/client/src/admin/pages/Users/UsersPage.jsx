@@ -113,8 +113,8 @@ function AdminUserForm({ user, onSuccess }) {
 }
 
 export default function UsersPage() {
-  const { admin } = useAuthStore();
-  const isViewer = admin?.role === 'viewer';
+  const { hasPermission } = useAuthStore();
+  const canEdit = hasPermission('users', 'full');
   const qc = useQueryClient();
   const [modal,    setModal]    = useState(null);
   const [deleting, setDeleting] = useState(null);
@@ -155,7 +155,7 @@ export default function UsersPage() {
         title="Admin Users"
         subtitle="Manage who can access the admin panel"
         actions={
-          !isViewer && (
+          canEdit && (
             <Button size="sm" onClick={() => setModal("create")}>
               <FiPlus /> New Admin User
             </Button>
@@ -205,7 +205,7 @@ export default function UsersPage() {
                     <FiShield />
                     <h3>No Admin Users</h3>
                     <p>Create the first admin account</p>
-                    {!isViewer && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> New Admin User</Button>}
+                    {canEdit && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> New Admin User</Button>}
                   </div>
                 </td></tr>
               )
@@ -235,13 +235,13 @@ export default function UsersPage() {
                     </td>
                     <td>
                       <button onClick={() => toggleMutation.mutate({ id: u._id, isActive: !u.isActive })}
-                        disabled={isViewer}
-                        style={{ background: "none", border: "none", cursor: isViewer ? "not-allowed" : "pointer", fontSize: 22, color: u.isActive !== false ? "#22c55e" : "var(--border)", opacity: isViewer ? 0.5 : 1 }}>
+                        disabled={!canEdit}
+                        style={{ background: "none", border: "none", cursor: !canEdit ? "not-allowed" : "pointer", fontSize: 22, color: u.isActive !== false ? "#22c55e" : "var(--border)", opacity: !canEdit ? 0.5 : 1 }}>
                         {u.isActive !== false ? <FiToggleRight /> : <FiToggleLeft />}
                       </button>
                     </td>
                     <td>
-                      {!isViewer ? (
+                      {canEdit ? (
                         <div className="table-actions">
                           <button className="btn-view" onClick={() => setModal(u)}><FiEdit /></button>
                           <button className="btn-delete" onClick={() => setDeleting(u)}><FiTrash2 /></button>

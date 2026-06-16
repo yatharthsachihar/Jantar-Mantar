@@ -136,8 +136,8 @@ function Section({ icon, title, subtitle, children }) {
 // ── Main Settings Page ────────────────────────────────────────
 export default function SettingsPage() {
   const pageRef     = useRef();
-  const { admin }   = useAuthStore();
-  const isViewer    = admin?.role === 'viewer';
+  const { hasPermission } = useAuthStore();
+  const canEdit = hasPermission('settings', 'full');
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
 
@@ -185,7 +185,7 @@ export default function SettingsPage() {
   return (
     <div ref={pageRef} className="dash-section">
 
-      {isViewer && (
+      {!canEdit && (
         <div style={{
           background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)",
           borderRadius: 12, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#3B82F6",
@@ -204,7 +204,7 @@ export default function SettingsPage() {
               onClick={() => { setForm(JSON.parse(JSON.stringify(settings))); toast("Reset to saved values"); }}>
               <FiRefreshCw /> Reset
             </Button>
-            {!isViewer && (
+            {canEdit && (
               <Button size="sm" loading={saveMutation.isPending} onClick={() => saveMutation.mutate(form)}>
                 <FiSave /> Save All Changes
               </Button>
@@ -624,7 +624,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ── Sticky save bar ───────────────────────────────── */}
-      {!isViewer && (
+      {canEdit && (
         <div style={{
           position: "sticky", bottom: 24, zIndex: 10,
           display: "flex", justifyContent: "flex-end", gap: 12,

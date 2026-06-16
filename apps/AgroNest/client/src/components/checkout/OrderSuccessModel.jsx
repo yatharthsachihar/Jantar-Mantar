@@ -21,6 +21,7 @@ import {
 } from "react-icons/fi";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import QRCode from "react-qr-code";
 import Navbar from "../navigation/Navbar";
 import Footer from "../navigation/Footer";
 import { orderApi } from "../../api/orderApi";
@@ -239,21 +240,7 @@ function InvoiceTemplate({ order, gstAmount, orderDate }) {
                         <td style={{ width: '35%', textAlign: 'center' }}>
                             <div className={styles['qr-cell']}>
                                 <div className={styles['qr-graphic-wrapper']}>
-                                    <svg width="60" height="60" viewBox="0 0 40 40">
-                                        <rect width="40" height="40" fill="white" />
-                                        <rect x="2" y="2" width="10" height="10" fill="#1B5E20" />
-                                        <rect x="4" y="4" width="6" height="6" fill="white" />
-                                        <rect x="28" y="2" width="10" height="10" fill="#1B5E20" />
-                                        <rect x="30" y="4" width="6" height="6" fill="white" />
-                                        <rect x="2" y="28" width="10" height="10" fill="#1B5E20" />
-                                        <rect x="4" y="30" width="6" height="6" fill="white" />
-                                        <rect x="15" y="5" width="4" height="4" fill="#1B5E20" />
-                                        <rect x="22" y="8" width="3" height="3" fill="#1B5E20" />
-                                        <rect x="14" y="16" width="6" height="6" fill="#1B5E20" />
-                                        <rect x="24" y="18" width="8" height="4" fill="#1B5E20" />
-                                        <rect x="18" y="28" width="6" height="6" fill="#1B5E20" />
-                                        <rect x="28" y="28" width="4" height="4" fill="#1B5E20" />
-                                    </svg>
+                                    <QRCode value={window.location.origin} size={60} fgColor="#1B5E20" />
                                 </div>
                                 <span className={styles['invoice-num-text']}>Invoice Number: {invoiceNo}</span>
                             </div>

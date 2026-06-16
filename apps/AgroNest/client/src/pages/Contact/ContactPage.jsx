@@ -6,6 +6,7 @@ import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
 import { useSettings } from "../../context/SettingsContext";
 import { pageApi } from "../../api/pageApi";
+import { enquiryApi } from "../../api/enquiryApi";
 import "../../styles/site.css";
 import "./ContactPage.css";
 
@@ -172,9 +173,23 @@ export default function ContactPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setLoading(false);
-    setSubmitted(true);
+    try {
+      await enquiryApi.submit({
+        type:    "general",
+        name:    form.name,
+        email:   form.email,
+        phone:   form.phone,
+        message: `Subject: ${form.subject}\n\n${form.message}`,
+        // productName used as subject in admin table
+        productName: form.subject,
+      });
+      setSubmitted(true);
+      setForm({ name:"", email:"", phone:"", subject: SUBJECTS[0], message:"" });
+    } catch (err) {
+      alert(err?.response?.data?.message || "Failed to send message. Please try again or call us directly.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

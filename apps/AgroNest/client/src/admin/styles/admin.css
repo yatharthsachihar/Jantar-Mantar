@@ -82,31 +82,3 @@ body[data-sidebar="collapsed"] .admin-main {
   min-height: 0;
 }
 
-/* ── RBAC View-Only Mode ── */
-.role-viewer button[type="submit"],
-.role-viewer .btn-create,
-.role-viewer .btn-delete,
-.role-viewer .btn-action,
-.role-viewer .btn-edit,
-.role-viewer button:not(.btn-view):not(.plp-filter-toggle):not(.btn-secondary):not(.plp-cat-chip) {
-  /* Attempting to target most "action" buttons generically */
-}
-
-/* Explicitly disable known modification buttons across the admin panel for viewers */
-.role-viewer button[type="submit"],
-.role-viewer .btn-delete,
-.role-viewer .btn-danger,
-.role-viewer [class*="submit"],
-.role-viewer [class*="create"],
-.role-viewer [class*="delete"] {
-  opacity: 0.5;
-  pointer-events: none !important;
-  cursor: not-allowed !important;
-}
-
-/* Disable pointer events on toggle switches and actionable inputs */
-.role-viewer input[type="checkbox"],
-.role-viewer .table-actions button:not(.btn-view) {
-  opacity: 0.5;
-  pointer-events: none !important;
-}

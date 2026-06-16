@@ -35,7 +35,10 @@ API.interceptors.response.use(
       // If we receive a 403 Forbidden, dispatch event so UserContext can navigate
       // instead of a hard reload which penalizes performance.
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('auth-error-403'));
+        const isAdminPanel = window.location.pathname.startsWith('/admin');
+        if (!isAdminPanel) {
+          window.dispatchEvent(new Event('auth-error-403'));
+        }
       }
     }
     return Promise.reject(error);
