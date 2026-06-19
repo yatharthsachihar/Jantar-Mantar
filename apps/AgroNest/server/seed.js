@@ -46,14 +46,14 @@ const seed = async () => {
   const settingsCount = await Settings.countDocuments();
   if (settingsCount === 0) {
     await Settings.create({
-      storeName: 'AgroNest',
-      tagline: 'Grow Better. Harvest More.',
+      storeName: 'Axiom Seeds',
+      tagline: 'हमारा संकल्प, आत्मनिर्भर किसान',
       storeMode: 'hybrid',
       showPricesInB2B: false,
       freeShippingAbove: 999,
-      storeEmail: 'info@agronest.in',
-      storePhone: '+91 98765 43210',
-      storeAddress: 'Plot 12, Agri Hub, Jaipur, Rajasthan - 302001',
+      storeEmail: 'axiomcropsciences@gmail.com',
+      storePhone: '+91 7340008599',
+      storeAddress: 'B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210',
       currency: 'INR',
       gstNumber: '08AABCU9603R1ZX',
       taxRate: 5,

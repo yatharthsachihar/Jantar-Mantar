@@ -3,7 +3,7 @@
 
   border:1px solid var(--border);
 
-  border-radius:24px;
+  border-radius:var(--radius-xl);
 
   padding:24px;
 
@@ -11,9 +11,9 @@
 
   overflow:hidden;
 
-  box-shadow:var(--shadow);
+  box-shadow:var(--shadow-sm);
 
-  transition:.3s;
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 
 .stat-card::before{
@@ -25,18 +25,21 @@
   left:0;
   right:0;
 
-  height:4px;
+  height:3px;
 
   background:
     linear-gradient(
       90deg,
-      #d6a46a,
-      #f3c58b
+      var(--primary-dark),
+      var(--primary)
     );
+  opacity:.85;
 }
 
 .stat-card:hover{
-  transform:translateY(-6px);
+  transform:translateY(-5px);
+  box-shadow:var(--shadow-lg);
+  border-color:var(--border-strong);
 }
 
 .stat-top{

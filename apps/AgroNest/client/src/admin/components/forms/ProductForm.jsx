@@ -85,7 +85,10 @@ export default function ProductForm({ product = null }) {
       ...flags,
       images,
       specifications: specs,
-      variations,
+      // Strip the UI-only `priceTouched` tracking flag before saving —
+      // it's not part of the Product schema, just used locally to know
+      // whether auto-calculated price should keep syncing to weight.
+      variations: variations.map(({ priceTouched, ...v }) => v),
     });
   };
 
@@ -101,17 +104,43 @@ export default function ProductForm({ product = null }) {
     ...categories.map(c => ({ label: c.name, value: c._id })),
   ];
 
-  // Variations Logic
+  // ── Variations Logic ──
+  // Converts a weight/volume string into a common base unit (grams or ml)
+  // so two different units can be compared as a ratio. Deliberately
+  // forgiving about formatting since admins will type "250g", "250 g",
+  // "250G", "0.25kg", or even just "250" without thinking about it.
   const parseWeight = (w) => {
     if (!w) return null;
-    const match = String(w).toLowerCase().replace(/\s+/g, '').match(/^([\d.]+)([a-z]+)$/);
+    const cleaned = String(w).trim().toLowerCase().replace(/\s+/g, '');
+    if (!cleaned) return null;
+
+    // Bare number with no unit at all → assume grams (the most common
+    // case for produce/seeds sold by small weight increments).
+    if (/^[\d.]+$/.test(cleaned)) {
+      const val = parseFloat(cleaned);
+      return Number.isFinite(val) && val > 0 ? val : null;
+    }
+
+    const match = cleaned.match(/^([\d.]+)([a-z]+)$/);
     if (!match) return null;
+
     const val = parseFloat(match[1]);
     const unit = match[2];
-    if (['kg', 'l', 'litre', 'litres'].includes(unit)) return val * 1000;
-    if (['g', 'gm', 'ml'].includes(unit)) return val;
-    return null;
+    if (!Number.isFinite(val) || val <= 0) return null;
+
+    // Everything normalizes to grams/ml as the common base unit.
+    if (['kg', 'kgs'].includes(unit))                                return val * 1000;
+    if (['l', 'litre', 'litres', 'liter', 'liters'].includes(unit))  return val * 1000;
+    if (['g', 'gm', 'gms', 'gram', 'grams', 'ml'].includes(unit))    return val;
+    if (['mg'].includes(unit))                                       return val / 1000;
+    if (['lb', 'lbs', 'pound', 'pounds'].includes(unit))             return val * 453.592;
+    if (['oz', 'ounce', 'ounces'].includes(unit))                    return val * 28.3495;
+
+    return null; // unrecognized unit (e.g. "piece", "dozen") — can't ratio those
   };
+
+  const baseWeightG  = parseWeight(watch("weight"));
+  const basePriceVal = parseFloat(watch("price"));
 
   const addVariation = () => {
     setVariations(prev => [...prev, { weight: "", price: "", stock: "", sku: "" }]);
@@ -121,16 +150,24 @@ export default function ProductForm({ product = null }) {
     setVariations(prev => {
       const newVars = [...prev];
       newVars[i] = { ...newVars[i], [field]: val };
-      
-      // Auto-calculate price if weight changes and base weight/price are valid
-      if (field === 'weight' && watch("weight") && watch("price")) {
-        const baseW = parseWeight(watch("weight"));
-        const baseP = parseFloat(watch("price"));
+
+      // Auto-calculate price whenever the weight changes, as long as the
+      // base weight/price are valid and this row's price hasn't been
+      // hand-typed by the admin yet. Re-derives every time (not just when
+      // empty) so fixing a typo in the weight re-syncs the price too.
+      if (field === 'weight') {
         const newW = parseWeight(val);
-        if (baseW && baseP && newW && !newVars[i].price) { // Only auto-calc if price is empty
-          newVars[i].price = Math.round((baseP / baseW) * newW);
+        if (baseWeightG && basePriceVal && newW && !newVars[i].priceTouched) {
+          newVars[i].price = Math.round((basePriceVal / baseWeightG) * newW);
         }
       }
+
+      // Once the admin manually edits price, stop auto-overwriting it —
+      // they may intentionally want a different price than the strict ratio.
+      if (field === 'price') {
+        newVars[i].priceTouched = true;
+      }
+
       return newVars;
     });
   };
@@ -195,22 +232,57 @@ export default function ProductForm({ product = null }) {
         <p style={{ fontSize: 13, color: "var(--site-text-muted)", marginBottom: 16 }}>
           Adding variations (like 100g, 250g) will automatically attach them to this product. Prices are auto-calculated from the Base Weight/Price but you can override them manually.
         </p>
-        
+
+        {!baseWeightG && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 14px", marginBottom: 16,
+            background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)",
+            borderRadius: 10, fontSize: 13, color: "#b45309",
+          }}>
+            Set a valid Base Weight above (e.g. "1kg", "500g") so variation prices can be auto-calculated from it.
+          </div>
+        )}
+
         {variations.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
-            {variations.map((v, i) => (
-              <div key={v._id || i} style={{ 
-                display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 10, 
-                alignItems: "flex-end", background: "var(--site-bg-secondary)", padding: 16, 
-                borderRadius: 12, border: "1px solid var(--site-border)"
-              }}>
-                <Input label="Weight (e.g. 100g)" value={v.weight || ""} onChange={e => updateVariation(i, "weight", e.target.value)} required />
-                <Input label="Price (₹)" type="number" value={v.price} onChange={e => updateVariation(i, "price", e.target.value)} required />
-                <Input label="Stock" type="number" value={v.stock} onChange={e => updateVariation(i, "stock", e.target.value)} />
-                <Input label="SKU" value={v.sku} onChange={e => updateVariation(i, "sku", e.target.value)} />
-                <Button type="button" variant="danger" onClick={() => removeVariation(i)}>Remove</Button>
-              </div>
-            ))}
+            {variations.map((v, i) => {
+              const parsedW = parseWeight(v.weight);
+              const weightInvalid = v.weight && !parsedW;
+              const ratioPct = baseWeightG && parsedW ? Math.round((parsedW / baseWeightG) * 100) : null;
+
+              return (
+                <div key={v._id || i} style={{
+                  display: "flex", flexDirection: "column", gap: 8,
+                  background: "var(--site-bg-secondary)", padding: 16,
+                  borderRadius: 12, border: `1px solid ${weightInvalid ? "#ef4444" : "var(--site-border)"}`,
+                }}>
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 10,
+                    alignItems: "flex-end",
+                  }}>
+                    <Input label="Weight (e.g. 100g)" value={v.weight || ""} onChange={e => updateVariation(i, "weight", e.target.value)} required />
+                    <Input label="Price (₹)" type="number" value={v.price} onChange={e => updateVariation(i, "price", e.target.value)} required />
+                    <Input label="Stock" type="number" value={v.stock} onChange={e => updateVariation(i, "stock", e.target.value)} />
+                    <Input label="SKU" value={v.sku} onChange={e => updateVariation(i, "sku", e.target.value)} />
+                    <Button type="button" variant="danger" onClick={() => removeVariation(i)}>Remove</Button>
+                  </div>
+
+                  {weightInvalid && (
+                    <span style={{ fontSize: 12, color: "#ef4444" }}>
+                      Couldn't read this weight — use a number plus unit, like "250g", "0.5kg", or "500ml".
+                    </span>
+                  )}
+                  {!weightInvalid && ratioPct !== null && (
+                    <span style={{ fontSize: 12, color: "var(--site-text-muted)" }}>
+                      {ratioPct}% of base weight
+                      {!v.priceTouched && ` — auto-priced at ${ratioPct}% of ₹${basePriceVal || 0}`}
+                      {v.priceTouched && " — manually overridden"}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
         

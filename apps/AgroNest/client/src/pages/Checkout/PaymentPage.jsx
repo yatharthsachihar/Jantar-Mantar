@@ -1,259 +1,292 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FiCheckCircle, FiShield, FiCreditCard, FiClock, FiSmartphone } from "react-icons/fi";
+import {
+  FiCheckCircle, FiShield, FiCreditCard, FiClock,
+  FiSmartphone, FiAlertCircle, FiZap, FiLock
+} from "react-icons/fi";
 import toast from "react-hot-toast";
 import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
 import { useSettings } from "../../context/SettingsContext";
 import { orderApi } from "../../api/orderApi";
+import logo from "/uploads/LOGO.png";
+import { mediaUrl } from "../../api/axios";
 import "../../styles/site.css";
 import "./PaymentPage.css";
 
-// Prefill loading script helper for Razorpay
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
+/* ── Load Razorpay checkout.js script ── */
+const loadRazorpayScript = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
   });
-};
 
 export default function PaymentPage() {
-  const navigate = useNavigate();
+  const navigate      = useNavigate();
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("orderId");
-  const { settings } = useSettings();
+  const orderId       = searchParams.get("orderId");
+  const { settings }  = useSettings();
 
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes timer for PhonePe QR
-  const [showRazorpaySim, setShowRazorpaySim] = useState(false);
-  const [showPhonePeSim, setShowPhonePeSim] = useState(false);
-  const [phonePeMode, setPhonePeMode] = useState("QR"); // "QR" or "UPI"
-  const [upiId, setUpiId] = useState("");
-  const [simCard, setSimCard] = useState({ number: "", expiry: "", cvc: "", name: "" });
+  const [order,          setOrder]          = useState(null);
+  const [loading,        setLoading]        = useState(true);
+  const [paying,         setPaying]         = useState(false);
+  const [timeLeft,       setTimeLeft]       = useState(300);
+  const [phonePeMode,    setPhonePeMode]    = useState("QR");
+  const [upiId,          setUpiId]          = useState("");
+
+  // Simulation modal state
+  const [showSim,        setShowSim]        = useState(false);
+  const [simMode,        setSimMode]        = useState("card"); // "card" | "upi" | "phonepe"
+  const [simCard,        setSimCard]        = useState({ number: "", expiry: "", cvv: "", name: "" });
+  const [simUpi,         setSimUpi]         = useState("");
+  const [simProcessing,  setSimProcessing]  = useState(false);
 
   const timerRef = useRef(null);
 
+  /* ── Fetch order ── */
   useEffect(() => {
-    if (!orderId) {
-      toast.error("No Order ID provided.");
-      navigate("/cart");
-      return;
-    }
-
-    // Fetch order details
+    if (!orderId) { toast.error("No Order ID."); navigate("/cart"); return; }
     orderApi.getOne(orderId)
-      .then(res => {
-        setOrder(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        toast.error(err.message);
-        navigate("/cart");
-      });
+      .then(res => { setOrder(res.data); setLoading(false); })
+      .catch(() => { toast.error("Could not load order."); navigate("/cart"); });
   }, [orderId, navigate]);
 
-  // PhonePe QR countdown timer
+  /* ── PhonePe QR countdown ── */
   useEffect(() => {
-    if (order && order.paymentMethod === "PhonePe" && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft(t => t - 1);
-      }, 1000);
+    if (order?.paymentMethod === "PhonePe" && timeLeft > 0) {
+      timerRef.current = setInterval(() => setTimeLeft(t => t - 1), 1000);
     }
     return () => clearInterval(timerRef.current);
   }, [order, timeLeft]);
 
+  const fmt = s => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+
+  /* ── Mark order paid (after server verification or simulation) ── */
   const confirmPayment = async (txnId) => {
     try {
-      const payload = {
+      await orderApi.pay(orderId, {
         paymentMethod: order.paymentMethod,
-        transactionId: txnId || `TXN_${Date.now()}`,
-      };
-      const res = await orderApi.pay(orderId, payload);
-      const updatedOrder = res.data;
-      
-      toast.success("Payment successful!");
-      // Success redirection logic
+        transactionId: txnId,
+      });
+      toast.success("Payment confirmed!");
       navigate(`/checkout/success?orderId=${orderId}`);
-      // We can also render a clean inline success step
-      setOrder(updatedOrder);
     } catch (err) {
-      toast.error(err.message || "Failed to confirm payment");
+      toast.error(err?.response?.data?.message || "Could not confirm payment.");
     } finally {
       setPaying(false);
-      setShowRazorpaySim(false);
-      setShowPhonePeSim(false);
+      setShowSim(false);
+      setSimProcessing(false);
     }
   };
 
+  /* ─────────────────────────────────────
+     RAZORPAY — 2-step professional flow
+     ───────────────────────────────────── */
   const handleRazorpayPayment = async () => {
     setPaying(true);
-    const hasKey = settings.razorpayKey && settings.razorpayKey.startsWith("rzp_");
-    
-    if (hasKey) {
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        toast.error("Failed to load Razorpay SDK. Please check your internet connection.");
+    try {
+      // Step 1 — ask server to create a Razorpay Order
+      const { data } = await orderApi.createRazorpayOrder(orderId);
+
+      if (data.simulationMode) {
+        // No keys configured → open our professional sim modal
+        setSimMode("card");
+        setShowSim(true);
+        setPaying(false);
+        return;
+      }
+
+      // Step 2 — load Razorpay SDK and open the real checkout
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        toast.error("Failed to load Razorpay. Check your internet connection.");
         setPaying(false);
         return;
       }
 
       const options = {
-        key: settings.razorpayKey,
-        amount: Math.round(order.totalAmount * 100), // in paise
-        currency: settings.currency || "INR",
-        name: settings.storeName || "AgroNest",
+        key:         data.key,
+        amount:      data.amount,        // in paise from server
+        currency:    data.currency,
+        name:        settings.storeName || "Axiom Seeds",
         description: `Order #${order._id.slice(-8).toUpperCase()}`,
-        handler: async function (response) {
-          await confirmPayment(response.razorpay_payment_id);
-        },
+        order_id:    data.rzpOrderId,    // Razorpay's own order ID
+        image:       settings.storeLogo ? mediaUrl(settings.storeLogo) : logo,
         prefill: {
-          name: order.customerName,
-          email: order.customerEmail,
+          name:    order.customerName,
+          email:   order.customerEmail,
           contact: order.customerPhone,
         },
-        theme: {
-          color: settings.colorPrimary || "#1F7A3D",
-        },
+        theme: { color: settings.colorPrimary || "#1F7A3D" },
         modal: {
-          ondismiss: function () {
+          ondismiss: () => {
             setPaying(false);
-            toast.error("Payment cancelled by user");
+            toast("Payment cancelled.", { icon: "ℹ️" });
+          },
+        },
+        handler: async (response) => {
+          // Step 3 — server-side HMAC-SHA256 verification
+          try {
+            const { data: verified } = await orderApi.verifyRazorpayPayment({
+              appOrderId:          orderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id:   response.razorpay_order_id,
+              razorpay_signature:  response.razorpay_signature,
+            });
+            if (verified.success) {
+              toast.success("Payment verified & confirmed!");
+              navigate(`/checkout/success?orderId=${orderId}`);
+            }
+          } catch (err) {
+            toast.error(err?.response?.data?.message || "Payment verification failed.");
+            setPaying(false);
           }
-        }
+        },
       };
+
       const rzp = new window.Razorpay(options);
       rzp.open();
-    } else {
-      // Use premium simulation overlay
-      setShowRazorpaySim(true);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Could not initiate payment.");
+      setPaying(false);
     }
   };
 
-  const formatTime = (seconds) => {
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-    return `${min}:${sec < 10 ? "0" : ""}${sec}`;
+  /* ── Simulation success handler ── */
+  const handleSimSuccess = async () => {
+    setSimProcessing(true);
+    await new Promise(r => setTimeout(r, 1800)); // realistic delay
+    await confirmPayment(`SIM_${Date.now()}`);
   };
 
-  if (loading) {
-    return (
-      <div className="site-root">
-        <Navbar />
-        <div className="payment-page-loading">
-          <div className="payment-spinner"></div>
-          <p>Initializing secure payment gateway…</p>
-        </div>
-        <Footer />
+  /* ── PhonePe UPI flow ── */
+  const handlePhonePeUpi = () => {
+    if (!upiId.includes("@")) {
+      toast.error("Enter a valid UPI ID (e.g. name@ybl)");
+      return;
+    }
+    setPaying(true);
+    setSimMode("phonepe");
+    setShowSim(true);
+  };
+
+  /* ════════════════════════════
+     LOADING STATE
+     ════════════════════════════ */
+  if (loading) return (
+    <div className="site-root">
+      <Navbar />
+      <div className="payment-page-loading">
+        <div className="payment-spinner" />
+        <p>Initialising secure payment gateway…</p>
       </div>
-    );
-  }
+      <Footer />
+    </div>
+  );
 
-  // Render clean receipt if order is already paid
-  if (order.paymentStatus === "paid") {
-    return (
-      <div className="site-root">
-        <Navbar />
-        <div className="payment-success-card-wrapper">
-          <div className="payment-success-card">
-            <div className="success-icon-wrap">
-              <FiCheckCircle size={52} color="#1F7A3D" />
-            </div>
-            <h2>Payment Successful!</h2>
-            <p className="payment-success-sub">Your transaction has been securely processed.</p>
-            
-            <div className="receipt-details">
-              <div className="receipt-row">
-                <span>Order ID</span>
-                <strong>#{order._id.slice(-8).toUpperCase()}</strong>
-              </div>
-              <div className="receipt-row">
-                <span>Amount Paid</span>
-                <strong className="paid-amount">₹{order.totalAmount.toLocaleString("en-IN")}</strong>
-              </div>
-              <div className="receipt-row">
-                <span>Payment Method</span>
-                <strong>{order.paymentMethod}</strong>
-              </div>
-              <div className="receipt-row">
-                <span>Transaction Reference</span>
-                <strong className="ref-id">{order.transactionId || "N/A"}</strong>
-              </div>
-            </div>
-
-            <button className="site-btn-primary" onClick={() => navigate("/products")} style={{ width: "100%", justifyContent: "center", marginTop: 24 }}>
-              Continue Shopping
-            </button>
+  /* ════════════════════════════
+     ALREADY PAID
+     ════════════════════════════ */
+  if (order.paymentStatus === "paid") return (
+    <div className="site-root">
+      <Navbar />
+      <div className="payment-success-card-wrapper">
+        <div className="payment-success-card">
+          <div className="success-icon-wrap">
+            <FiCheckCircle size={52} color="#1F7A3D" />
           </div>
+          <h2>Payment Successful!</h2>
+          <p className="payment-success-sub">Your transaction has been securely processed.</p>
+          <div className="receipt-details">
+            <div className="receipt-row"><span>Order ID</span><strong>#{order._id.slice(-8).toUpperCase()}</strong></div>
+            <div className="receipt-row"><span>Amount Paid</span><strong className="paid-amount">₹{order.totalAmount.toLocaleString("en-IN")}</strong></div>
+            <div className="receipt-row"><span>Payment Method</span><strong>{order.paymentMethod}</strong></div>
+            <div className="receipt-row"><span>Transaction Ref</span><strong className="ref-id">{order.transactionId || "N/A"}</strong></div>
+          </div>
+          <button className="site-btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: 24 }}
+            onClick={() => navigate("/products")}>Continue Shopping</button>
         </div>
-        <Footer />
       </div>
-    );
-  }
+      <Footer />
+    </div>
+  );
 
+  /* ════════════════════════════
+     MAIN PAYMENT PAGE
+     ════════════════════════════ */
   return (
     <div className="site-root">
       <Navbar />
       <div className="payment-page-main">
         <div className="payment-container">
           <div className="payment-layout-cols">
-            
-            {/* Payment Portal */}
+
+            {/* ── Left: Payment Portal ── */}
             <div className="payment-portal-card">
               <div className="portal-header">
-                <div className="secure-badge">
-                  <FiShield size={14} /> <span>100% Secure Checkout</span>
-                </div>
-                <h2>Secure Payment Gateway</h2>
-                <p>Complete your payment using your chosen provider</p>
+                <div className="secure-badge"><FiShield size={13} /><span>256-bit SSL · Secure Checkout</span></div>
+                <h2>Complete Your Payment</h2>
+                <p>Choose your payment method and follow the steps below</p>
               </div>
 
+              {/* ── RAZORPAY ── */}
               {order.paymentMethod === "Razorpay" && (
                 <div className="razorpay-portal">
-                  <div className="portal-provider-logo">
-                    <span className="logo-accent">Razorpay</span>
+                  <div className="gateway-provider-row">
+                    <div className="gateway-logo rzp-logo">
+                      <svg width="20" height="20" viewBox="0 0 25 25" fill="none"><path d="M15.5 3L7 14.5h6.5L11 22l11-13h-7L15.5 3z" fill="#3395FF"/></svg>
+                      <span>Razorpay</span>
+                    </div>
+                    <div className="gateway-methods">
+                      <span className="method-pill">💳 Card</span>
+                      <span className="method-pill">📲 UPI</span>
+                      <span className="method-pill">🏦 Net Banking</span>
+                      <span className="method-pill">👛 Wallets</span>
+                    </div>
                   </div>
-                  <p className="payment-instructions">
-                    Pay securely using credit/debit card, UPI, netbanking or popular wallets via Razorpay.
-                  </p>
-                  
-                  <button 
-                    className="pay-now-btn" 
-                    onClick={handleRazorpayPayment} 
-                    disabled={paying}
-                  >
-                    {paying ? "Opening Secure Gateway…" : `Pay ₹${order.totalAmount.toLocaleString("en-IN")} Now`}
+
+                  <div className="gateway-amount-display">
+                    <span className="amount-label">Amount to pay</span>
+                    <span className="amount-value">₹{order.totalAmount.toLocaleString("en-IN")}</span>
+                  </div>
+
+                  <button className="pay-now-btn rzp-btn" onClick={handleRazorpayPayment} disabled={paying}>
+                    <FiLock size={16} />
+                    {paying ? "Opening Payment Gateway…" : `Pay ₹${order.totalAmount.toLocaleString("en-IN")} Securely`}
                   </button>
 
-                  <div className="gateway-hints">
-                    By clicking pay now, you authorize AgroNest to launch the Razorpay payments client.
+                  <div className="gateway-trust-row">
+                    <FiShield size={12} /> Your payment is encrypted and secure
                   </div>
                 </div>
               )}
 
+              {/* ── PHONEPE ── */}
               {order.paymentMethod === "PhonePe" && (
                 <div className="phonepe-portal">
-                  <div className="portal-provider-logo phonepe">
-                    <span className="logo-accent">PhonePe</span>
+                  <div className="gateway-provider-row">
+                    <div className="gateway-logo pp-logo">
+                      <span style={{ fontSize: 20 }}>📱</span>
+                      <span>PhonePe</span>
+                    </div>
+                    <div className="gateway-methods">
+                      <span className="method-pill">📷 QR</span>
+                      <span className="method-pill">📲 UPI ID</span>
+                    </div>
                   </div>
-                  
+
                   <div className="phonepe-tabs">
-                    <button className={`tab-btn ${phonePeMode === "QR" ? "active" : ""}`} onClick={() => setPhonePeMode("QR")}>
-                      Scan QR Code
-                    </button>
-                    <button className={`tab-btn ${phonePeMode === "UPI" ? "active" : ""}`} onClick={() => setPhonePeMode("UPI")}>
-                      Pay via UPI ID
-                    </button>
+                    <button className={`tab-btn${phonePeMode === "QR" ? " active" : ""}`} onClick={() => setPhonePeMode("QR")}>Scan QR Code</button>
+                    <button className={`tab-btn${phonePeMode === "UPI" ? " active" : ""}`} onClick={() => setPhonePeMode("UPI")}>Pay via UPI ID</button>
                   </div>
 
                   {phonePeMode === "QR" && (
                     <div className="phonepe-qr-flow">
                       <div className="qr-box-wrapper">
-                        {/* High fidelity mock QR code styled like PhonePe */}
                         <div className="phonepe-qr-card">
                           <div className="phonepe-qr-logo">PhonePe</div>
                           <div className="qr-container-graphics">
@@ -265,7 +298,6 @@ export default function PaymentPage() {
                               <rect x="79" y="9" width="12" height="12" fill="white" />
                               <rect x="5" y="75" width="20" height="20" fill="black" />
                               <rect x="9" y="79" width="12" height="12" fill="white" />
-                              {/* Noise pixels for realistic QR code */}
                               <rect x="30" y="5" width="5" height="10" fill="black" />
                               <rect x="40" y="15" width="10" height="5" fill="black" />
                               <rect x="35" y="25" width="15" height="10" fill="black" />
@@ -283,20 +315,15 @@ export default function PaymentPage() {
                               <rect x="75" y="80" width="10" height="10" fill="black" />
                             </svg>
                           </div>
-                          <div className="phonepe-qr-footer">AgroNest Store Merchant</div>
+                          <div className="phonepe-qr-footer">{settings.storeName || "Axiom Seeds"}</div>
                         </div>
                       </div>
-
-                      <div className="qr-instructions">
-                        <p className="timer-countdown"><FiClock /> Code expires in <strong>{formatTime(timeLeft)}</strong></p>
-                        <p className="qr-subtext">Scan the QR code with any UPI app (PhonePe, GPay, Paytm) to complete payment.</p>
-                      </div>
-
-                      <button className="simulate-payment-btn purple" onClick={() => {
-                        setPaying(true);
-                        setTimeout(() => confirmPayment(`PP_${Date.now()}`), 1800);
-                      }} disabled={paying}>
-                        {paying ? "Processing Simulated UPI Payment…" : "Simulate QR Payment Success"}
+                      <p className="timer-countdown"><FiClock size={13} /> Expires in <strong>{fmt(timeLeft)}</strong></p>
+                      <p className="qr-subtext">Scan with PhonePe, GPay, or any UPI app</p>
+                      <button className="pay-now-btn pp-btn" disabled={paying}
+                        onClick={() => { setPaying(true); setTimeout(() => confirmPayment(`PP_QR_${Date.now()}`), 1800); }}>
+                        <FiZap size={16} />
+                        {paying ? "Processing…" : "Simulate QR Scan (Demo)"}
                       </button>
                     </div>
                   )}
@@ -304,31 +331,15 @@ export default function PaymentPage() {
                   {phonePeMode === "UPI" && (
                     <div className="phonepe-upi-flow">
                       <div className="upi-input-group">
-                        <label>Enter your UPI ID</label>
+                        <label>Your UPI ID</label>
                         <div className="input-wrap">
-                          <input 
-                            type="text" 
-                            placeholder="username@ybl" 
-                            value={upiId} 
-                            onChange={e => setUpiId(e.target.value)} 
-                          />
+                          <input type="text" placeholder="yourname@ybl" value={upiId} onChange={e => setUpiId(e.target.value)} />
                         </div>
-                        <span className="input-hint">For example: 9876543210@ybl, name@ybl</span>
+                        <span className="input-hint">e.g. 9876543210@ybl · name@paytm · user@gpay</span>
                       </div>
-
-                      <button 
-                        className="pay-now-btn phonepe-color" 
-                        onClick={() => {
-                          if (!upiId.includes("@")) {
-                            toast.error("Please enter a valid UPI ID (e.g. user@ybl)");
-                            return;
-                          }
-                          setPaying(true);
-                          setShowPhonePeSim(true);
-                        }}
-                        disabled={paying}
-                      >
-                        Send Payment Request
+                      <button className="pay-now-btn pp-btn" onClick={handlePhonePeUpi} disabled={paying}>
+                        <FiSmartphone size={16} />
+                        {paying ? "Sending Request…" : "Send Payment Request"}
                       </button>
                     </div>
                   )}
@@ -336,20 +347,30 @@ export default function PaymentPage() {
               )}
             </div>
 
-            {/* Order Invoice Details */}
+            {/* ── Right: Order Invoice ── */}
             <div className="payment-invoice-sidebar">
-              <h3>Order Invoice</h3>
-              
+              <div className="invoice-brand-header">
+                <img
+                  src={settings.storeLogo ? mediaUrl(settings.storeLogo) : logo}
+                  alt={settings.storeName || "Axiom Seeds"}
+                  className="invoice-brand-logo"
+                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = logo; }}
+                />
+                <span className="invoice-brand-name">{settings.storeName || "Axiom Seeds"}</span>
+              </div>
+
+              <h3>Order Summary</h3>
+
               <div className="invoice-recipient">
                 <strong>Delivering to:</strong>
                 <p>{order.customerName}</p>
-                <p>{order.address}, {order.city}, {order.state} - {order.pincode}</p>
-                <p>Phone: {order.customerPhone}</p>
+                <p>{order.address}, {order.city}, {order.state} — {order.pincode}</p>
+                <p>📞 {order.customerPhone}</p>
               </div>
 
               <div className="invoice-items">
-                {order.items.map((item, idx) => (
-                  <div key={idx} className="invoice-item-row">
+                {order.items.map((item, i) => (
+                  <div key={i} className="invoice-item-row">
                     <span>{item.name} <strong>×{item.quantity}</strong></span>
                     <span>₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
                   </div>
@@ -361,115 +382,166 @@ export default function PaymentPage() {
                 <span>Grand Total</span>
                 <span className="total-price">₹{order.totalAmount.toLocaleString("en-IN")}</span>
               </div>
+
+              <div className="invoice-security-note">
+                <FiLock size={12} /> Payments are encrypted end-to-end
+              </div>
             </div>
 
           </div>
         </div>
       </div>
 
-      {/* Razorpay Simulation Modal */}
-      {showRazorpaySim && (
-        <div className="simulation-overlay">
-          <div className="sim-modal razorpay-sim">
-            <div className="sim-modal-header razorpay-theme">
-              <span className="brand-name">Razorpay Sandbox Checkout</span>
-              <span className="close-btn" onClick={() => { setShowRazorpaySim(false); setPaying(false); }}>×</span>
+      {/* ════════════════════════════════════════════════
+          PROFESSIONAL SIMULATION / TEST-MODE MODAL
+          ════════════════════════════════════════════════ */}
+      {showSim && (
+        <div className="simulation-overlay" onClick={e => e.target === e.currentTarget && !simProcessing && (setShowSim(false), setPaying(false))}>
+          <div className={`sim-modal ${simMode === "phonepe" ? "phonepe-sim" : "razorpay-sim"}`}>
+
+            {/* Header */}
+            <div className={`sim-modal-header ${simMode === "phonepe" ? "phonepe-theme" : "razorpay-theme"}`}>
+              <div className="sim-header-left">
+                {simMode === "phonepe"
+                  ? <><span style={{ fontSize: 18 }}>📱</span><span className="brand-name">PhonePe</span></>
+                  : <><svg width="18" height="18" viewBox="0 0 25 25" fill="none"><path d="M15.5 3L7 14.5h6.5L11 22l11-13h-7L15.5 3z" fill="#3395FF"/></svg><span className="brand-name">Razorpay</span></>
+                }
+              </div>
+              {!simProcessing && (
+                <button className="sim-close-btn" onClick={() => { setShowSim(false); setPaying(false); }}>✕</button>
+              )}
             </div>
-            
+
+            {/* Test-mode banner */}
+            <div className="sim-test-banner">
+              <FiAlertCircle size={14} />
+              <span>TEST MODE — No real money is charged</span>
+            </div>
+
             <div className="sim-modal-body">
+              {/* Amount row */}
               <div className="sim-order-summary">
-                <span>Paying to <strong>AgroNest</strong></span>
-                <span className="sim-amount">₹{order.totalAmount.toLocaleString("en-IN")}</span>
-              </div>
-
-              <div className="sim-card-form">
-                <h4><FiCreditCard /> Simulated Credit / Debit Card</h4>
-                <div className="sim-field-row">
-                  <div className="field-group">
-                    <label>Card Number</label>
-                    <input 
-                      type="text" 
-                      placeholder="4111 1111 1111 1111" 
-                      value={simCard.number} 
-                      onChange={e => setSimCard({ ...simCard, number: e.target.value })} 
-                    />
-                  </div>
+                <div>
+                  <div className="sim-paying-label">Paying to</div>
+                  <div className="sim-paying-merchant">{settings.storeName || "Axiom Seeds"}</div>
                 </div>
-                <div className="sim-field-row two-col">
-                  <div className="field-group">
-                    <label>Expiry (MM/YY)</label>
-                    <input 
-                      type="text" 
-                      placeholder="12/29" 
-                      value={simCard.expiry} 
-                      onChange={e => setSimCard({ ...simCard, expiry: e.target.value })} 
-                    />
+                <div className="sim-amount">₹{order.totalAmount.toLocaleString("en-IN")}</div>
+              </div>
+
+              {/* ── Card mode (Razorpay sim) ── */}
+              {simMode === "card" && !simProcessing && (
+                <>
+                  {/* Quick test credentials */}
+                  <div className="sim-test-cards">
+                    <div className="test-cards-header"><FiCreditCard size={13} /> Use test credentials</div>
+                    <div className="test-card-row">
+                      <span className="test-card-label">Card</span>
+                      <code className="test-card-val">4111 1111 1111 1111</code>
+                      <button className="copy-btn" onClick={() => setSimCard(c => ({ ...c, number: "4111111111111111" }))}>Fill</button>
+                    </div>
+                    <div className="test-card-row">
+                      <span className="test-card-label">Expiry</span>
+                      <code className="test-card-val">12/29</code>
+                      <button className="copy-btn" onClick={() => setSimCard(c => ({ ...c, expiry: "12/29" }))}>Fill</button>
+                    </div>
+                    <div className="test-card-row">
+                      <span className="test-card-label">CVV</span>
+                      <code className="test-card-val">123</code>
+                      <button className="copy-btn" onClick={() => setSimCard(c => ({ ...c, cvv: "123" }))}>Fill</button>
+                    </div>
                   </div>
-                  <div className="field-group">
-                    <label>CVC</label>
-                    <input 
-                      type="text" 
-                      placeholder="123" 
-                      value={simCard.cvc} 
-                      onChange={e => setSimCard({ ...simCard, cvc: e.target.value })} 
-                    />
+
+                  {/* Card form */}
+                  <div className="sim-card-form">
+                    <div className="sim-field-full">
+                      <label>Card Number</label>
+                      <input type="text" placeholder="4111 1111 1111 1111" maxLength={19}
+                        value={simCard.number.replace(/(.{4})/g, "$1 ").trim()}
+                        onChange={e => setSimCard(c => ({ ...c, number: e.target.value.replace(/\s/g, "") }))} />
+                    </div>
+                    <div className="sim-field-row two-col">
+                      <div className="sim-field-group">
+                        <label>Expiry</label>
+                        <input type="text" placeholder="MM/YY" maxLength={5}
+                          value={simCard.expiry}
+                          onChange={e => setSimCard(c => ({ ...c, expiry: e.target.value }))} />
+                      </div>
+                      <div className="sim-field-group">
+                        <label>CVV</label>
+                        <input type="password" placeholder="•••" maxLength={4}
+                          value={simCard.cvv}
+                          onChange={e => setSimCard(c => ({ ...c, cvv: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="sim-field-full">
+                      <label>Name on Card</label>
+                      <input type="text" placeholder="John Doe"
+                        value={simCard.name}
+                        onChange={e => setSimCard(c => ({ ...c, name: e.target.value }))} />
+                    </div>
                   </div>
+
+                  {/* Also offer UPI quick option */}
+                  <div className="sim-upi-quick">
+                    <div className="sim-upi-label">Or pay via UPI (test)</div>
+                    <div className="sim-upi-row">
+                      <input type="text" placeholder="success@razorpay" value={simUpi}
+                        onChange={e => setSimUpi(e.target.value)} />
+                    </div>
+                    <p className="sim-upi-hint">Use <strong>success@razorpay</strong> or <strong>failure@razorpay</strong></p>
+                  </div>
+
+                  <div className="simulation-actions">
+                    <button className="sim-action-btn success" onClick={handleSimSuccess}>
+                      <FiCheckCircle size={16} /> Authorize Payment — Success
+                    </button>
+                    <button className="sim-action-btn fail" onClick={() => {
+                      toast.error("Payment declined by bank (test failure)");
+                      setShowSim(false); setPaying(false);
+                    }}>
+                      Simulate Payment Failure
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* ── PhonePe UPI sim ── */}
+              {simMode === "phonepe" && !simProcessing && (
+                <>
+                  <div className="sim-phonepe-message">
+                    <FiSmartphone size={36} className="sim-phone-icon" />
+                    <p>A UPI collect request for <strong>₹{order.totalAmount.toLocaleString("en-IN")}</strong> has been sent to <strong>{upiId}</strong>.</p>
+                  </div>
+                  <div className="sim-instruction-card">
+                    <p><strong>Steps to complete payment:</strong></p>
+                    <ol>
+                      <li>Open your UPI / PhonePe app</li>
+                      <li>Approve the collect request from <strong>{settings.storeName || "Axiom Seeds"}</strong></li>
+                      <li>Click Approve below to simulate</li>
+                    </ol>
+                  </div>
+                  <div className="simulation-actions">
+                    <button className="sim-action-btn success phonepe-accent" onClick={handleSimSuccess}>
+                      <FiCheckCircle size={16} /> Approve Payment Request
+                    </button>
+                    <button className="sim-action-btn fail" onClick={() => {
+                      toast.error("UPI request expired / declined");
+                      setShowSim(false); setPaying(false);
+                    }}>
+                      Decline Request
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* ── Processing spinner ── */}
+              {simProcessing && (
+                <div className="sim-processing">
+                  <div className="sim-processing-spinner" />
+                  <p>Verifying payment…</p>
+                  <p className="sim-processing-sub">Please do not close this window</p>
                 </div>
-
-                <div className="simulation-actions" style={{ marginTop: 24 }}>
-                  <button className="sim-action-btn success" onClick={() => confirmPayment(`RZP_SIM_SUCCESS_${Date.now()}`)}>
-                    Authorize Payment (Success)
-                  </button>
-                  <button className="sim-action-btn fail" onClick={() => {
-                    toast.error("Simulated transaction failed");
-                    setShowRazorpaySim(false);
-                    setPaying(false);
-                  }}>
-                    Fail Transaction
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PhonePe Intent / UPI Request Simulation Modal */}
-      {showPhonePeSim && (
-        <div className="simulation-overlay">
-          <div className="sim-modal phonepe-sim">
-            <div className="sim-modal-header phonepe-theme">
-              <span className="brand-name">PhonePe UPI Direct Payment</span>
-              <span className="close-btn" onClick={() => { setShowPhonePeSim(false); setPaying(false); }}>×</span>
-            </div>
-            
-            <div className="sim-modal-body">
-              <div className="sim-alert-message">
-                <FiSmartphone size={32} />
-                <p>We've sent a simulated payment request of <strong>₹{order.totalAmount.toLocaleString("en-IN")}</strong> to your UPI app at <strong>{upiId}</strong>.</p>
-              </div>
-
-              <div className="sim-instruction-card">
-                <p><strong>Instructions:</strong></p>
-                <ol>
-                  <li>Open your UPI / PhonePe app on your smartphone.</li>
-                  <li>Approve the payment request from <strong>AgroNest Store</strong>.</li>
-                  <li>Click authorize below to simulate app approval.</li>
-                </ol>
-              </div>
-
-              <div className="simulation-actions" style={{ marginTop: 20 }}>
-                <button className="sim-action-btn success phonepe-accent" onClick={() => confirmPayment(`PP_UPI_SUCCESS_${Date.now()}`)}>
-                  Simulate UPI Approval (Success)
-                </button>
-                <button className="sim-action-btn fail" onClick={() => {
-                  toast.error("UPI Request Expired/Declined by customer");
-                  setShowPhonePeSim(false);
-                  setPaying(false);
-                }}>
-                  Decline Request
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>

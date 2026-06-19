@@ -46,6 +46,16 @@
   align-items: center;
   gap: 10px;
 }
+/* Brand logo (replaces the old "AN" mark + AgroNest text). Shown bigger and with
+   a transparent background (no card) so the logo's own transparency shows. */
+.auth-sidebar-logo-img {
+  display: block;
+  max-width: 280px;
+  width: auto;
+  height: 92px;
+  object-fit: contain;
+  background: transparent;
+}
 
 .auth-sidebar-logo {
   width: 40px;
@@ -309,10 +319,18 @@
 .auth-pw-toggle:hover { color: #1F7A3D; }
 
 .auth-field-error {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #EF4444;
-  margin-top: -12px;
-  margin-bottom: 6px;
+  margin-top: 2px;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.auth-field-error::before {
+  content: "⚠";
+  font-size: 12px;
+  line-height: 1;
 }
 
 /* ── Account type picker ── */
@@ -597,6 +615,25 @@
 }
 
 /* ── Back to Home Link ── */
+/* Brand logo on the white form panel (top-left). Visible on mobile, where the
+   dark sidebar is hidden. Logo shows on white so its natural colours read well. */
+.auth-panel-logo {
+  margin-bottom: 22px;
+}
+.auth-panel-logo img {
+  display: block;
+  height: 64px;
+  width: auto;
+  max-width: 230px;
+  object-fit: contain;
+}
+.auth-panel-logo-text {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--site-primary, #1B7A3D);
+  letter-spacing: -0.5px;
+}
+
 .auth-back-btn {
   display: inline-flex;
   align-items: center;

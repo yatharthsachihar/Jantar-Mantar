@@ -5,28 +5,37 @@ import {
   FiArrowRight, FiAlertCircle, FiArrowLeft,
 } from "react-icons/fi";
 import { useUser } from "../../context/UserContext";
+import { useSettings } from "../../context/SettingsContext";
 import "../../styles/site.css";
 import "./AuthPage.css";
 
 const STATS = [
-  { icon: "👨‍🌾", val: "25,000+", label: "Happy Farmers"     },
-  { icon: "📦",  val: "500+",    label: "Quality Products"  },
-  { icon: "✅",  val: "100%",    label: "Genuine & Trusted" },
-  { icon: "🎧",  val: "24/7",    label: "Expert Support"    },
+  { icon: "👨‍🌾", val: "25,000+", label: "Happy Farmers" },
+  { icon: "📦", val: "500+", label: "Quality Products" },
+  { icon: "✅", val: "100%", label: "Genuine & Trusted" },
+  { icon: "🎧", val: "24/7", label: "Expert Support" },
 ];
 
 export default function LoginPage() {
   const { login } = useUser();
-  const navigate  = useNavigate();
-  const location  = useLocation();
-  const from      = location.state?.from || "/";
+  const { settings } = useSettings();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/";
+
+  const storeName = settings?.storeName || "Axiom Seeds";
+  // Brand logo bundled in the frontend's /public/uploads/LOGO.png (served at the
+  // site root by Vite). Used directly so it always shows regardless of any
+  // (possibly broken) storeLogo value in settings.
+  const logoSrc = "/uploads/LOGO.png";
+  const [logoBroken, setLogoBroken] = useState(false);
 
   const [identifier, setIdentifier] = useState("");
-  const [password,   setPassword]   = useState("");
-  const [showPw,     setShowPw]     = useState(false);
-  const [remember,   setRemember]   = useState(false);
-  const [loading,    setLoading]    = useState(false);
-  const [error,      setError]      = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,20 +60,6 @@ export default function LoginPage() {
 
       {/* ── LEFT SIDEBAR ── */}
       <aside className="auth-sidebar">
-
-        {/* Brand */}
-        <div className="auth-sidebar-brand">
-          <div style={{
-            width: 44, height: 44, borderRadius: 14,
-            background: "linear-gradient(135deg,#1F7A3D,#2EA855)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 900, fontSize: 17, color: "white",
-          }}>AN</div>
-          <div className="auth-sidebar-logo-text">
-            <strong>AgroNest</strong>
-            <span>Grow Better, Harvest More.</span>
-          </div>
-        </div>
 
         {/* Stats block */}
         <div className="auth-stats">
@@ -102,13 +97,22 @@ export default function LoginPage() {
       <main className="auth-form-panel">
         <div className="auth-form-inner">
 
+          {/* Brand logo — top-left of the white panel (visible on mobile too) */}
+          <div className="auth-panel-logo">
+            {logoSrc && !logoBroken ? (
+              <img src={logoSrc} alt={storeName} onError={() => setLogoBroken(true)} />
+            ) : (
+              <span className="auth-panel-logo-text">{storeName}</span>
+            )}
+          </div>
+
           <Link to="/" className="auth-back-btn">
             <FiArrowLeft size={16} /> Back to Home
           </Link>
 
           <h1 className="auth-form-heading">Welcome Back!</h1>
           <p className="auth-form-sub">
-            Login to your AgroNest account<br />and continue your journey
+            Login to your Axiom account<br />and continue your journey
           </p>
 
           {/* Error banner */}
@@ -178,33 +182,11 @@ export default function LoginPage() {
             <button type="submit" className="auth-submit" disabled={loading}>
               {loading
                 ? <span className="auth-btn-spinner" />
-                : <>Login to AgroNest <FiArrowRight size={18} /></>
+                : <>Login to {storeName} <FiArrowRight size={18} /></>
               }
             </button>
 
           </form>
-
-          {/* Divider */}
-          <div className="auth-divider">OR</div>
-
-          {/* Social buttons */}
-          <button className="auth-social-btn" type="button">
-            <img
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google"
-              className="auth-social-logo"
-            />
-            Continue with Google
-          </button>
-
-          <button className="auth-social-btn" type="button">
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg"
-              alt="Facebook"
-              className="auth-social-logo"
-            />
-            Continue with Facebook
-          </button>
 
           {/* Switch to register */}
           <p className="auth-switch">

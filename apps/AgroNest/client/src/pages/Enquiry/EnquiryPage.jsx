@@ -6,9 +6,11 @@ import {
   FiPlus, FiTrash2, FiPackage, FiSend, FiCheckCircle,
   FiArrowRight, FiShield, FiClock, FiTruck,
 } from "react-icons/fi";
+import toast from "react-hot-toast";
 import Navbar  from "../../components/navigation/Navbar";
 import Footer  from "../../components/navigation/Footer";
 import { enquiryApi } from "../../api/enquiryApi";
+import { useSettings } from "../../context/SettingsContext";
 import "../../styles/site.css";
 import "./EnquiryPage.css";
 
@@ -31,6 +33,7 @@ const INDIAN_STATES     = ["Andhra Pradesh","Assam","Bihar","Chhattisgarh","Delh
 const EMPTY_ITEM        = { productName: "", quantity: "", unit: "kg" };
 
 export default function EnquiryPage() {
+  const { settings } = useSettings();
   const pageRef    = useRef(null);
   const successRef = useRef(null);
   const [submitted, setSubmitted] = useState(false);
@@ -94,7 +97,7 @@ export default function EnquiryPage() {
           gsap.fromTo(successRef.current, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.4)" });
       }, 50);
     } catch {
-      alert("Something went wrong. Please try again or call us directly.");
+      toast.error("Something went wrong. Please try again or call us directly.");
     } finally {
       setLoading(false);
     }
@@ -312,8 +315,7 @@ export default function EnquiryPage() {
                 <div className="enq-sidebar-icon">📞</div>
                 <div className="enq-sidebar-card-title">Prefer to call?</div>
                 <p>B2B team available Mon–Sat, 9am–6pm</p>
-                <a href="tel:18001234567" className="enq-sidebar-phone">1800-AGRONEST</a>
-                <span className="enq-sidebar-tag">Toll Free</span>
+                <a href={`tel:${settings.storePhone || "+917340008599"}`} className="enq-sidebar-phone">{settings.storePhone || "+91 7340008599"}</a>
               </div>
 
               <div className="enq-sidebar-card">
@@ -346,7 +348,7 @@ export default function EnquiryPage() {
                 <div style={{ fontSize:32, marginBottom:10 }}>💬</div>
                 <div className="enq-sidebar-card-title">WhatsApp Us</div>
                 <p style={{ fontSize:13, color:"var(--site-text-muted)", marginBottom:14 }}>Send your product list for a faster response</p>
-                <a href="https://wa.me/919876543210?text=Hi%20AgroNest%2C%20I%20need%20a%20bulk%20quote"
+                <a href={`https://wa.me/${(settings.storePhone || "917340008599").replace(/\D/g, "")}?text=Hi%20Axiom%20Seeds%2C%20I%20need%20a%20bulk%20quote`}
                   target="_blank" rel="noopener noreferrer" className="enq-whatsapp-btn">
                   💬 Chat on WhatsApp
                 </a>

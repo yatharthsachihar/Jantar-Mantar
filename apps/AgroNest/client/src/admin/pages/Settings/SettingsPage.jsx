@@ -9,6 +9,7 @@ import {
   FiDollarSign, FiTruck, FiSave, FiRefreshCw, FiToggleLeft,
   FiHome, FiSpeaker, FiBarChart2
 } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import { settingsApi } from "../../../api/settingsApi";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
@@ -213,31 +214,33 @@ export default function SettingsPage() {
         }
       />
 
-      {/* ── 1. Store Mode ─────────────────────────────────── */}
+      {/* ── 1. Store Mode (managed in Homepage Builder) ───── */}
       <div className="settings-section">
-        <Section icon={<FiToggleLeft />} title="Store Mode" subtitle="Controls how the entire website behaves for all visitors. This is the only place this can be changed.">
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Field label="Store Mode">
-              <select
-                value={form.storeMode || "hybrid"}
-                onChange={e => set("storeMode", e.target.value)}
-                style={{
-                  padding: "10px 14px", background: "var(--bg)",
-                  border: "1px solid var(--border)", borderRadius: 10,
-                  color: "var(--text)", fontSize: 14, outline: "none", fontFamily: "inherit",
-                }}
-              >
-                <option value="b2c">B2C / Retail — Prices visible, cart & checkout enabled</option>
-                <option value="b2b">B2B / Wholesale — Quote-based enquiries, prices hidden</option>
-                <option value="hybrid">Both — Cart & checkout AND bulk enquiry option shown to all visitors</option>
-              </select>
-            </Field>
-            <Toggle
-              label="Show Prices in B2B Mode"
-              checked={!!form.showPricesInB2B}
-              onChange={v => set("showPricesInB2B", v)}
-              hint="If ON, prices will still show even when store is in B2B/Wholesale mode"
-            />
+        <Section icon={<FiToggleLeft />} title="Store Mode" subtitle="How the entire website behaves for visitors.">
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 16, padding: "16px 18px", background: "var(--bg)",
+            border: "1px solid var(--border)", borderRadius: 12, flexWrap: "wrap",
+          }}>
+            <div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 6 }}>
+                Currently active mode
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>
+                {form.storeMode === "b2c" ? "B2C / Retail"
+                  : form.storeMode === "b2b" ? "B2B / Wholesale"
+                  : "Hybrid (Retail + Wholesale)"}
+                {form.showPricesInB2B && form.storeMode === "b2b" &&
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginLeft: 8 }}>· prices visible</span>}
+              </div>
+            </div>
+            <Link to="/admin/homepage-builder?tab=stats" style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "10px 16px", borderRadius: 10, background: "var(--primary)",
+              color: "white", fontWeight: 600, fontSize: 13, textDecoration: "none",
+            }}>
+              <FiHome size={15} /> Change in Homepage Builder
+            </Link>
           </div>
         </Section>
       </div>
@@ -458,6 +461,55 @@ export default function SettingsPage() {
                         let val = parseInt(e.target.value);
                         if (isNaN(val)) val = 0;
                         set("storeLogoXOffset", val);
+                      }}
+                      style={{
+                        width: 65,
+                        padding: "6px 10px",
+                        background: "var(--bg)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 8,
+                        color: "var(--text)",
+                        textAlign: "center",
+                        fontSize: 14,
+                        fontFamily: "inherit",
+                        outline: "none",
+                      }}
+                    />
+                    <span style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 500 }}>px</span>
+                  </div>
+                </div>
+              </Field>
+
+              <Field
+                label="Logo Vertical Position"
+                hint="Adjust the logo up/down position (-50px to 50px)"
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12, height: 42 }}>
+                  <input
+                    type="range"
+                    min="-50"
+                    max="50"
+                    value={form.storeLogoYOffset ?? 0}
+                    onChange={e => set("storeLogoYOffset", parseInt(e.target.value) || 0)}
+                    style={{
+                      flex: 1,
+                      cursor: "pointer",
+                      accentColor: "var(--primary)",
+                      height: 6,
+                      borderRadius: 3,
+                      outline: "none",
+                    }}
+                  />
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <input
+                      type="number"
+                      min="-50"
+                      max="50"
+                      value={form.storeLogoYOffset ?? 0}
+                      onChange={e => {
+                        let val = parseInt(e.target.value);
+                        if (isNaN(val)) val = 0;
+                        set("storeLogoYOffset", val);
                       }}
                       style={{
                         width: 65,

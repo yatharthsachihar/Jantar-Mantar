@@ -25,6 +25,7 @@ import QRCode from "react-qr-code";
 import Navbar from "../navigation/Navbar";
 import Footer from "../navigation/Footer";
 import { orderApi } from "../../api/orderApi";
+import { useSettings } from "../../context/SettingsContext";
 import styles from "./OrderSuccessModel.module.css";
 
 export default function OrderSuccessModal({ order, onClose }) {
@@ -81,7 +82,7 @@ export default function OrderSuccessModal({ order, onClose }) {
             heightLeft -= pageHeight;
         }
 
-        pdf.save(`AgroNest_Invoice_${_id?.slice(-8).toUpperCase() || "ORDER"}.pdf`);
+        pdf.save(`AxiomSeeds_Invoice_${_id?.slice(-8).toUpperCase() || "ORDER"}.pdf`);
     };
 
     return (
@@ -99,7 +100,7 @@ export default function OrderSuccessModal({ order, onClose }) {
 
                 <h2 className={styles['osm-title']}>Order Placed Successfully!</h2>
                 <p className={styles['osm-sub']}>
-                    Thank you for shopping with AgroNest. Your order
+                    Thank you for shopping with Axiom Seeds. Your order
                     <strong> #{_id?.slice(-8).toUpperCase() || "—"} </strong>
                     has been confirmed and is being processed.
                 </p>
@@ -149,6 +150,7 @@ export default function OrderSuccessModal({ order, onClose }) {
    Invoice Template — what gets rendered to PDF
 ───────────────────────────────────────── */
 function InvoiceTemplate({ order, gstAmount, orderDate }) {
+    const { settings } = useSettings();
     const {
         _id,
         items = [],
@@ -220,7 +222,7 @@ function InvoiceTemplate({ order, gstAmount, orderDate }) {
             <div className={styles['invoice-header']}>
                 <div className={styles['invoice-brand-group']}>
                     <div className={styles['invoice-logo-wrapper']}>
-                        <img src="/uploads/AgroNest_logo.png" className={styles['invoice-logo']} alt="AgroNest Logo" />
+                        <img src="/uploads/LOGO.png" className={styles['invoice-logo']} alt="Axiom Seeds Logo" />
                     </div>
                 </div>
                 <div className={styles['invoice-title-group']}>
@@ -234,8 +236,8 @@ function InvoiceTemplate({ order, gstAmount, orderDate }) {
                     <tr>
                         <td style={{ width: '65%' }}>
                             <span className={styles['section-label']}>SOLD BY / SELLER</span>
-                            <strong className={styles['seller-company-name']}>ARGONEST AGRO PRIVATE LIMITED</strong>
-                            <p className={styles['seller-address']}>123 Green Valley, Pal Road, Jodhpur, Rajasthan - 342003, India</p>
+                            <strong className={styles['seller-company-name']}>{settings.storeName || "Axiom Seeds"}</strong>
+                            <p className={styles['seller-address']}>{settings.storeAddress || "B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210"}</p>
                         </td>
                         <td style={{ width: '35%', textAlign: 'center' }}>
                             <div className={styles['qr-cell']}>
@@ -410,7 +412,7 @@ function InvoiceTemplate({ order, gstAmount, orderDate }) {
                 <tbody>
                     <tr>
                         <td style={{ width: '65%' }}>
-                            <strong className={styles['bottom-company-name']}>ARGONEST PRIVATE LIMITED</strong>
+                            <strong className={styles['bottom-company-name']}>{settings.storeName || "Axiom Seeds"}</strong>
                         </td>
                         <td style={{ width: '35%', textAlign: 'center' }}>
                             <div className={styles['signatory-cell']}>
@@ -435,7 +437,7 @@ function InvoiceTemplate({ order, gstAmount, orderDate }) {
             <div className={styles['terms-box']}>
                 <strong>Terms & Conditions:</strong>
                 <ol>
-                    <li>If you have any issues or queries in respect of your order, please contact customer chat support through AgroNest platform or drop an email at support@argonest.com.</li>
+                    <li>If you have any issues or queries in respect of your order, please contact customer chat support through {settings.storeName || "Axiom Seeds"} platform or drop an email at {settings.storeEmail || "support@axiomseeds.com"}.</li>
                     <li>In case you need to get more information about seller's status, please visit our platform settings or contact support.</li>
                     <li>Please note that we never ask for bank account details such as CVV, account number, UPI Pin, etc. across our support channels. For your safety, please do not share these details with anyone over any medium.</li>
                     <li>MRP displays on the platform is as printed on the product package. Actual MRP and amount payable may be a function of offers/discounts/gst.</li>
@@ -445,7 +447,7 @@ function InvoiceTemplate({ order, gstAmount, orderDate }) {
 
             {/* 9. Formal Footer */}
             <div className={styles['formal-footer-line']}>
-                THIS IS A COMPUTER GENERATED INVOICE AND DOES NOT REQUIRE A SIGNATURE. | Thank you for shopping with AgroNest! 🍃
+                THIS IS A COMPUTER GENERATED INVOICE AND DOES NOT REQUIRE A SIGNATURE. | Thank you for shopping with {settings.storeName || "Axiom Seeds"}! 🍃
             </div>
         </div>
     );

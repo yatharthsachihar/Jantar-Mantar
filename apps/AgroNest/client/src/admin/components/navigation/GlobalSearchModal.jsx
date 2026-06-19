@@ -6,9 +6,10 @@ import {
   FiSearch, FiChevronRight,
   FiPackage, FiGrid, FiShoppingCart, FiMessageSquare,
   FiLoader, FiZap, FiMoon, FiSun, FiGlobe, FiEye, FiEyeOff,
-  FiToggleLeft, FiToggleRight, FiRefreshCw,
+  FiToggleLeft, FiToggleRight, FiRefreshCw, FiSettings,
 } from "react-icons/fi";
 import { MENU } from "./Sidebar";
+import { FEATURE_INDEX } from "../../utils/searchIndex";
 import API from "../../../api/axios";
 import { settingsApi } from "../../../api/settingsApi";
 import { useSettings } from "../../../context/SettingsContext";
@@ -22,6 +23,7 @@ const TYPE_CONFIG = {
   category: { color: "#C68A3A", bg: "rgba(198,138,58,0.10)" },
   order: { color: "#8B5CF6", bg: "rgba(139,92,246,0.10)" },
   enquiry: { color: "#F59E0B", bg: "rgba(245,158,11,0.10)" },
+  feature: { color: "#0EA5E9", bg: "rgba(14,165,233,0.10)" },
 };
 
 function TypeBadge({ type }) {
@@ -39,7 +41,7 @@ function TypeBadge({ type }) {
 
 // ── Build COMMAND_ACTIONS inside the component so it can close
 // over live settings + theme values ─────────────────────────
-function useCommandActions(settings, theme, toggleTheme, queryClient) {
+function useCommandActions(settings, theme, toggleTheme, queryClient, navigate) {
   return useMemo(() => {
     const runSettingsUpdate = async (patch, successMsg) => {
       try {
@@ -58,33 +60,14 @@ function useCommandActions(settings, theme, toggleTheme, queryClient) {
     const aboutVisible = settings?.pageVisibility?.about ?? false;
 
     return [
-      // ── Store mode ───────────────────────────────────────
+      // ── Store mode (single editor lives in Homepage Builder) ──
       {
-        id: "mode-b2c",
-        keywords: ["store mode", "switch b2c", "retail mode", "b2c", "retail"],
-        label: "Switch to Retail (B2C)",
-        description: currentMode === "b2c" ? "Already active" : "Show prices, enable cart & checkout",
+        id: "store-mode",
+        keywords: ["store mode", "mode", "switch mode", "b2c", "retail", "b2b", "wholesale", "hybrid", "both"],
+        label: "Change Store Mode",
+        description: `Currently ${currentMode === "b2c" ? "Retail (B2C)" : currentMode === "b2b" ? "Wholesale (B2B)" : "Hybrid"} — opens Homepage Builder to change`,
         icon: <FiGlobe size={15} />,
-        disabled: currentMode === "b2c",
-        action: () => runSettingsUpdate({ storeMode: "b2c" }, "✅ Switched to Retail (B2C) mode"),
-      },
-      {
-        id: "mode-b2b",
-        keywords: ["store mode", "switch b2b", "wholesale mode", "b2b", "wholesale"],
-        label: "Switch to Wholesale (B2B)",
-        description: currentMode === "b2b" ? "Already active" : "Hide prices, show enquiry forms",
-        icon: <FiGlobe size={15} />,
-        disabled: currentMode === "b2b",
-        action: () => runSettingsUpdate({ storeMode: "b2b" }, "✅ Switched to Wholesale (B2B) mode"),
-      },
-      {
-        id: "mode-hybrid",
-        keywords: ["store mode", "switch hybrid", "hybrid mode", "hybrid", "both"],
-        label: "Switch to Hybrid Mode",
-        description: currentMode === "hybrid" ? "Already active" : "Enable both B2B and B2C features",
-        icon: <FiGlobe size={15} />,
-        disabled: currentMode === "hybrid",
-        action: () => runSettingsUpdate({ storeMode: "hybrid" }, "✅ Switched to Hybrid mode"),
+        action: () => navigate("/admin/homepage-builder?tab=stats"),
       },
 
       // ── Announcement bar ────────────────────────────────
@@ -191,7 +174,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
 
   const { settings } = useSettings();
   const { theme, toggleTheme } = useTheme();
-  const COMMAND_ACTIONS = useCommandActions(settings, theme, toggleTheme, queryClient);
+  const COMMAND_ACTIONS = useCommandActions(settings, theme, toggleTheme, queryClient, navigate);
 
   // ── Static page nav items from MENU ──────────────────────
   const allPages = useMemo(() =>
@@ -225,6 +208,27 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
       p.sub.toLowerCase().includes(q)
     );
   }, [query, allPages]);
+
+  // ── Match deep feature/settings index ─────────────────────
+  const featureMatches = useMemo(() => {
+    if (!query || query.length < 2) return [];
+    const q = query.toLowerCase();
+    return FEATURE_INDEX
+      .filter(f =>
+        f.label.toLowerCase().includes(q) ||
+        f.group.toLowerCase().includes(q) ||
+        f.keywords.some(kw => kw.includes(q) || q.includes(kw))
+      )
+      .slice(0, 8)
+      .map(f => ({
+        id: `feat:${f.path}:${f.label}`,
+        type: "feature",
+        label: f.label,
+        sub: f.hint || f.group,
+        path: f.path,
+        icon: <FiSettings size={15} />,
+      }));
+  }, [query]);
 
   // ── Fetch DB results ──────────────────────────────────────
   const fetchDB = useCallback(async (q) => {
@@ -305,9 +309,10 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
   // Order: actions → db results → pages
   const flatList = useMemo(() => [
     ...matchedActions.map(a => ({ ...a, type: "action" })),
+    ...featureMatches,
     ...dbResults,
     ...pageMatches,
-  ], [matchedActions, dbResults, pageMatches]);
+  ], [matchedActions, featureMatches, dbResults, pageMatches]);
 
   useEffect(() => setSelectedIndex(0), [query]);
 
@@ -349,6 +354,14 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
       label: "⚡ Actions",
       color: TYPE_CONFIG.action.color,
       items: matchedActions.map(a => ({ ...a, type: "action" })),
+    });
+  }
+
+  if (featureMatches.length > 0) {
+    groups.push({
+      label: "Features & Settings",
+      color: TYPE_CONFIG.feature.color,
+      items: featureMatches,
     });
   }
 

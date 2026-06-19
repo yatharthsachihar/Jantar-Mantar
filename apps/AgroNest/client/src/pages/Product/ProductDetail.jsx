@@ -6,7 +6,7 @@ import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
 import { useSettings } from "../../context/SettingsContext";
 import { useCart } from "../../context/CartContext";
-import API from "../../api/axios";
+import API, { mediaUrl } from "../../api/axios";
 import "../../styles/site.css";
 import "./ProductDetail.css";
 
@@ -35,12 +35,18 @@ export default function ProductDetail() {
           if (prod.hasVariations && prod.variations?.length > 0) {
             const allOpts = [{
               _id: prod._id || "base",
+              name: prod.name,
+              images: prod.images,
               weight: prod.weight,
               price: prod.price,
               originalPrice: prod.originalPrice,
               stock: prod.stock,
               sku: prod.sku
-            }, ...prod.variations];
+            }, ...prod.variations.map(v => ({
+              ...v,
+              name: prod.name,
+              images: prod.images
+            }))];
             setVariations(allOpts);
             setSelectedVariation(allOpts[0]);
           } else {
@@ -66,7 +72,7 @@ export default function ProductDetail() {
         productName: product.name,
       });
       setSubmitted(true);
-    } catch { alert("Failed to send enquiry. Please try again."); }
+    } catch { toast.error("Failed to send enquiry. Please try again."); }
     finally { setSubmitting(false); }
   };
 
@@ -97,11 +103,34 @@ export default function ProductDetail() {
 
   const displayProduct = selectedVariation || product;
 
-  const images = displayProduct.images?.length
+  // The base option stores the parent product _id; real variations store the
+  // embedded subdocument _id. Compare against the product id to tell them apart.
+  const isVariationSelected = product.hasVariations
+    && selectedVariation
+    && selectedVariation._id !== product._id;
+
+  // Build a variation-aware cart line: always reference the parent product so
+  // the order route can find it, and carry variationId only for real variations.
+  const buildCartItem = () => ({
+    productId: product._id,
+    variationId: isVariationSelected ? selectedVariation._id : null,
+    variationWeight: isVariationSelected ? selectedVariation.weight : (product.weight || ""),
+    name: product.name,
+    slug: product.slug,
+    category: product.category,
+    images: product.images,
+    unit: product.unit,
+    price: displayProduct.price,
+    originalPrice: displayProduct.originalPrice,
+    stock: displayProduct.stock,
+  });
+
+  const images = (displayProduct.images?.length
     ? displayProduct.images
     : product.images?.length
     ? product.images
-    : [`https://placehold.co/600x600/E8F5EC/1F7A3D?text=${encodeURIComponent(product.name.slice(0,14))}`];
+    : [`https://placehold.co/600x600/E8F5EC/1F7A3D?text=${encodeURIComponent(product.name.slice(0,14))}`]
+  ).map(mediaUrl);
 
   const discount = displayProduct.originalPrice
     ? Math.round(((displayProduct.originalPrice - displayProduct.price) / displayProduct.originalPrice) * 100)
@@ -242,13 +271,13 @@ export default function ProductDetail() {
                       </div>
                     </div>
                     <button className="pd-btn-cart" onClick={() => {
-                      addToCart(displayProduct, qty);
-                      toast.success(`${displayProduct.name} ${displayProduct.weight && product.hasVariations ? '('+displayProduct.weight+')' : ''} added to cart`);
+                      addToCart(buildCartItem(), qty);
+                      toast.success(`${product.name} ${isVariationSelected ? '('+displayProduct.weight+')' : ''} added to cart`);
                     }}>
                       <FiShoppingCart /> Add to Cart
                     </button>
                     <button className="pd-btn-buy" onClick={() => {
-                      addToCart(displayProduct, qty);
+                      addToCart(buildCartItem(), qty);
                       navigate("/checkout");
                     }}>Buy Now</button>
                   </div>

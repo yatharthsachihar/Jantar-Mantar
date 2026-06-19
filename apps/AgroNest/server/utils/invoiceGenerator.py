@@ -278,8 +278,8 @@ def generate_invoice(order: dict, output_path: str = None) -> bytes:
     # ─────────────────────────────────────────
     seller_details = [
         Paragraph("SOLD BY / SELLER", section_lbl_style),
-        Paragraph("ARGONEST AGRO PRIVATE LIMITED", company_name_style),
-        Paragraph("123 Green Valley, Pal Road, Jodhpur, Rajasthan - 342003, India", details_line_style),
+        Paragraph("Axiom Seeds", company_name_style),
+        Paragraph("B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210", details_line_style),
     ]
 
     # QR Drawing
@@ -493,7 +493,7 @@ def generate_invoice(order: dict, output_path: str = None) -> bytes:
     # 6. Corporate & Signatory Block Grid Table
     # ─────────────────────────────────────────
     corp_info = [
-        Paragraph("ARGONEST AGRO PRIVATE LIMITED", company_name_style),
+        Paragraph("Axiom Seeds", company_name_style),
     ]
 
     # Stylized signature graphic using reportlab drawing
@@ -544,7 +544,7 @@ def generate_invoice(order: dict, output_path: str = None) -> bytes:
     # ─────────────────────────────────────────
     terms_list = [
         Paragraph("Terms & Conditions:", terms_title_style),
-        Paragraph("1. If you have any issues or queries in respect of your order, please contact customer chat support through AgroNest platform or drop an email at support@argonest.com.", terms_line_style),
+        Paragraph("1. If you have any issues or queries in respect of your order, please contact customer chat support through Axiom Seeds platform or drop an email at axiomcropsciences@gmail.com.", terms_line_style),
         Paragraph("2. In case you need to get more information about seller's status, please visit our platform settings or contact support.", terms_line_style),
         Paragraph("3. Please note that we never ask for bank account details such as CVV, account number, UPI Pin, etc. across our support channels. For your safety, please do not share these details with anyone over any medium.", terms_line_style),
         Paragraph("4. MRP displayed on the platform is as printed on the product package. Actual MRP and amount payable may be a function of offers/discounts/gst.", terms_line_style),
@@ -565,7 +565,7 @@ def generate_invoice(order: dict, output_path: str = None) -> bytes:
     # 9. Bottom Footer Bar
     # ─────────────────────────────────────────
     elements.append(Spacer(1, 3 * mm))
-    elements.append(Paragraph("THIS IS A COMPUTER GENERATED INVOICE AND DOES NOT REQUIRE A SIGNATURE. &nbsp;|&nbsp; Thank you for shopping with AgroNest! 🍃", footer_bar_style))
+    elements.append(Paragraph("THIS IS A COMPUTER GENERATED INVOICE AND DOES NOT REQUIRE A SIGNATURE. &nbsp;|&nbsp; Thank you for shopping with Axiom Seeds! 🍃", footer_bar_style))
 
     # doc build using NumberedCanvas
     doc.build(elements, canvasmaker=NumberedCanvas)

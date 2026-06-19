@@ -21,10 +21,10 @@ const SUPPORT_LINKS = [
 ];
 
 const COMPANY_LINKS = [
-  { label: "About AgroNest",  to: "/about" },
-  { label: "Careers",         to: "/careers" },
-  { label: "Sustainability",   to: "/sustainability" },
-  { label: "Partner With Us", to: "/partners" },
+  { label: "About Axiom Seeds",  to: "/about" },
+  { label: "Careers",            to: "/careers" },
+  { label: "Sustainability",     to: "/sustainability" },
+  { label: "Partner With Us",    to: "/partners" },
 ];
 
 // Map each settings key → its react-icon component
@@ -40,10 +40,10 @@ export default function Footer() {
   const { settings } = useSettings();
 
   // Use live values from admin Settings; fallback to defaults so page never looks blank
-  const phone   = settings.storePhone   || "1800-AGRONEST (Toll Free)";
-  const email   = settings.storeEmail   || "support@agronest.in";
-  const address = settings.storeAddress || "Jaipur, Rajasthan — 302001";
-  const name    = settings.storeName    || "AgroNest";
+  const phone   = settings.storePhone   || "+91 7340008599";
+  const email   = settings.storeEmail   || "axiomcropsciences@gmail.com";
+  const address = settings.storeAddress || "B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210";
+  const name    = settings.storeName    || "Axiom Seeds";
   const tagline = settings.footerTagline || settings.tagline || "India's most trusted agricultural e-commerce platform — certified seeds, fertilizers, and farm supplies at your door.";
   
   const quickLinks = settings.footerQuickLinks?.length ? settings.footerQuickLinks : QUICK_LINKS;

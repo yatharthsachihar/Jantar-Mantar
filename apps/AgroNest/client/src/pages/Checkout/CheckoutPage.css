@@ -21,14 +21,14 @@
 .checkout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
 /* Input styles */
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-group label { font-size: 12px; font-weight: 700; color: var(--site-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.input-field {
+.site-form-group { display: flex; flex-direction: column; gap: 6px; }
+.site-form-group label { font-size: 12px; font-weight: 700; color: var(--site-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.checkout-input {
   padding: 11px 14px; border: 1.5px solid var(--site-border); border-radius: 10px;
   font-size: 14px; outline: none; font-family: inherit;
   background: var(--site-bg); color: var(--site-text); transition: border-color 0.2s;
 }
-.input-field:focus { border-color: var(--site-primary); }
+.checkout-input:focus { border-color: var(--site-primary); }
 .required { color: #ef4444; }
 .error-text { font-size: 12px; color: #ef4444; }
 
@@ -55,6 +55,11 @@
   padding: 24px; height: fit-content; position: sticky; top: 96px;
 }
 .checkout-summary h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+
+.invoice-brand-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--site-border); }
+.invoice-brand-logo { height: 44px; width: auto; object-fit: contain; border-radius: 8px; }
+.invoice-brand-name { font-size: 1.05rem; font-weight: 800; color: var(--site-primary); font-family: var(--site-font-display); }
+
 .checkout-summary-item { display: flex; justify-content: space-between; font-size: 13px; color: var(--site-text-muted); padding: 6px 0; gap: 8px; }
 .checkout-summary-item span:first-child { flex: 1; }
 .checkout-summary-divider { border-top: 1px solid var(--site-border); margin: 12px 0; }

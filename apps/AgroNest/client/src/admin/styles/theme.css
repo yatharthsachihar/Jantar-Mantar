@@ -23,7 +23,7 @@
     0 10px 30px rgba(0,0,0,.35);
 }
 
-[data-theme="light"]{
+.admin-layout[data-theme="light"]{
   --bg:#f4f5f7;
   --bg-secondary:#ffffff;
 

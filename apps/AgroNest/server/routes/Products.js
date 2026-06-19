@@ -1,9 +1,14 @@
 const express  = require('express');
 const mongoose = require('mongoose');
+const multer   = require('multer');
+const path     = require('path');
+const fs       = require('fs');
 const Product  = require('../models/Product');
+const Category = require('../models/Category');
 const jwt      = require('jsonwebtoken');
 const router   = express.Router();
 const sseManager = require('../utils/sse');
+const { UPLOAD_DIR } = require('../middleware/uploadMiddleware');
 
 // ── Soft auth: attach admin info if token present, don't block if missing ──
 const softAuth = (req, res, next) => {
@@ -19,6 +24,182 @@ const softAuth = (req, res, next) => {
 const { protect } = require('../middleware/authMiddleware');
 
 // ─────────────────────────────────────────────────
+// CSV bulk import (with optional product images)
+// ─────────────────────────────────────────────────
+
+// Dedicated multer that accepts the CSV file plus image files. The shared
+// media upload middleware rejects CSVs, so we configure our own here.
+const importStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+  filename: (_req, file, cb) => {
+    const ext  = path.extname(file.originalname).toLowerCase();
+    const base = path.basename(file.originalname, ext)
+      .replace(/[^a-zA-Z0-9-_]/g, '-').slice(0, 40);
+    cb(null, `${base}-${Date.now()}${ext}`);
+  },
+});
+const importUpload = multer({
+  storage: importStorage,
+  limits: { fileSize: 8 * 1024 * 1024, files: 250 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const ok = file.fieldname === 'csv'
+      ? /\.csv$/i.test(file.originalname) || /csv|excel|text\/plain/.test(file.mimetype)
+      : /\.(jpe?g|png|gif|webp|svg)$/i.test(ext);
+    if (ok) return cb(null, true);
+    const err = new Error(`Unsupported file for "${file.fieldname}": ${file.originalname}`);
+    err.status = 400;
+    cb(err, false);
+  },
+});
+
+// Minimal but correct CSV parser — handles quoted fields, embedded commas,
+// escaped double-quotes ("") and CRLF/LF line endings. Returns row objects
+// keyed by the (lowercased, trimmed) header names.
+function parseCSV(text) {
+  const rows = [];
+  let field = '', row = [], inQuotes = false;
+  text = text.replace(/^﻿/, ''); // strip BOM
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); field = '';
+      if (row.some(v => v.trim() !== '')) rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); if (row.some(v => v.trim() !== '')) rows.push(row); }
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.trim().toLowerCase());
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (r[i] ?? '').trim(); });
+    return obj;
+  });
+}
+
+const slugify = (s) => String(s).toLowerCase().trim()
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// POST /api/products/import — multipart: csv (1) + images (many)
+router.post('/import', protect, (req, res, next) => {
+  importUpload.fields([{ name: 'csv', maxCount: 1 }, { name: 'images', maxCount: 250 }])(req, res, (err) => {
+    if (err) return res.status(err.status || 400).json({ message: err.message });
+    next();
+  });
+}, async (req, res) => {
+  const csvFile = req.files?.csv?.[0];
+  const imageFiles = req.files?.images || [];
+  try {
+    if (!csvFile) return res.status(400).json({ message: 'No CSV file received (field name must be "csv")' });
+
+    const text = fs.readFileSync(csvFile.path, 'utf8');
+    const records = parseCSV(text);
+    if (!records.length) return res.status(400).json({ message: 'CSV has no data rows' });
+
+    // Index uploaded images by their original base filename (lowercased) so a
+    // row can reference "kedarnath.png" OR just match on the product name.
+    const imageByName = {};
+    for (const f of imageFiles) {
+      const base = path.basename(f.originalname, path.extname(f.originalname)).toLowerCase();
+      imageByName[f.originalname.toLowerCase()] = `/uploads/media/${f.filename}`;
+      imageByName[base] = `/uploads/media/${f.filename}`;
+    }
+
+    // Cache categories by lowercased name; create missing ones on the fly.
+    const catCache = {};
+    const ensureCategory = async (name) => {
+      const key = name.toLowerCase();
+      if (catCache[key]) return catCache[key];
+      let cat = await Category.findOne({ name: new RegExp(`^${name}$`, 'i') });
+      if (!cat) {
+        cat = await Category.create({ name, slug: slugify(name) || key });
+      }
+      catCache[key] = cat;
+      return cat;
+    };
+
+    const result = { created: 0, skipped: 0, categoriesCreated: 0, errors: [] };
+    const existingCatCount = await Category.countDocuments();
+
+    for (let i = 0; i < records.length; i++) {
+      const row = records[i];
+      const line = i + 2; // human-friendly (header = line 1)
+      try {
+        const name = row.name || row['product name'] || row.title;
+        if (!name) { result.errors.push(`Line ${line}: missing product name`); continue; }
+
+        const slug = slugify(name);
+        if (await Product.findOne({ slug })) { result.skipped++; continue; }
+
+        const catName = row.category || row.crop || row.croptype || 'Uncategorized';
+        const category = await ensureCategory(catName);
+
+        // Resolve images: explicit URLs/filenames in the row, else auto-match
+        // an uploaded file by the product name.
+        const images = [];
+        const imgRef = row.images || row.image || row.imagefile || '';
+        for (const part of imgRef.split(/[|;]/).map(s => s.trim()).filter(Boolean)) {
+          if (/^https?:\/\//i.test(part) || part.startsWith('/uploads/')) images.push(part);
+          else if (imageByName[part.toLowerCase()]) images.push(imageByName[part.toLowerCase()]);
+        }
+        if (!images.length && imageByName[name.toLowerCase()]) images.push(imageByName[name.toLowerCase()]);
+        if (!images.length && imageByName[slug]) images.push(imageByName[slug]);
+
+        const specs = [];
+        if (row.seedtype || row.type) specs.push({ key: 'Seed Type', value: row.seedtype || row.type });
+        if (row.croptype || row.crop) specs.push({ key: 'Crop', value: row.croptype || row.crop });
+
+        await Product.create({
+          name,
+          slug,
+          category: category._id,
+          description: row.description || '',
+          shortDescription: row.shortdescription || row.description || '',
+          price: Number(row.price) || 0,
+          stock: Number(row.stock) || 0,
+          unit: row.unit || 'packet',
+          brand: row.brand || '',
+          sku: row.sku || '',
+          images,
+          specifications: specs,
+          status: 'active',
+        });
+        result.created++;
+      } catch (rowErr) {
+        result.errors.push(`Line ${line}: ${rowErr.message}`);
+      }
+    }
+
+    result.categoriesCreated = (await Category.countDocuments()) - existingCatCount;
+
+    if (result.created > 0) {
+      sseManager.dispatch({
+        type: 'product', title: 'Products Imported',
+        message: `${result.created} product(s) imported via CSV.`,
+        referenceType: 'Product',
+      });
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('Product import error:', err);
+    res.status(500).json({ message: err.message });
+  } finally {
+    // Always remove the temp CSV; images are kept (they're referenced by products).
+    if (csvFile) fs.unlink(csvFile.path, () => {});
+  }
+});
+
+// ─────────────────────────────────────────────────
 // GET /api/products  — public browse + admin list
 // ─────────────────────────────────────────────────
 router.get('/', softAuth, async (req, res) => {
@@ -26,7 +207,7 @@ router.get('/', softAuth, async (req, res) => {
     const {
       mode, category, featured, bestseller, newarrival,
       trending, topselling, seasonal, search,
-      status, page, limit = 20,
+      status, lowStock, page, limit = 20,
     } = req.query;
 
     let filter = {};
@@ -57,6 +238,11 @@ router.get('/', softAuth, async (req, res) => {
 
     // Search
     if (search) filter.name = { $regex: search, $options: 'i' };
+
+    // Low stock filter (admin only — "stock at/below lowStockThreshold")
+    if (isAdmin && lowStock === 'true') {
+      filter.$expr = { $lte: ['$stock', '$lowStockThreshold'] };
+    }
 
     const pageNum   = Math.max(1, Number(page) || 1);
     const limitNum  = Math.min(100, Number(limit));
@@ -90,8 +276,54 @@ router.get('/', softAuth, async (req, res) => {
 // ─────────────────────────────────────────────────
 router.post('/bulk-delete', protect, async (req, res) => {
   try {
-    await Product.deleteMany({ _id: { $in: req.body.ids } });
-    res.json({ message: 'Products deleted' });
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'No product IDs provided' });
+    }
+
+    const validIds = ids.filter(id => mongoose.Types.ObjectId.isValid(id));
+    if (validIds.length === 0) {
+      return res.status(400).json({ message: 'No valid product IDs provided' });
+    }
+
+    const result = await Product.deleteMany({ _id: { $in: validIds } });
+
+    sseManager.dispatch({
+      type: 'product',
+      title: 'Products Deleted',
+      message: `${result.deletedCount} product${result.deletedCount === 1 ? '' : 's'} removed from the catalog.`,
+    });
+
+    res.json({ message: 'Products deleted', deletedCount: result.deletedCount });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────
+// POST /api/products/bulk-status — activate/deactivate many (admin only)
+// ─────────────────────────────────────────────────
+router.post('/bulk-status', protect, async (req, res) => {
+  try {
+    const { ids, status } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'No product IDs provided' });
+    }
+    if (!['active', 'inactive'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
+    const validIds = ids.filter(id => mongoose.Types.ObjectId.isValid(id));
+    if (validIds.length === 0) {
+      return res.status(400).json({ message: 'No valid product IDs provided' });
+    }
+
+    const result = await Product.updateMany(
+      { _id: { $in: validIds } },
+      { $set: { status } }
+    );
+
+    res.json({ message: 'Products updated', modifiedCount: result.modifiedCount });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

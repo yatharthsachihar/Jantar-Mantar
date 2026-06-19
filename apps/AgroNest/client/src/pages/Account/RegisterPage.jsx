@@ -5,6 +5,7 @@ import {
   FiEye, FiEyeOff, FiMapPin, FiArrowRight, FiAlertCircle, FiArrowLeft,
 } from "react-icons/fi";
 import { useUser } from "../../context/UserContext";
+import { useSettings } from "../../context/SettingsContext";
 import "../../styles/site.css";
 import "./AuthPage.css";
 
@@ -19,15 +20,6 @@ const INDIAN_STATES = [
   "Delhi","Jammu & Kashmir","Ladakh","Lakshadweep","Puducherry",
 ];
 
-/* ── Account types matching the design ── */
-const ACCOUNT_TYPES = [
-  { value: "farmer",             label: "Farmer",             icon: "👨‍🌾" },
-  { value: "retail_customer",    label: "Retail Customer",    icon: "🛒" },
-  { value: "dealer_distributor", label: "Dealer / Distributor", icon: "🏪" },
-  { value: "best_pricer",        label: "Best Pricer",        icon: "💰" },
-  { value: "business_buyer",     label: "Business Buyer",     icon: "🏢" },
-];
-
 const TRUST_ITEMS = [
   { icon: "🌱", label: "Premium Quality Products"  },
   { icon: "👨‍🌾", label: "Expert Guidance and Support" },
@@ -39,7 +31,7 @@ const INIT = {
   fullName:    "",
   mobile:      "",
   email:       "",
-  accountType: "farmer",
+  accountType: "retail_customer",
   state:       "",
   district:    "",
   city:        "",
@@ -51,9 +43,16 @@ const INIT = {
 
 export default function RegisterPage() {
   const { register } = useUser();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || "/";
+
+  const storeName = settings?.storeName || "Axiom Seeds";
+  // Brand logo bundled in the frontend's /public/uploads/LOGO.png. Used directly
+  // so it always renders regardless of any storeLogo value in settings.
+  const logoSrc   = "/uploads/LOGO.png";
+  const [logoBroken, setLogoBroken] = useState(false);
 
   const [form,    setForm]    = useState(INIT);
   const [showPw,  setShowPw]  = useState(false);
@@ -74,7 +73,6 @@ export default function RegisterPage() {
     if (!/^\d{10}$/.test(form.mobile)) e.mobile     = "Enter a valid 10-digit mobile number.";
     if (!/\S+@\S+\.\S+/.test(form.email)) e.email   = "Enter a valid email address.";
     if (!form.state)                  e.state       = "Please select your state.";
-    if (!form.city.trim())            e.city        = "Village / City is required.";
     if (form.password.length < 6)     e.password    = "Password must be at least 6 characters.";
     if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
     if (!form.agreeTerms)             e.agreeTerms  = "You must agree to the Terms & Conditions.";
@@ -97,7 +95,6 @@ export default function RegisterPage() {
         accountType: form.accountType,
         state:       form.state,
         district:    form.district,
-        city:        form.city.trim(),
         password:    form.password,
       });
       navigate(from, { replace: true });
@@ -114,19 +111,6 @@ export default function RegisterPage() {
       {/* ── LEFT SIDEBAR ── */}
       <aside className="auth-sidebar">
 
-        {/* Brand */}
-        <div className="auth-sidebar-brand">
-          <div style={{
-            width: 44, height: 44, borderRadius: 14,
-            background: "linear-gradient(135deg,#1F7A3D,#2EA855)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 900, fontSize: 17, color: "white",
-          }}>AN</div>
-          <div className="auth-sidebar-logo-text">
-            <strong>AgroNest</strong>
-            <span>Grow Better, Harvest More.</span>
-          </div>
-        </div>
 
         {/* Center headline */}
         <div className="auth-sidebar-headline">
@@ -154,12 +138,21 @@ export default function RegisterPage() {
       <main className="auth-form-panel">
         <div className="auth-form-inner">
 
+          {/* Brand logo — top-left of the white panel (visible on mobile too) */}
+          <div className="auth-panel-logo">
+            {logoSrc && !logoBroken ? (
+              <img src={logoSrc} alt={storeName} onError={() => setLogoBroken(true)} />
+            ) : (
+              <span className="auth-panel-logo-text">{storeName}</span>
+            )}
+          </div>
+
           <Link to="/" className="auth-back-btn">
             <FiArrowLeft size={16} /> Back to Home
           </Link>
 
           <h1 className="auth-form-heading">Create Your Account</h1>
-          <p className="auth-form-sub">Join AgroNest and start your journey</p>
+          <p className="auth-form-sub">Join {storeName} and start your journey</p>
 
           {/* Error banner */}
           {error && (
@@ -170,35 +163,6 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} noValidate>
-
-            {/* ── Account Type ── */}
-            <div className="auth-type-label">I am a</div>
-            <div className="auth-type-grid">
-              {ACCOUNT_TYPES.slice(0, 3).map(t => (
-                <button
-                  key={t.value}
-                  type="button"
-                  className={`auth-type-btn${form.accountType === t.value ? " selected" : ""}`}
-                  onClick={() => set("accountType", t.value)}
-                >
-                  <span className="auth-type-icon">{t.icon}</span>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-            <div className="auth-type-grid-2">
-              {ACCOUNT_TYPES.slice(3).map(t => (
-                <button
-                  key={t.value}
-                  type="button"
-                  className={`auth-type-btn${form.accountType === t.value ? " selected" : ""}`}
-                  onClick={() => set("accountType", t.value)}
-                >
-                  <span className="auth-type-icon">{t.icon}</span>
-                  {t.label}
-                </button>
-              ))}
-            </div>
 
             {/* ── Personal Information ── */}
             <div className="auth-section-title">Personal Information</div>
@@ -289,21 +253,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Village / City */}
-            <div className="auth-field">
-              <label className="auth-label">Village / City <span style={{ color:"#EF4444" }}>*</span></label>
-              <div className={`auth-input-wrap${errors.city ? " error" : ""}`}>
-                <span className="auth-input-icon"><FiMapPin size={17} /></span>
-                <input
-                  type="text"
-                  placeholder="Enter your village or city"
-                  value={form.city}
-                  onChange={e => set("city", e.target.value)}
-                />
-              </div>
-              {errors.city && <div className="auth-field-error">{errors.city}</div>}
-            </div>
-
             {/* ── Account Security ── */}
             <div className="auth-section-title">Account Security</div>
 
@@ -357,7 +306,7 @@ export default function RegisterPage() {
                 />
                 I agree to the <Link to="/policies/terms" target="_blank">Terms &amp; Conditions</Link>
               </label>
-              {errors.agreeTerms && <div className="auth-field-error" style={{ marginTop: -4 }}>{errors.agreeTerms}</div>}
+              {errors.agreeTerms && <div className="auth-field-error">{errors.agreeTerms}</div>}
 
               <label className="auth-terms-row">
                 <input
@@ -367,7 +316,7 @@ export default function RegisterPage() {
                 />
                 I agree to the <Link to="/policies/privacy" target="_blank">Privacy Policy</Link>
               </label>
-              {errors.agreePrivacy && <div className="auth-field-error" style={{ marginTop: -4 }}>{errors.agreePrivacy}</div>}
+              {errors.agreePrivacy && <div className="auth-field-error">{errors.agreePrivacy}</div>}
             </div>
 
             {/* Submit */}

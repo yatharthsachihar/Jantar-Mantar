@@ -8,6 +8,7 @@ import {
 } from "react-icons/fi";
 
 import { productApi } from "../../../api/productApi";
+import { mediaUrl } from "../../../api/axios";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import SearchInput from "../../components/common/SearchInput";
@@ -173,7 +174,7 @@ function InventoryRow({ product }) {
         <div className="table-product">
           <div className="table-product-img-wrapper">
             {product.images?.[0] ? (
-              <img className="table-product-img" src={product.images[0]} alt={product.name} />
+              <img className="table-product-img" src={mediaUrl(product.images[0])} alt={product.name} />
             ) : (
               <div className="table-product-img-placeholder"><FiPackage size={20} /></div>
             )}

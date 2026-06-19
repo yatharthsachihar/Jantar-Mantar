@@ -152,7 +152,7 @@
   max-width: var(--site-max-width);
   margin: 0 auto;
   padding: 0 40px;
-  height: 72px;
+  height: 74px;
   display: flex;
   align-items: center;
   gap: 32px;
@@ -179,11 +179,18 @@
   object-fit: contain;
 }
 
-/* Links */
+/* Brand logo — height-driven, auto width so the wide logo shows in full */
+.site-nav-logo-img {
+  display: block;
+  max-width: 190px;
+}
+
+/* Links — nudged right so the logo has full room beside it */
 .site-nav-links {
   display: flex;
   align-items: center;
   gap: 2px;
+  margin-left: 22px;
 }
 
 .site-nav-link {
@@ -302,7 +309,7 @@
   position: absolute;
   top: -6px;
   right: -6px;
-  background: var(--site-secondary);
+  background: var(--site-primary);
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -361,9 +368,12 @@
 }
 
 .site-nav-shop-btn    { background: var(--site-primary); color: white; }
-.site-nav-shop-btn:hover  { background: #185f30; transform: translateY(-1px); }
-.site-nav-enquiry-btn { background: var(--site-secondary); color: white; }
-.site-nav-enquiry-btn:hover { background: #a97449; transform: translateY(-1px); }
+.site-nav-shop-btn:hover  { filter: brightness(0.9); transform: translateY(-1px); }
+/* Use the primary brand colour with white text so the label is always legible.
+   The secondary/accent colour can be light (e.g. lime), which made white text
+   invisible until hover switched the background. */
+.site-nav-enquiry-btn { background: var(--site-primary); color: white; }
+.site-nav-enquiry-btn:hover { filter: brightness(0.9); transform: translateY(-1px); }
 
 /* Loading skeletons — shown briefly while settings fetch on first load,
    prevents the cart/login icons "flashing" before B2B mode is applied */
@@ -411,7 +421,7 @@
 .site-nav-mobile {
   display: none;
   position: fixed;
-  top: var(--site-nav-offset, 108px);
+  top: var(--site-nav-offset, 110px);
   left: 0;
   right: 0;
   background: var(--site-bg);
@@ -421,7 +431,7 @@
   gap: 4px;
   z-index: 998;
   box-shadow: var(--site-shadow-lg);
-  max-height: calc(100vh - var(--site-nav-offset, 108px));
+  max-height: calc(100vh - var(--site-nav-offset, 110px));
   overflow-y: auto;
 }
 
@@ -457,11 +467,18 @@
   }
 
   .site-nav-brand {
+    /* Centre the logo both ways and override the inline X/Y offsets (which are
+       meant for desktop fine-tuning) so the logo never drifts out of the
+       navbar on mobile. */
     position: absolute !important;
     left: 50% !important;
-    transform: translateX(-50%);
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
     margin: 0;
   }
+  /* On mobile, make the logo as large as the navbar allows (navbar is 72px
+     tall) without overflowing it — overrides the desktop inline height. */
+  .site-nav-logo-img { height: 62px !important; max-height: 62px; max-width: 70vw; }
 
   .site-nav-hamburger { 
     display: flex; 
@@ -480,9 +497,9 @@
 }
 
 /* ── Page content offset ── */
-/* Regular pages: padding equals announcement bar (36px) + navbar (72px) = 108px */
+/* Regular pages: padding equals announcement bar (36px) + navbar (74px) = 110px */
 .site-root {
-  padding-top: var(--site-nav-offset, 108px);
+  padding-top: var(--site-nav-offset, 110px);
 }
 
 /* Hero pages (home, about, contact) — first section is full-viewport with

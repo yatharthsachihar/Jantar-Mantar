@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -85,13 +86,28 @@ const TABS = [
   { id: "announcement", label: "Announcement",  icon: <FiTag /> },
   { id: "sections",    label: "Sections",       icon: <FiPackage /> },
   { id: "stats",       label: "Stats & Trust",  icon: <FiStar /> },
+  { id: "reviews",     label: "Reviews",        icon: <FiStar /> },
+  { id: "brands",      label: "Brands",         icon: <FiTag /> },
+  { id: "contact",     label: "Contact Blocks", icon: <FiMessageSquare /> },
   { id: "cta",         label: "CTA Banners",    icon: <FiMessageSquare /> },
 ];
 
 export default function HomepageBuilderPage() {
   const pageRef     = useRef();
   const queryClient = useQueryClient();
-  const [tab, setTab]   = useState("hero");
+  const [searchParams] = useSearchParams();
+  const validTab = (t) => ["hero", "announcement", "sections", "stats", "reviews", "brands", "contact", "cta"].includes(t);
+  const [tab, setTab]   = useState(() => {
+    const t = searchParams.get("tab");
+    return validTab(t) ? t : "hero";
+  });
+
+  // Keep the active tab in sync with the ?tab= param so deep links work even
+  // when the page is already mounted (e.g. navigating here from the palette).
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (validTab(t)) setTab(t);
+  }, [searchParams]);
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
 
@@ -122,6 +138,12 @@ export default function HomepageBuilderPage() {
 
   const set = (key, val) => setForm(p => ({ ...p, [key]: val }));
 
+  // Helpers for editing arrays-of-objects (reviews, contact offices).
+  const updateListItem = (key, idx, field, val) =>
+    set(key, (form[key] || []).map((it, i) => i === idx ? { ...it, [field]: val } : it));
+  const addListItem = (key, blank) => set(key, [...(form[key] || []), blank]);
+  const removeListItem = (key, idx) => set(key, (form[key] || []).filter((_, i) => i !== idx));
+
   if (isLoading || !form) {
     return (
       <div className="dash-section">
@@ -140,6 +162,10 @@ export default function HomepageBuilderPage() {
     fontWeight: 700, fontSize: 15, color: "var(--text)",
     marginBottom: 20, paddingBottom: 14, borderBottom: "1px solid var(--border)",
     display: "flex", alignItems: "center", gap: 10,
+  };
+  const editItemStyle = {
+    background: "var(--bg)", border: "1px solid var(--border)",
+    borderRadius: 14, padding: 18, marginBottom: 14,
   };
 
   return (
@@ -291,10 +317,11 @@ export default function HomepageBuilderPage() {
           </div>
 
           <div className="hpb-card" style={cardStyle}>
-            <div style={cardHeadStyle}><FiInfo /> Store Mode Display</div>
+            <div style={cardHeadStyle}><FiInfo /> Store Mode &nbsp;<span style={{ fontSize: 11, fontWeight: 600, color: "var(--primary)", background: "rgba(var(--primary-rgb),0.1)", padding: "2px 8px", borderRadius: 6 }}>Primary control</span></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                These control how products appear to visitors. Go to <strong>Settings</strong> to change the store mode.
+                This is the single place to switch how the whole site behaves for visitors.
+                Pick a mode and click <strong>Save</strong> to publish it across the website.
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                 {[
@@ -313,9 +340,88 @@ export default function HomepageBuilderPage() {
                   </div>
                 ))}
               </div>
+              <Toggle
+                label="Show Prices in B2B / Wholesale Mode"
+                checked={!!form.showPricesInB2B}
+                onChange={v => set("showPricesInB2B", v)}
+                hint="If ON, prices stay visible even in Wholesale mode. If OFF, products show 'Request Quote'."
+              />
             </div>
           </div>
         </>
+      )}
+
+      {/* ── Reviews Tab ──────────────────────────────────── */}
+      {tab === "reviews" && (
+        <div className="hpb-card" style={cardStyle}>
+          <div style={cardHeadStyle}><FiStar /> Customer Reviews</div>
+          <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>
+            Shown in the "Reviews" section on the homepage. Add your real customer reviews —
+            until you do, a few sample reviews are shown as a placeholder.
+          </p>
+          {(form.homeTestimonials || []).map((t, i) => (
+            <div key={i} style={editItemStyle}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 110px", gap: 12 }}>
+                <Field label="Name" value={t.name} onChange={e => updateListItem("homeTestimonials", i, "name", e.target.value)} placeholder="Ramesh Patel" />
+                <Field label="Location" value={t.location} onChange={e => updateListItem("homeTestimonials", i, "location", e.target.value)} placeholder="Gujarat" />
+                <Field label="Crop / Product" value={t.crop} onChange={e => updateListItem("homeTestimonials", i, "crop", e.target.value)} placeholder="Bajra & Mustard" />
+                <Field label="Rating (1-5)" type="number" value={t.rating} onChange={e => updateListItem("homeTestimonials", i, "rating", Math.max(1, Math.min(5, Number(e.target.value) || 5)))} />
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <Textarea label="Review" value={t.text} onChange={e => updateListItem("homeTestimonials", i, "text", e.target.value)} rows={2} placeholder="The hybrid bajra seed gave excellent germination…" />
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <Button variant="danger" size="sm" onClick={() => removeListItem("homeTestimonials", i)}>Remove Review</Button>
+              </div>
+            </div>
+          ))}
+          <Button variant="secondary" onClick={() => addListItem("homeTestimonials", { name: "", location: "", crop: "", rating: 5, text: "" })}>+ Add Review</Button>
+        </div>
+      )}
+
+      {/* ── Brands Tab ───────────────────────────────────── */}
+      {tab === "brands" && (
+        <div className="hpb-card" style={cardStyle}>
+          <div style={cardHeadStyle}><FiTag /> Brand / Partner Ticker</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Field label="Section Heading" value={form.brandsLabel} onChange={e => set("brandsLabel", e.target.value)} placeholder="Trusted Brands We Stock" hint="e.g. 'Our Certifications' or 'Available At'" />
+            <Textarea
+              label="Ticker Entries (one per line)"
+              value={(form.homeBrands || []).join("\n")}
+              onChange={e => set("homeBrands", e.target.value.split("\n"))}
+              rows={8}
+              hint="Each line becomes a scrolling chip. Leave empty to hide the whole section."
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Contact Blocks Tab ───────────────────────────── */}
+      {tab === "contact" && (
+        <div className="hpb-card" style={cardStyle}>
+          <div style={cardHeadStyle}><FiMessageSquare /> Contact Page — Office Blocks</div>
+          <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>
+            These appear under "Our Offices" on the Contact page. Add your real branch /
+            office details. Empty fields are hidden automatically.
+          </p>
+          {(form.contactOffices || []).map((o, i) => (
+            <div key={i} style={editItemStyle}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <Field label="City / Branch" value={o.city} onChange={e => updateListItem("contactOffices", i, "city", e.target.value)} placeholder="Ahmedabad (HQ)" />
+                <Field label="Phone" value={o.phone} onChange={e => updateListItem("contactOffices", i, "phone", e.target.value)} placeholder="+91 …" />
+                <Field label="Email" value={o.email} onChange={e => updateListItem("contactOffices", i, "email", e.target.value)} placeholder="info@…" />
+                <Field label="Hours" value={o.hours} onChange={e => updateListItem("contactOffices", i, "hours", e.target.value)} placeholder="Mon–Sat: 9 AM – 7 PM" />
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <Textarea label="Address" value={o.address} onChange={e => updateListItem("contactOffices", i, "address", e.target.value)} rows={2} placeholder="B-235 Sobo Centre, Gymkhana Road, Bopal, Ahmedabad – 382210" />
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <Button variant="danger" size="sm" onClick={() => removeListItem("contactOffices", i)}>Remove Office</Button>
+              </div>
+            </div>
+          ))}
+          <Button variant="secondary" onClick={() => addListItem("contactOffices", { city: "", address: "", phone: "", email: "", hours: "" })}>+ Add Office</Button>
+        </div>
       )}
 
       {/* ── CTA Tab ──────────────────────────────────────── */}

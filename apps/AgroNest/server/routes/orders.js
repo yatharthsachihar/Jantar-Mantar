@@ -14,9 +14,31 @@ const { protectUser } = require('../middleware/userAuthMiddleware');
 router.post('/', protectUser, async (req, res) => {
   try {
     const { items, couponCode, customerName, customerEmail, customerPhone, address, city, state, pincode, paymentMethod } = req.body;
-    
+
     if (!items || !items.length) {
       return res.status(400).json({ message: 'Cart is empty' });
+    }
+
+    // Validate the requested payment method against what the admin has
+    // actually enabled in Settings. The storefront already hides disabled
+    // options from the UI, but that's a client-side convenience only —
+    // without this check, anyone could still POST paymentMethod: "COD"
+    // directly to the API even after an admin turns COD off.
+    const settingsDoc = await Settings.findOne() || {};
+    const VALID_METHODS = ['COD', 'Razorpay', 'PhonePe'];
+
+    if (!paymentMethod || !VALID_METHODS.includes(paymentMethod)) {
+      return res.status(400).json({ message: 'Invalid payment method' });
+    }
+
+    const methodEnabled = {
+      COD:      settingsDoc.codActive      !== false,
+      Razorpay: settingsDoc.razorpayActive  !== false,
+      PhonePe:  settingsDoc.phonepeActive   !== false,
+    };
+
+    if (!methodEnabled[paymentMethod]) {
+      return res.status(400).json({ message: `${paymentMethod} is currently unavailable. Please choose another payment method.` });
     }
 
     let calculatedTotal = 0;
@@ -26,16 +48,31 @@ router.post('/', protectUser, async (req, res) => {
     for (const item of items) {
       const product = await Product.findById(item.product);
       if (!product) throw new Error(`Product ${item.name} not found`);
-      
-      const price = product.salePrice || product.price;
+
+      // Resolve the variation, if one was purchased. The client may send a
+      // variationId (preferred) or just a variationWeight; either lets us pull
+      // the authoritative price from the embedded variation rather than the
+      // base product. Falls back cleanly to the base price for plain products.
+      let variation = null;
+      if (product.hasVariations && (item.variationId || item.variationWeight)) {
+        variation = product.variations.find(v =>
+          (item.variationId && String(v._id) === String(item.variationId)) ||
+          (item.variationWeight && v.weight === item.variationWeight)
+        );
+        if (!variation) throw new Error(`Selected variation for ${product.name} is unavailable`);
+      }
+
+      const price = variation ? variation.price : (product.salePrice || product.price);
       calculatedTotal += price * item.quantity;
-      
+
       enrichedItems.push({
         product: product._id,
-        name: product.name,
+        name: variation ? `${product.name} (${variation.weight})` : product.name,
         price: price, // Securely set price from DB
         quantity: item.quantity,
-        image: item.image || item.images?.[0] || ""
+        image: item.image || item.images?.[0] || "",
+        variationId: variation ? variation._id : null,
+        variationWeight: variation ? variation.weight : "",
       });
     }
 
@@ -63,8 +100,7 @@ router.post('/', protectUser, async (req, res) => {
     }
 
     // 3. Apply Shipping rules
-    const settings = await Settings.findOne() || {};
-    const freeShipping = settings.freeShippingAbove || 999;
+    const freeShipping = settingsDoc.freeShippingAbove || 999;
     const subtotalAfterDiscount = calculatedTotal - discountAmount;
     const shipping = subtotalAfterDiscount >= freeShipping ? 0 : 79;
     
@@ -85,20 +121,33 @@ router.post('/', protectUser, async (req, res) => {
     for (const item of enrichedItems) {
       const p = await Product.findById(item.product);
       if (p && p.trackInventory) {
-        p.stock -= item.quantity;
+        // Deduct from the specific variation when the item was a variation,
+        // otherwise from the base product stock. This keeps variation stock
+        // accurate instead of always draining the base counter.
+        let remaining;
+        if (item.variationId) {
+          const variation = p.variations.id(item.variationId);
+          if (variation) {
+            variation.stock -= item.quantity;
+            remaining = variation.stock;
+          }
+        } else {
+          p.stock -= item.quantity;
+          remaining = p.stock;
+        }
         await p.save();
-        
+
         // Stock alert logic
-        if (p.stock === 0) {
+        if (remaining === 0) {
           sseManager.dispatch({
             type: 'inventory', title: 'Out of Stock',
-            message: `${p.name} is now out of stock.`,
+            message: `${item.name} is now out of stock.`,
             referenceId: p._id, referenceType: 'Product'
           });
-        } else if (p.stock <= p.lowStockThreshold) {
+        } else if (remaining !== undefined && remaining <= p.lowStockThreshold) {
           sseManager.dispatch({
             type: 'inventory', title: 'Low Stock Alert',
-            message: `${p.name} has dropped to ${p.stock} units.`,
+            message: `${item.name} has dropped to ${remaining} units.`,
             referenceId: p._id, referenceType: 'Product'
           });
         }
@@ -124,12 +173,12 @@ router.post('/', protectUser, async (req, res) => {
 // Protected User — get their orders
 router.get('/my-orders', protectUser, async (req, res) => {
   try {
-    const orders = await Order.find({ 
-      $or: [
-        { customerEmail: req.user.email }, 
-        { customerPhone: req.user.mobile }
-      ] 
-    }).sort({ createdAt: -1 });
+    // Match on email, and on phone only when the account actually has one —
+    // otherwise an empty mobile would match every order with a blank phone.
+    const orConditions = [{ customerEmail: req.user.email }];
+    if (req.user.mobile) orConditions.push({ customerPhone: req.user.mobile });
+
+    const orders = await Order.find({ $or: orConditions }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -141,7 +190,8 @@ router.put('/:id/cancel', protectUser, async (req, res) => {
     if (!order) return res.status(404).json({ message: 'Order not found' });
     
     // Check if the order belongs to this user
-    const isOwner = (order.customerEmail === req.user.email) || (order.customerPhone === req.user.mobile);
+    const isOwner = (order.customerEmail === req.user.email) ||
+                    (req.user.mobile && order.customerPhone === req.user.mobile);
     if (!isOwner) {
       return res.status(403).json({ message: 'Unauthorized to cancel this order' });
     }
@@ -152,7 +202,23 @@ router.put('/:id/cancel', protectUser, async (req, res) => {
 
     order.status = 'cancelled';
     await order.save();
-    
+
+    // Restore inventory that was deducted when the order was placed, mirroring
+    // the deduction logic (variation-aware). Without this, cancelled orders
+    // would permanently leak stock.
+    for (const item of order.items) {
+      const p = await Product.findById(item.product);
+      if (p && p.trackInventory) {
+        if (item.variationId) {
+          const variation = p.variations.id(item.variationId);
+          if (variation) variation.stock += item.quantity;
+        } else {
+          p.stock += item.quantity;
+        }
+        await p.save();
+      }
+    }
+
     // Dispatch cancellation notification
     sseManager.dispatch({
       type: 'order',
@@ -175,12 +241,20 @@ router.get('/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// Public — confirm payment and mark order as confirmed and paid
-router.put('/:id/pay', async (req, res) => {
+// Protected User — confirm payment and mark order as confirmed and paid
+router.put('/:id/pay', protectUser, async (req, res) => {
   try {
     const { paymentMethod, transactionId } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // Only the customer who placed the order may confirm its payment, so an
+    // attacker can't flip an arbitrary order id to "paid".
+    const isOwner = (order.customerEmail === req.user.email) ||
+                    (req.user.mobile && order.customerPhone === req.user.mobile);
+    if (!isOwner) {
+      return res.status(403).json({ message: 'Unauthorized to confirm payment for this order' });
+    }
 
     order.status = 'confirmed';
     order.paymentStatus = 'paid';
@@ -212,8 +286,17 @@ router.get('/', protect, async (req, res) => {
 // Admin — update order status
 router.put('/:id', protect, async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    
+    // Whitelist the fields an admin may change. Passing req.body verbatim would
+    // let any admin rewrite totalAmount, paymentStatus, items, etc.
+    const ALLOWED = ['status', 'paymentStatus', 'paymentMethod', 'transactionId'];
+    const updates = {};
+    for (const key of ALLOWED) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    const order = await Order.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
     if (req.body.status) {
       sseManager.dispatch({
         type: 'order',

@@ -46,6 +46,9 @@ mount(app, '/api/orders',     './routes/orders');
 mount(app, '/api/enquiries',  './routes/enquiries');
 mount(app, '/api/coupons',    './routes/couponRoutes');
 
+// Payments
+mount(app, '/api/razorpay',   './routes/razorpayRoutes');
+
 // Content
 mount(app, '/api/banners',    './routes/banners');
 mount(app, '/api/blogs',      './routes/blogRoutes');

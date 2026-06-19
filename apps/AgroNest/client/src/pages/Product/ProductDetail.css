@@ -32,24 +32,36 @@
 
 .pd-layout {
   display: grid;
-  grid-template-columns: 42% 58%;
-  gap: 50px;
+  grid-template-columns: 44% 56%;
+  gap: 56px;
   align-items: flex-start;
 }
 
-/* Images */
+/* Keep the gallery in view while scrolling the (often longer) info column. */
+.pd-images {
+  position: sticky;
+  top: 96px;
+}
+
+/* Images — identical treatment to the product card: clean white panel,
+   object-fit: contain, generous padding. The image is shown in full (never
+   cropped or zoomed) so it looks the same on the card and when opened. */
 .pd-main-img {
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  background: var(--site-green-light);
+  background: #ffffff;
+  background-image: linear-gradient(180deg, #ffffff 0%, #f6f8f5 100%);
+  border: 1px solid var(--site-border);
+  box-shadow: 0 12px 40px rgba(16, 40, 24, 0.08);
   aspect-ratio: 1;
 }
 
 .pd-main-img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 32px;
 }
 
 .pd-discount-badge {
@@ -77,14 +89,14 @@
   border-radius: 12px;
   overflow: hidden;
   border: 2px solid var(--site-border);
-  background: var(--site-green-light);
+  background: #ffffff;
   cursor: pointer;
   padding: 0;
   transition: border-color 0.2s;
 }
 
 .pd-thumb.active { border-color: var(--site-primary); }
-.pd-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pd-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
 
 /* Info */
 .pd-category {
@@ -428,6 +440,8 @@
 @media (max-width: 768px) {
   .pd-page { padding: 96px 0 60px; }
   .pd-layout { grid-template-columns: 1fr; gap: 32px; }
+  .pd-images { position: static; top: auto; }
+  .pd-main-img img { padding: 22px; }
   .pd-name { font-size: 1.5rem; }
   .pd-form-row { grid-template-columns: 1fr; }
   .pd-actions-grid { grid-template-columns: 1fr; }

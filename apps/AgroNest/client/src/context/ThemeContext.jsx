@@ -3,17 +3,22 @@ import API from "../api/axios";
 
 const ThemeContext = createContext();
 
+// Separate storage key from the admin panel ("agronest-admin-theme")
+const STORAGE_KEY = "agronest-site-theme";
+
 export function ThemeProvider({ children }) {
-  // Admin panel is dark-first. Default to dark unless user explicitly set light.
+  // Default to light for the site (admin defaults to dark independently)
   const [theme, setTheme] = useState(
-    () => localStorage.getItem("agronest-theme") || "dark"
+    () => {
+      try { return localStorage.getItem(STORAGE_KEY) || "light"; } catch { return "light"; }
+    }
   );
 
   useEffect(() => {
     const root = document.documentElement;
-    root.setAttribute("data-theme",      theme); // admin CSS: [data-theme]
-    root.setAttribute("data-site-theme", theme); // site CSS: [data-site-theme]
-    localStorage.setItem("agronest-theme", theme);
+    // ONLY touch data-site-theme — never data-theme (that's admin-only)
+    root.setAttribute("data-site-theme", theme);
+    try { localStorage.setItem(STORAGE_KEY, theme); } catch {}
   }, [theme]);
 
   /**

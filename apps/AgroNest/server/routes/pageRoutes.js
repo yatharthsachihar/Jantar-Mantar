@@ -14,7 +14,7 @@ const PAGE_SEEDS = {
         type: 'hero', order: 0, visible: true,
         data: {
           heading: 'Growing a Greener India, Together',
-          subheading: 'AgroNest was born from a simple belief — every farmer deserves access to the best seeds, tools, and knowledge without leaving their village.',
+          subheading: 'Axiom Seeds was born from a simple belief — every farmer deserves access to the best seeds, tools, and knowledge without leaving their village.',
           badge: 'Est. 2020',
           image: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&q=80',
         },
@@ -58,7 +58,7 @@ const PAGE_SEEDS = {
         type: 'cta', order: 4, visible: true,
         data: {
           heading: 'Ready to grow smarter?',
-          subheading: 'Join 50,000+ farmers who trust AgroNest for their every season.',
+          subheading: 'Join 50,000+ farmers who trust Axiom Seeds for their every season.',
           btnText: 'Shop Now',
           btnLink: '/products',
           btn2Text: 'Contact Us',
@@ -84,10 +84,10 @@ const PAGE_SEEDS = {
         type: 'contact_info', order: 1, visible: true,
         data: {
           cards: [
-            { icon: '📞', title: 'Call Us',       value: '1800-AGRONEST', note: 'Toll free · Mon–Sun 8am–8pm' },
-            { icon: '📧', title: 'Email Us',      value: 'support@agronest.in', note: 'Reply within 24 hours' },
-            { icon: '📍', title: 'Visit Us',      value: 'Plot 12, Agro Hub, Jaipur, Rajasthan 302001', note: 'Mon–Sat 9am–6pm' },
-            { icon: '💬', title: 'WhatsApp',      value: '+91 98765 43210', note: 'Quick queries & order tracking' },
+            { icon: '📞', title: 'Call Us',       value: '+91 7340008599', note: 'Mon–Sun 8am–8pm' },
+            { icon: '📧', title: 'Email Us',      value: 'axiomcropsciences@gmail.com', note: 'Reply within 24 hours' },
+            { icon: '📍', title: 'Visit Us',      value: 'B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210', note: 'Mon–Sat 9am–6pm' },
+            { icon: '💬', title: 'WhatsApp',      value: '+91 7340008599', note: 'Quick queries & order tracking' },
           ],
         },
       },

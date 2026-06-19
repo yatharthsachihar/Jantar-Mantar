@@ -19,11 +19,14 @@
   box-shadow: var(--site-shadow-lg);
 }
 
-/* Image area */
+/* Image area — clean, consistent panel so transparent product PNGs all
+   sit the same way. No hover zoom: the image stays put and looks identical
+   on the card and when opened. */
 .site-product-card-img {
   position: relative;
   aspect-ratio: 1;
-  background: var(--site-green-light);
+  background: #ffffff;
+  background-image: linear-gradient(180deg, #ffffff 0%, #f6f8f5 100%);
   overflow: hidden;
 }
 
@@ -31,12 +34,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 20px;
-  transition: transform 0.4s var(--site-ease);
-}
-
-.site-product-card:hover .site-product-card-img img {
-  transform: scale(1.07);
+  padding: 18px;
 }
 
 /* Badges */
@@ -59,7 +57,7 @@
 
 .site-product-badge.sale    { background: #EF4444; color: white; }
 .site-product-badge.new     { background: var(--site-primary); color: white; }
-.site-product-badge.organic { background: var(--site-secondary); color: white; }
+.site-product-badge.organic { background: var(--site-secondary); color: #14331e; }
 .site-product-badge.hot     { background: var(--site-accent); color: #333; }
 
 /* Wishlist btn */
@@ -220,6 +218,47 @@
 .site-product-card-atc:hover {
   background: var(--site-primary);
   color: white;
+}
+
+/* In-cart quantity stepper — replaces "Add to Cart" once the item is in the
+   cart. Uses the brand primary colour so it matches the site design. */
+.site-product-card-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--site-primary);
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(var(--site-primary-rgb), 0.28);
+}
+.site-product-card-stepper button {
+  width: 44px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s;
+  flex-shrink: 0;
+}
+.site-product-card-stepper button:hover:not(:disabled) { background: rgba(255,255,255,0.18); }
+.site-product-card-stepper button:disabled { opacity: 0.45; cursor: not-allowed; }
+.site-product-card-stepper-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .site-product-card-enquire {

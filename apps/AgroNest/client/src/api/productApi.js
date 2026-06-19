@@ -6,11 +6,9 @@ export const productApi = {
     params: { page: 1, limit: 20, ...params },
   }),
 
-  // Public — single product by slug or id
+  // Public — single product by slug or id (the product carries its embedded
+  // variations array, so there is no separate variations endpoint)
   getOne: (slugOrId) => API.get(`/products/${slugOrId}`),
-
-  // Public — get variations of a product
-  getVariations: (slugOrId) => API.get(`/products/${slugOrId}/variations`),
 
   // Admin — create
   create: (data) => API.post('/products', data),
@@ -24,6 +22,12 @@ export const productApi = {
   // Admin — delete by _id
   remove: (id) => API.delete(`/products/${id}`),
 
+  // Admin — bulk import from CSV (+ optional image files), multipart form-data
+  importCsv: (formData) => API.post('/products/import', formData),
+
   // Admin — bulk delete
   bulkDelete: (ids) => API.post('/products/bulk-delete', { ids }),
+
+  // Admin — bulk activate/deactivate
+  bulkUpdateStatus: (ids, status) => API.post('/products/bulk-status', { ids, status }),
 };

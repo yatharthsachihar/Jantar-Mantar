@@ -12,19 +12,28 @@ export function CartProvider({ children }) {
     localStorage.setItem("agronest_cart", JSON.stringify(cart));
   }, [cart]);
 
-  const addToCart = (product, qty = 1) => {
+  // Each cart line is keyed by parent product + variation, so two different
+  // variations of the same product (e.g. 250g vs 500g) are separate lines and
+  // never collide. `productId` is what gets sent to the order API; older carts
+  // saved with just `_id` still work via the fallbacks below.
+  const lineKey = (i) => i.cartKey || `${i.productId || i._id}:${i.variationId || 'base'}`;
+
+  const addToCart = (item, qty = 1) => {
+    const productId   = item.productId || item._id;
+    const variationId = item.variationId || null;
+    const cartKey     = `${productId}:${variationId || 'base'}`;
     setCart(prev => {
-      const exists = prev.find(i => i._id === product._id);
-      if (exists) return prev.map(i => i._id === product._id ? { ...i, qty: i.qty + qty } : i);
-      return [...prev, { ...product, qty }];
+      const exists = prev.find(i => lineKey(i) === cartKey);
+      if (exists) return prev.map(i => lineKey(i) === cartKey ? { ...i, qty: i.qty + qty } : i);
+      return [...prev, { ...item, productId, variationId, cartKey, qty }];
     });
   };
 
-  const removeFromCart = (id) => setCart(prev => prev.filter(i => i._id !== id));
+  const removeFromCart = (key) => setCart(prev => prev.filter(i => lineKey(i) !== key));
 
-  const updateQty = (id, qty) => {
-    if (qty < 1) return removeFromCart(id);
-    setCart(prev => prev.map(i => i._id === id ? { ...i, qty } : i));
+  const updateQty = (key, qty) => {
+    if (qty < 1) return removeFromCart(key);
+    setCart(prev => prev.map(i => lineKey(i) === key ? { ...i, qty } : i));
   };
 
   const clearCart = () => setCart([]);
@@ -33,7 +42,7 @@ export function CartProvider({ children }) {
   const totalAmount   = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQty, clearCart, totalItems, totalAmount }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQty, clearCart, totalItems, totalAmount, lineKey }}>
       {children}
     </CartContext.Provider>
   );

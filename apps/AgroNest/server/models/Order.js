@@ -14,6 +14,11 @@ const orderSchema = new mongoose.Schema({
     price: Number,
     quantity: Number,
     image: String,
+    // Variation tracking — when a product is bought as a specific variation
+    // (e.g. 500g), we record which embedded variation it was so stock can be
+    // deducted from / restored to the right place. Null for base purchases.
+    variationId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    variationWeight: { type: String, default: '' },
   }],
   totalAmount: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], default: 'pending' },

@@ -11,15 +11,6 @@ import "../../styles/site.css";
 import "../About/AboutPage.css";
 import "./CategoriesPage.css";
 
-const DEMO_CATS = [
-  { _id:"d1", name:"Seeds",       slug:"seeds",       description:"Certified hybrid & organic seeds for every crop",    productCount:12, image:"https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?w=800&q=80" },
-  { _id:"d2", name:"Fertilizers", slug:"fertilizers", description:"Macro & micro nutrient fertilizers for soil health",  productCount:8,  image:"https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800&q=80" },
-  { _id:"d3", name:"Pesticides",  slug:"pesticides",  description:"Insecticides, fungicides & crop protection",           productCount:9,  image:"https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80" },
-  { _id:"d4", name:"Irrigation",  slug:"irrigation",  description:"Drip systems, sprinklers & water management",          productCount:5,  image:"https://images.unsplash.com/photo-1563514227147-6d2af9a0c3b5?w=800&q=80" },
-  { _id:"d5", name:"Farm Tools",  slug:"farm-tools",  description:"Hand tools, power tools & machinery attachments",      productCount:7,  image:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80" },
-  { _id:"d6", name:"Organic",     slug:"organic",     description:"100% natural compost, biofertilizers & sprays",        productCount:10, image:"https://images.unsplash.com/photo-1585184394271-4c0a47dc59c9?w=800&q=80" },
-];
-
 // ── Dynamic Sections Renderer (same as AboutPage / ContactPage) ──
 function SectionStats({ data }) {
   return (
@@ -202,7 +193,7 @@ export default function CategoriesPage() {
     window.scrollTo(0, 0);
   }, [pageData]);
 
-  const categories    = apiCats.length ? apiCats : DEMO_CATS;
+  const categories    = Array.isArray(apiCats) ? apiCats : [];
   const totalProducts = categories.reduce((s, c) => s + (c.productCount || 0), 0);
 
   const sections = pageData?.sections ? pageData.sections.filter(s => s.visible !== false) : [];
@@ -264,11 +255,19 @@ export default function CategoriesPage() {
       {/* Categories Grid */}
       <section className="cats-page-grid-section">
         <div className="site-container">
-          <div className="cats-page-grid">
-            {categories.map((cat, i) => (
-              <CategoryCard key={cat._id} category={cat} index={i} />
-            ))}
-          </div>
+          {categories.length > 0 ? (
+            <div className="cats-page-grid">
+              {categories.map((cat, i) => (
+                <CategoryCard key={cat._id} category={cat} index={i} />
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign:"center", padding:"60px 20px", color:"var(--site-text-muted)" }}>
+              <div style={{ fontSize:64 }}>🌱</div>
+              <h3 style={{ color:"var(--site-text)", margin:"12px 0 6px" }}>No categories yet</h3>
+              <p>Categories will appear here once they are added.</p>
+            </div>
+          )}
         </div>
       </section>
 

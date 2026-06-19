@@ -28,7 +28,7 @@ router.put('/', async (req, res) => {
 
     // Safe field-by-field update — prevents Object.assign nuking nested subdocs
     const allowed = [
-      'storeName','tagline','storeLogo','storeLogoHeight','storeLogoXOffset','currency','gstNumber',
+      'storeName','tagline','storeLogo','storeLogoHeight','storeLogoXOffset','storeLogoYOffset','currency','gstNumber',
       'storeEmail','storePhone','storeAddress',
       'heroHeight','heroWidth','heroOverlayOpacity',
       'themePreset','siteTheme','colorPrimary','colorSecondary',
@@ -38,6 +38,10 @@ router.put('/', async (req, res) => {
       'announcementBar','announcementActive',
       'heroTitle','heroSubtitle','heroCTA1Text','heroCTA1Link','heroCTA2Text','heroCTA2Link',
       'statFarmers','statProducts','statSatisfaction',
+      'brandsLabel','homeBrands','homeTestimonials','contactOffices',
+      'aboutHeroBadge','aboutHeroTitle','aboutHeroSubtitle','aboutHeroImage',
+      'aboutStoryHeading','aboutStoryText','aboutMissionHeading','aboutMissionText',
+      'aboutWhyUs','aboutTeam','aboutMilestones',
       'b2bCtaText','b2bCtaSubtext','retailCtaText',
       'showFeaturedCategories','showFeaturedProducts','showSeasonalBanner',
       'showBestSellers','showBrandsSection','showTestimonials','showBlogSection','showNewsletter',
@@ -61,6 +65,11 @@ router.put('/', async (req, res) => {
 
     allowed.forEach(key => {
       if (req.body[key] !== undefined) settings[key] = req.body[key];
+    });
+
+    // Ensure replaced arrays-of-objects are flagged dirty so Mongoose saves them.
+    ['homeTestimonials','contactOffices','homeBrands','aboutWhyUs','aboutTeam','aboutMilestones'].forEach(key => {
+      if (req.body[key] !== undefined) settings.markModified(key);
     });
 
     // Handle nested objects explicitly

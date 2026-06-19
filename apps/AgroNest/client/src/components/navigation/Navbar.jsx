@@ -7,7 +7,7 @@ import {
 import toast from "react-hot-toast";
 import { userApi } from "../../api/userApi";
 import { useTheme } from "../../context/ThemeContext";
-import logo from "/uploads/AgroNest_logo.png";
+import logo from "/uploads/LOGO.png";
 import { useSettings } from "../../context/SettingsContext";
 import { useCart } from "../../context/CartContext";
 import { useUser } from "../../context/UserContext";
@@ -49,14 +49,16 @@ export default function Navbar() {
     return pageVisibility[key] !== false;
   }).map(l => ({ label: l.label, to: l.href || l.to, key: l.key || l.label.toLowerCase() }));
 
-  const isGhost = atTop && !mobileOpen;
-  const isHeroGhost = isGhost && HERO_PAGES.includes(location.pathname);
+  // Navbar is always solid/opaque (no transparent "ghost" state), even at the
+  // very top of hero pages — keeps it readable and consistent on every page.
+  const isGhost = false;
+  const isHeroGhost = false;
 
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty(
       '--site-nav-offset',
-      settings.announcementActive !== false ? '108px' : '72px'
+      settings.announcementActive !== false ? '110px' : '74px'
     );
   }, [settings.announcementActive]);
 
@@ -142,15 +144,18 @@ export default function Navbar() {
 
           {/* Brand */}
           <Link to="/" className="site-nav-brand"
-            style={{ position: "relative", left: `${settings.storeLogoXOffset || 0}px` }}>
-            {settings.storeLogo
-              ? <img src={settings.storeLogo} alt="AgroNest"
-                style={{ height: `${settings.storeLogoHeight || 44}px`, width: "auto", objectFit: "contain" }} />
-              : <div className="site-nav-logo-mark"
-                style={{ height: `${settings.storeLogoHeight || 52}px`, width: `${settings.storeLogoHeight || 52}px` }}>
-                <img src={logo} alt="AgroNest Logo" style={{ height: "100%", width: "100%", objectFit: "contain" }} />
-              </div>
-            }
+            style={{
+              position: "relative",
+              left: `${settings.storeLogoXOffset || 0}px`,
+              top: `${settings.storeLogoYOffset || 0}px`,
+            }}>
+            <img
+              src={settings.storeLogo || logo}
+              alt={settings.storeName || "Axiom Seeds"}
+              className="site-nav-logo-img"
+              style={{ height: `${settings.storeLogoHeight || 48}px`, width: "auto", objectFit: "contain" }}
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = logo; }}
+            />
           </Link>
 
           {/* Desktop links */}

@@ -5,12 +5,13 @@ import Footer      from "../../components/navigation/Footer";
 import { useCart }     from "../../context/CartContext";
 import { useSettings } from "../../context/SettingsContext";
 import { useUser }     from "../../context/UserContext";
+import { mediaUrl }    from "../../api/axios";
 import "../../styles/site.css";
 import "./CartPage.css";
 
 export default function CartPage() {
   const navigate  = useNavigate();
-  const { cart, updateQty, removeFromCart, totalAmount, totalItems } = useCart();
+  const { cart, updateQty, removeFromCart, totalAmount, totalItems, lineKey } = useCart();
   const { settings }  = useSettings();
   const { user }      = useUser();
 
@@ -52,22 +53,27 @@ export default function CartPage() {
               {/* ── Items ── */}
               <div className="cart-items">
                 {cart.map(item => {
+                  const key = lineKey(item);
+                  const link = `/products/${item.slug || item.productId || item._id}`;
                   const img = item.images?.[0]
-                    || `https://placehold.co/120x120/E8F5EC/1F7A3D?text=${encodeURIComponent(item.name?.slice(0, 8))}`;
+                    ? mediaUrl(item.images[0])
+                    : `https://placehold.co/120x120/E8F5EC/1F7A3D?text=${encodeURIComponent(item.name?.slice(0, 8))}`;
                   return (
-                    <div key={item._id} className="cart-item">
-                      <Link to={`/products/${item.slug || item._id}`} className="cart-item-img">
+                    <div key={key} className="cart-item">
+                      <Link to={link} className="cart-item-img">
                         <img src={img} alt={item.name} />
                       </Link>
                       <div className="cart-item-info">
                         <div className="cart-item-category">{item.category?.name}</div>
-                        <Link to={`/products/${item.slug || item._id}`} className="cart-item-name">{item.name}</Link>
-                        {item.unit && <div className="cart-item-unit">Unit: {item.unit}</div>}
+                        <Link to={link} className="cart-item-name">{item.name}</Link>
+                        {item.variationWeight
+                          ? <div className="cart-item-unit">Variant: {item.variationWeight}</div>
+                          : item.unit && <div className="cart-item-unit">Unit: {item.unit}</div>}
                       </div>
                       <div className="cart-item-qty">
-                        <button onClick={() => updateQty(item._id, item.qty - 1)}><FiMinus /></button>
+                        <button onClick={() => updateQty(key, item.qty - 1)}><FiMinus /></button>
                         <span>{item.qty}</span>
-                        <button onClick={() => updateQty(item._id, item.qty + 1)}><FiPlus /></button>
+                        <button onClick={() => updateQty(key, item.qty + 1)}><FiPlus /></button>
                       </div>
                       <div className="cart-item-price">
                         <div className="cart-item-subtotal">₹{(item.price * item.qty).toLocaleString("en-IN")}</div>
@@ -75,7 +81,7 @@ export default function CartPage() {
                           <div className="cart-item-original">₹{(item.originalPrice * item.qty).toLocaleString("en-IN")}</div>
                         )}
                       </div>
-                      <button className="cart-item-remove" onClick={() => removeFromCart(item._id)} title="Remove">
+                      <button className="cart-item-remove" onClick={() => removeFromCart(key)} title="Remove">
                         <FiTrash2 size={16} />
                       </button>
                     </div>

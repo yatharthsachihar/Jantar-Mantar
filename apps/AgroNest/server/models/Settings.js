@@ -2,11 +2,12 @@ const mongoose = require('mongoose');
 
 const settingsSchema = new mongoose.Schema({
   // Store identity
-  storeName:    { type: String, default: 'AgroNest' },
-  tagline:      { type: String, default: 'Grow Better. Harvest More.' },
+  storeName:    { type: String, default: 'Axiom Seeds' },
+  tagline:      { type: String, default: 'हमारा संकल्प, आत्मनिर्भर किसान' },
   storeLogo:    { type: String, default: '' },
   storeLogoHeight: { type: Number, default: 44 },
   storeLogoXOffset: { type: Number, default: 0 },
+  storeLogoYOffset: { type: Number, default: 0 },
   currency:     { type: String, default: 'INR' },
   gstNumber:    { type: String, default: '' },
 
@@ -20,15 +21,15 @@ const settingsSchema = new mongoose.Schema({
   heroWidth:      { type: String, default: '100%' },     // e.g. '100%', '1320px'
   heroOverlayOpacity: { type: Number, default: 0.70 },   // 0–1
 
-  // Theme
-  themePreset:    { type: String, default: 'agro-green' },
+  // Theme — Axiom Seeds brand palette (matched to logo: forest green + lime accent)
+  themePreset:    { type: String, default: 'axiom-green' },
   siteTheme:      { type: String, enum: ['light', 'dark'], default: 'light' },
-  colorPrimary:   { type: String, default: '#1F7A3D' },
-  colorSecondary: { type: String, default: '#C68A3A' },
-  colorBg:        { type: String, default: '#faf7f2' },
+  colorPrimary:   { type: String, default: '#1B7A3D' },
+  colorSecondary: { type: String, default: '#A8D95C' },
+  colorBg:        { type: String, default: '#f6f9f3' },
   colorCard:      { type: String, default: '#ffffff' },
-  colorText:      { type: String, default: '#1A1A1A' },
-  colorBorder:    { type: String, default: '#E8E0D5' },
+  colorText:      { type: String, default: '#18241c' },
+  colorBorder:    { type: String, default: '#dfe9d4' },
   fontBody:       { type: String, default: 'Inter' },
   fontDisplay:    { type: String, default: 'Playfair Display' },
   borderRadius:   { type: String, default: '16px' },
@@ -54,6 +55,67 @@ const settingsSchema = new mongoose.Schema({
   statFarmers:      { type: String, default: '50K+' },
   statProducts:     { type: String, default: '2K+' },
   statSatisfaction: { type: String, default: '98%' },
+
+  // Editable homepage social proof
+  brandsLabel:      { type: String, default: 'Trusted Brands We Stock' },
+  homeBrands:       { type: [String], default: [] },           // brand ticker entries
+  homeTestimonials: {                                            // homepage reviews
+    type: [{
+      name:     { type: String, default: '' },
+      location: { type: String, default: '' },
+      crop:     { type: String, default: '' },
+      rating:   { type: Number, default: 5 },
+      text:     { type: String, default: '' },
+    }],
+    default: [],
+  },
+
+  // ── About page (admin-editable) ──
+  aboutHeroBadge:    { type: String, default: 'Our Story' },
+  aboutHeroTitle:    { type: String, default: 'Quality Seeds for the Self-Reliant Farmer' },
+  aboutHeroSubtitle: { type: String, default: 'Research-bred and hybrid seed varieties developed to give farmers dependable germination, stronger crops, and better yields.' },
+  aboutHeroImage:    { type: String, default: '' },
+  aboutStoryHeading: { type: String, default: 'Who We Are' },
+  aboutStoryText:    { type: String, default: 'We are a seed company focused on developing and supplying high-quality research and hybrid seeds across a wide range of crops — from bajra and maize to mustard, castor, cumin and fodder varieties. Every variety is selected to perform in real field conditions.' },
+  aboutMissionHeading: { type: String, default: 'Our Mission' },
+  aboutMissionText:  { type: String, default: 'To empower farmers with seeds they can trust — improving productivity and supporting a more self-reliant farming community.' },
+  aboutWhyUs: {
+    type: [{
+      icon:  { type: String, default: '🌱' },
+      title: { type: String, default: '' },
+      desc:  { type: String, default: '' },
+    }],
+    default: [],
+  },
+  aboutTeam: {
+    type: [{
+      name:   { type: String, default: '' },
+      role:   { type: String, default: '' },
+      bio:    { type: String, default: '' },
+      avatar: { type: String, default: '' },
+    }],
+    default: [],
+  },
+  aboutMilestones: {
+    type: [{
+      year:  { type: String, default: '' },
+      title: { type: String, default: '' },
+      desc:  { type: String, default: '' },
+    }],
+    default: [],
+  },
+
+  // Editable Contact page office blocks
+  contactOffices: {
+    type: [{
+      city:    { type: String, default: '' },
+      address: { type: String, default: '' },
+      phone:   { type: String, default: '' },
+      email:   { type: String, default: '' },
+      hours:   { type: String, default: '' },
+    }],
+    default: [],
+  },
 
   // CTA button labels
   b2bCtaText:    { type: String, default: 'Request a Quote' },

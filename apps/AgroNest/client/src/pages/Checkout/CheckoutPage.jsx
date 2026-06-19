@@ -10,6 +10,8 @@ import { useSettings } from "../../context/SettingsContext";
 import { useUser }     from "../../context/UserContext";
 import { couponApi } from "../../api/couponApi";
 import { orderApi } from "../../api/orderApi";
+import { mediaUrl } from "../../api/axios";
+import logo from "/uploads/LOGO.png";
 import "../../styles/site.css";
 import "./CheckoutPage.css";
 
@@ -17,7 +19,7 @@ const INDIAN_STATES = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chh
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { cart, totalAmount, clearCart } = useCart();
+  const { cart, totalAmount, clearCart, lineKey } = useCart();
   const { settings } = useSettings();
   const { user, loading: userLoading } = useUser();
   const [loading, setLoading] = useState(false);
@@ -108,7 +110,9 @@ export default function CheckoutPage() {
   }
 
   const freeShipping = settings?.freeShippingAbove || 999;
-  const shipping = totalAmount >= freeShipping ? 0 : 79;
+  // Free-shipping eligibility is judged on the post-discount subtotal, matching
+  // the server so the total shown here equals what the server actually charges.
+  const shipping = (totalAmount - discountAmount) >= freeShipping ? 0 : 79;
   const grandTotal = totalAmount - discountAmount + shipping;
 
   const handleApplyCoupon = async (coupon) => {
@@ -146,7 +150,15 @@ export default function CheckoutPage() {
     try {
       const payload = {
         ...data,
-        items: cart.map(i => ({ product: i._id, name: i.name, price: i.price, quantity: i.qty, image: i.images?.[0] || "" })),
+        items: cart.map(i => ({
+          product: i.productId || i._id,
+          variationId: i.variationId || null,
+          variationWeight: i.variationWeight || "",
+          name: i.name,
+          price: i.price,
+          quantity: i.qty,
+          image: i.images?.[0] || "",
+        })),
         totalAmount: grandTotal,
         status: "pending",
         paymentStatus: "pending",
@@ -180,7 +192,7 @@ export default function CheckoutPage() {
           <div className="checkout-success">
             <div className="checkout-success-icon"><FiCheck size={40} /></div>
             <h2>Order Placed Successfully!</h2>
-            <p>Thank you for shopping with AgroNest. Your order <strong>#{orderId?.slice(-8).toUpperCase()}</strong> has been placed.</p>
+            <p>Thank you for shopping with {settings.storeName || "Axiom Seeds"}. Your order <strong>#{orderId?.slice(-8).toUpperCase()}</strong> has been placed.</p>
             <p style={{ color:"var(--site-text-muted)", fontSize:14 }}>You'll receive a confirmation email shortly. Our team will process your order within 24 hours.</p>
             <div style={{ display:"flex", gap:12, justifyContent:"center", marginTop:24 }}>
               <button className="site-btn-primary" onClick={() => navigate("/products")}>Continue Shopping</button>
@@ -217,19 +229,19 @@ export default function CheckoutPage() {
                   <div className="checkout-card">
                     <h3>Contact Information</h3>
                     <div className="checkout-grid">
-                      <div className="form-group">
+                      <div className="site-form-group">
                         <label>Full Name <span className="required">*</span></label>
-                        <input className="input-field" {...register("customerName", { required: "Required" })} placeholder="Ramesh Patel" />
+                        <input className="checkout-input" {...register("customerName", { required: "Required" })} placeholder="Ramesh Patel" />
                         {errors.customerName && <span className="error-text">{errors.customerName.message}</span>}
                       </div>
-                      <div className="form-group">
+                      <div className="site-form-group">
                         <label>Phone <span className="required">*</span></label>
-                        <input className="input-field" {...register("customerPhone", { required: "Required" })} placeholder="+91 98765 43210" />
+                        <input className="checkout-input" {...register("customerPhone", { required: "Required" })} placeholder="+91 98765 43210" />
                         {errors.customerPhone && <span className="error-text">{errors.customerPhone.message}</span>}
                       </div>
-                      <div className="form-group" style={{ gridColumn:"1/-1" }}>
+                      <div className="site-form-group" style={{ gridColumn:"1/-1" }}>
                         <label>Email <span className="required">*</span></label>
-                        <input className="input-field" type="email" {...register("customerEmail", { required: "Required" })} placeholder="you@example.com" />
+                        <input className="checkout-input" type="email" {...register("customerEmail", { required: "Required" })} placeholder="you@example.com" />
                         {errors.customerEmail && <span className="error-text">{errors.customerEmail.message}</span>}
                       </div>
                     </div>
@@ -238,27 +250,27 @@ export default function CheckoutPage() {
                   <div className="checkout-card">
                     <h3>Delivery Address</h3>
                     <div className="checkout-grid">
-                      <div className="form-group" style={{ gridColumn:"1/-1" }}>
+                      <div className="site-form-group" style={{ gridColumn:"1/-1" }}>
                         <label>Street Address <span className="required">*</span></label>
-                        <input className="input-field" {...register("address", { required: "Required" })} placeholder="House/Flat no., Street, Village" />
+                        <input className="checkout-input" {...register("address", { required: "Required" })} placeholder="House/Flat no., Street, Village" />
                         {errors.address && <span className="error-text">{errors.address.message}</span>}
                       </div>
-                      <div className="form-group">
+                      <div className="site-form-group">
                         <label>City <span className="required">*</span></label>
-                        <input className="input-field" {...register("city", { required: "Required" })} placeholder="Jaipur" />
+                        <input className="checkout-input" {...register("city", { required: "Required" })} placeholder="Jaipur" />
                         {errors.city && <span className="error-text">{errors.city.message}</span>}
                       </div>
-                      <div className="form-group">
+                      <div className="site-form-group">
                         <label>State <span className="required">*</span></label>
-                        <select className="input-field" {...register("state", { required: "Required" })}>
+                        <select className="checkout-input" {...register("state", { required: "Required" })}>
                           <option value="">Select State</option>
                           {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                         {errors.state && <span className="error-text">{errors.state.message}</span>}
                       </div>
-                      <div className="form-group">
+                      <div className="site-form-group">
                         <label>Pincode <span className="required">*</span></label>
-                        <input className="input-field" {...register("pincode", { required: "Required", pattern: { value:/^\d{6}$/, message:"6 digit pincode" } })} placeholder="302001" />
+                        <input className="checkout-input" {...register("pincode", { required: "Required", pattern: { value:/^\d{6}$/, message:"6 digit pincode" } })} placeholder="302001" />
                         {errors.pincode && <span className="error-text">{errors.pincode.message}</span>}
                       </div>
                     </div>
@@ -288,8 +300,8 @@ export default function CheckoutPage() {
                   <div className="checkout-card">
                     <h3>Order Review</h3>
                     {cart.map(item => (
-                      <div key={item._id} className="checkout-review-item">
-                        <span className="checkout-review-name">{item.name}</span>
+                      <div key={lineKey(item)} className="checkout-review-item">
+                        <span className="checkout-review-name">{item.name}{item.variationWeight ? ` (${item.variationWeight})` : ""}</span>
                         <span>×{item.qty}</span>
                         <span className="checkout-review-price">₹{(item.price * item.qty).toLocaleString("en-IN")}</span>
                       </div>
@@ -316,10 +328,19 @@ export default function CheckoutPage() {
 
             {/* Order Summary Sidebar */}
             <div className="checkout-summary">
+              <div className="invoice-brand-header">
+                <img
+                  src={settings.storeLogo ? mediaUrl(settings.storeLogo) : logo}
+                  alt={settings.storeName || "Axiom Seeds"}
+                  className="invoice-brand-logo"
+                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = logo; }}
+                />
+                <span className="invoice-brand-name">{settings.storeName || "Axiom Seeds"}</span>
+              </div>
               <h3>Order Summary</h3>
               {cart.map(item => (
-                <div key={item._id} className="checkout-summary-item">
-                  <span>{item.name.slice(0,28)}{item.name.length>28?"…":""}</span>
+                <div key={lineKey(item)} className="checkout-summary-item">
+                  <span>{item.name.slice(0,28)}{item.name.length>28?"…":""}{item.variationWeight ? ` (${item.variationWeight})` : ""}</span>
                   <span>₹{(item.price * item.qty).toLocaleString("en-IN")}</span>
                 </div>
               ))}

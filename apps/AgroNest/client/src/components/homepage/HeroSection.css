@@ -23,13 +23,13 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  animation: heroZoom 10s ease-in-out infinite alternate;
+  animation: heroZoom 20s ease-in-out infinite alternate;
   z-index: 0;
 }
 
 @keyframes heroZoom {
   from { transform: scale(1); }
-  to   { transform: scale(1.05); }
+  to   { transform: scale(1.035); }
 }
 
 .hero-bg-overlay {
@@ -38,9 +38,9 @@
   z-index: 1;
   background: linear-gradient(
     105deg,
-    rgba(5, 20, 10, 0.88) 0%,
-    rgba(10, 30, 15, 0.72) 45%,
-    rgba(5, 15, 8, 0.38) 100%
+    rgba(5, 20, 10, 0.80) 0%,
+    rgba(10, 30, 15, 0.58) 45%,
+    rgba(5, 15, 8, 0.22) 100%
   );
   opacity: var(--hero-overlay-opacity, 1);
 }

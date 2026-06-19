@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
@@ -533,21 +534,21 @@ export default function WebsiteBuilderPage() {
           </Panel>
 
           <Panel icon={<FiGlobe />} title="Site Mode">
-            <FieldRow label="Default Store Mode" hint="Affects all new visitors">
-              <select className="wb-input wb-select"
-                value={form.storeMode}
-                onChange={e => set("storeMode", e.target.value)}>
-                <option value="hybrid">Hybrid (both B2B + B2C)</option>
-                <option value="b2c">Retail Only (B2C)</option>
-                <option value="b2b">Wholesale Only (B2B)</option>
-              </select>
-            </FieldRow>
-            <FieldRow label="Show Prices in B2B Mode" hint="If off, prices show as 'Request Quote'">
-              <WbToggle
-                checked={form.showPricesInB2B}
-                onChange={v => set("showPricesInB2B", v)}
-                label=""
-              />
+            <FieldRow label="Current Store Mode" hint="Store mode is managed in one place: the Homepage Builder">
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ fontWeight: 700, color: "var(--text)" }}>
+                  {form.storeMode === "b2c" ? "Retail Only (B2C)"
+                    : form.storeMode === "b2b" ? "Wholesale Only (B2B)"
+                    : "Hybrid (B2B + B2C)"}
+                </span>
+                <Link to="/admin/homepage-builder?tab=stats" style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "8px 14px", borderRadius: 9, background: "var(--primary)",
+                  color: "white", fontWeight: 600, fontSize: 12.5, textDecoration: "none",
+                }}>
+                  <FiHome size={14} /> Change in Homepage Builder
+                </Link>
+              </div>
             </FieldRow>
           </Panel>
 

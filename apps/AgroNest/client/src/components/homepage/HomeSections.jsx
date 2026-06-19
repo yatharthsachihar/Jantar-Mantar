@@ -1,7 +1,8 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiArrowRight } from "react-icons/fi";
 import { useQuery } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import CategoryCard from "../category/CategoryCard";
 import ProductCard  from "../product/ProductCard";
 import { useSettings } from "../../context/SettingsContext";
@@ -18,15 +19,6 @@ const fetchList = (url) => API.get(url).then(r => {
 /* ─────────────────────────────────────────────
    FEATURED CATEGORIES
 ───────────────────────────────────────────── */
-const DEMO_CATS = [
-  { _id:"d1", name:"Seeds",       slug:"seeds",       description:"Hybrid & organic seeds",   productCount:12, image:"https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?w=600&q=80" },
-  { _id:"d2", name:"Fertilizers", slug:"fertilizers", description:"Macro & micro nutrients",  productCount:8,  image:"https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600&q=80" },
-  { _id:"d3", name:"Pesticides",  slug:"pesticides",  description:"Crop protection range",    productCount:9,  image:"https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80" },
-  { _id:"d4", name:"Irrigation",  slug:"irrigation",  description:"Drip & sprinkler systems", productCount:5,  image:"https://images.unsplash.com/photo-1563514227147-6d2af9a0c3b5?w=600&q=80" },
-  { _id:"d5", name:"Farm Tools",  slug:"farm-tools",  description:"Hand & power tools",       productCount:7,  image:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80" },
-  { _id:"d6", name:"Organic",     slug:"organic",     description:"100% natural products",    productCount:10, image:"https://images.unsplash.com/photo-1585184394271-4c0a47dc59c9?w=600&q=80" },
-];
-
 export function FeaturedCategories() {
   const { data: cats = [], isLoading } = useQuery({
     queryKey: ["categories-home"],
@@ -115,17 +107,6 @@ export function TrustSection() {
 /* ─────────────────────────────────────────────
    PRODUCTS — reusable
 ───────────────────────────────────────────── */
-const DEMO_PRODUCTS = [
-  { _id:"p1", name:"Hybrid Tomato Seeds",    slug:"hybrid-tomato-seeds",  category:{name:"Seeds"},       price:299, originalPrice:399, stock:500, unit:"packet", isFeatured:true,  isBestSeller:true,  images:["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80"] },
-  { _id:"p2", name:"NPK 19:19:19 (5kg)",     slug:"npk-19-19-19-5kg",     category:{name:"Fertilizers"}, price:649, originalPrice:850, stock:800, unit:"bag",    isFeatured:true,  isTrending:true,    images:["https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=400&q=80"] },
-  { _id:"p3", name:"Drip Irrigation Kit",    slug:"drip-irrigation-kit",  category:{name:"Irrigation"},  price:1899,originalPrice:2499,stock:120, unit:"kit",    isTopProduct:true,isFeatured:true,    images:["https://images.unsplash.com/photo-1563514227147-6d2af9a0c3b5?w=400&q=80"] },
-  { _id:"p4", name:"Organic Neem Pesticide", slug:"organic-neem-pesticide",category:{name:"Pesticides"},  price:349, originalPrice:450, stock:600, unit:"bottle", isBestSeller:true,isOrganic:true,     images:["https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80"] },
-  { _id:"p5", name:"Paddy Seeds PR-126",     slug:"paddy-seeds-pr-126",   category:{name:"Seeds"},       price:199, stock:1200,unit:"packet",isTrending:true, isNewArrival:true,                        images:["https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&q=80"] },
-  { _id:"p6", name:"Vermicompost 10kg",      slug:"vermicompost-10kg",    category:{name:"Organic"},     price:399, originalPrice:499, stock:400, unit:"bag",    isFeatured:true,  isOrganic:true,      images:["https://images.unsplash.com/photo-1585184394271-4c0a47dc59c9?w=400&q=80"] },
-  { _id:"p7", name:"Forged Steel Spade",     slug:"forged-steel-spade",   category:{name:"Farm Tools"},  price:849, originalPrice:1099,stock:200, unit:"piece",  isTopProduct:true,                     images:["https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=80"] },
-  { _id:"p8", name:"DAP Fertilizer (50kg)",  slug:"dap-fertilizer-50kg",  category:{name:"Fertilizers"}, price:1400,stock:900, unit:"bag",    isBestSeller:true,isFeatured:true,                        images:["https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=400&q=80"] },
-];
-
 function ProductSection({ queryKey, flag, label, title, viewAllLink, altBg }) {
   const { activeMode } = useSettings();
   const { data: products = [] } = useQuery({
@@ -134,8 +115,9 @@ function ProductSection({ queryKey, flag, label, title, viewAllLink, altBg }) {
     staleTime: 1000 * 60 * 3,
   });
 
-  // Use demo data if API not connected yet
-  const items = (products.length ? products : DEMO_PRODUCTS.filter(p => p[flag === 'featured' ? 'isFeatured' : flag === 'bestseller' ? 'isBestSeller' : flag === 'newarrival' ? 'isNewArrival' : 'isTrending'])).slice(0, 8);
+  // Only render real products. When the store has none flagged for this
+  // section, hide the whole section rather than showing placeholder items.
+  const items = products.slice(0, 8);
   if (!items.length) return null;
 
   return (
@@ -207,13 +189,22 @@ export function SeasonalProducts() {
 const BRANDS = ["Syngenta","Bayer","Corteva","UPL","Mahindra Agri","IFFCO","Coromandel","Godrej Agrovet","Rallis India","PI Industries"];
 
 export function BrandsSection() {
+  const { settings } = useSettings();
+  // Admin-managed brand ticker (Homepage Builder › Brands). The list is
+  // duplicated in markup so the marquee scrolls seamlessly.
+  // Only the admin-managed list is shown. Empty → section hidden (no fake
+  // placeholder brands). Add entries in Homepage Builder › Brands.
+  const brands = (settings?.homeBrands || []).map(b => (b || "").trim()).filter(Boolean);
+  const label = settings?.brandsLabel || "Trusted Brands We Stock";
+  if (!brands.length) return null;
+
   return (
     <section className="brands-section">
       <div className="site-container">
-        <div className="brands-label">Trusted Brands We Stock</div>
+        <div className="brands-label">{label}</div>
         <div className="brands-ticker">
           <div className="brands-track">
-            {[...BRANDS, ...BRANDS].map((b, i) => (
+            {[...brands, ...brands].map((b, i) => (
               <div key={i} className="brand-chip">{b}</div>
             ))}
           </div>
@@ -234,24 +225,29 @@ const TESTIMONIALS = [
 ];
 
 export function Testimonials() {
+  const { settings } = useSettings();
+  // Only admin-managed reviews are shown — no fake placeholder reviews.
+  // Add real ones in Homepage Builder › Reviews.
+  const testimonials = settings?.homeTestimonials || [];
+  if (!testimonials.length) return null;
+
   return (
     <section className="home-section alt-bg">
       <div className="site-container">
         <div className="home-section-head center">
           <div className="site-section-label">Reviews</div>
-          <h2 className="site-section-heading">Farmers Love AgroNest</h2>
-          <p className="site-section-sub">50,000+ farmers across India trust us every season.</p>
+          <h2 className="site-section-heading">What Our Customers Say</h2>
         </div>
         <div className="testimonials-grid">
-          {TESTIMONIALS.map((t, i) => (
+          {testimonials.map((t, i) => (
             <div key={i} className="testimonial-card">
-              <div className="testimonial-stars">{"⭐".repeat(t.rating)}</div>
+              <div className="testimonial-stars">{"⭐".repeat(Math.max(0, Math.min(5, t.rating || 5)))}</div>
               <p className="testimonial-text">"{t.text}"</p>
               <div className="testimonial-author">
-                <div className="testimonial-avatar">{t.name[0]}</div>
+                <div className="testimonial-avatar">{(t.name || "?")[0]}</div>
                 <div>
                   <div className="testimonial-name">{t.name}</div>
-                  <div className="testimonial-meta">{t.location} · {t.crop}</div>
+                  <div className="testimonial-meta">{[t.location, t.crop].filter(Boolean).join(" · ")}</div>
                 </div>
               </div>
             </div>
@@ -265,19 +261,16 @@ export function Testimonials() {
 /* ─────────────────────────────────────────────
    BLOG
 ───────────────────────────────────────────── */
-const DEMO_BLOGS = [
-  { _id:"b1", title:"How to Choose the Right Fertilizer for Your Kharif Crop",         category:"Fertilizers",  slug:"choose-fertilizer-kharif", featuredImage:"https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600&q=80" },
-  { _id:"b2", title:"Drip Irrigation: Why Every Small Farmer Should Invest in 2026",   category:"Irrigation",   slug:"drip-irrigation-2026",     featuredImage:"https://images.unsplash.com/photo-1563514227147-6d2af9a0c3b5?w=600&q=80" },
-  { _id:"b3", title:"Understanding Integrated Pest Management (IPM) for Indian Farms", category:"Pest Control", slug:"ipm-indian-farms",          featuredImage:"https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80" },
-];
-
 export function BlogSection() {
   const { data: apiBlogs = [] } = useQuery({
     queryKey: ["blogs-home"],
     queryFn:  () => API.get("/blogs?status=published").then(r => r.data).catch(() => []),
     staleTime: 1000 * 60 * 10,
   });
-  const blogs = (apiBlogs.length ? apiBlogs : DEMO_BLOGS).slice(0, 3);
+  const blogs = (Array.isArray(apiBlogs) ? apiBlogs : []).slice(0, 3);
+
+  // No published articles yet — hide the section instead of showing samples.
+  if (!blogs.length) return null;
 
   return (
     <section className="home-section">
@@ -320,6 +313,32 @@ export function BlogSection() {
    NEWSLETTER
 ───────────────────────────────────────────── */
 export function Newsletter() {
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Wire the newsletter to the enquiries collection (type: 'newsletter') so
+  // signups actually reach the admin instead of a fake alert.
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    const value = email.trim();
+    if (!value) return;
+    setSubmitting(true);
+    try {
+      await API.post("/enquiries", {
+        type: "newsletter",
+        name: "Newsletter Subscriber",
+        email: value,
+        message: "Newsletter subscription request",
+      });
+      toast.success("Subscribed! We'll keep you posted.");
+      setEmail("");
+    } catch {
+      toast.error("Couldn't subscribe right now. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <section className="newsletter-section">
       <div className="site-container">
@@ -327,12 +346,14 @@ export function Newsletter() {
           <div className="newsletter-icon">📬</div>
           <h2 className="newsletter-heading">Get Seasonal Crop Advice & Exclusive Deals</h2>
           <p className="newsletter-sub">
-            Join 80,000 farmers who receive weekly tips, new arrivals,
-            and early-bird offers in their inbox.
+            Get weekly tips, new arrivals, and early-bird offers in your inbox.
           </p>
-          <form className="newsletter-form" onSubmit={e => { e.preventDefault(); alert("Subscribed! Thank you."); }}>
-            <input type="email" placeholder="Enter your email address" className="newsletter-input" required />
-            <button type="submit" className="site-btn-primary">Subscribe Free</button>
+          <form className="newsletter-form" onSubmit={handleSubscribe}>
+            <input type="email" placeholder="Enter your email address" className="newsletter-input"
+              value={email} onChange={e => setEmail(e.target.value)} required />
+            <button type="submit" className="site-btn-primary" disabled={submitting}>
+              {submitting ? "Subscribing…" : "Subscribe Free"}
+            </button>
           </form>
           <div className="newsletter-note">No spam. Unsubscribe any time.</div>
         </div>

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { FiCalendar, FiUser, FiClock, FiTag, FiArrowLeft, FiArrowRight, FiShare2 } from "react-icons/fi";
+import toast from "react-hot-toast";
 import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
 import { blogApi } from "../../api/blogApi";
@@ -49,7 +50,7 @@ export default function BlogPostPage() {
       navigator.share({ title: post?.title, url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+      toast.success("Link copied to clipboard!");
     }
   };
 

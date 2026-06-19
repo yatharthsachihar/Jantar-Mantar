@@ -242,7 +242,7 @@ export default function FAQPage() {
                   <div className="faq-form-head-icon">🌾</div>
                   <h2 className="faq-form-title">Ask Our Experts</h2>
                   <p className="faq-form-sub">
-                    Couldn't find your answer above? Fill in the form below and an AgroNest agronomist will respond within 48 hours.
+                    Couldn't find your answer above? Fill in the form below and an Axiom Seeds agronomist will respond within 48 hours.
                   </p>
                 </div>
 

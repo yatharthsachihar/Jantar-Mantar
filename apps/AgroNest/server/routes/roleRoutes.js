@@ -1,5 +1,5 @@
 const express  = require('express');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, clearPermissionMatrixCache } = require('../middleware/authMiddleware');
 const { MODULES } = require('../utils/permissionDefaults');
 const Settings = require('../models/Settings');
 const router = express.Router();
@@ -33,6 +33,7 @@ router.put('/matrix', protect, async (req, res) => {
     await Settings.findOneAndUpdate(
       {}, { permissionMatrix: matrix }, { upsert: true, new: true }
     );
+    clearPermissionMatrixCache();
     res.json(matrix);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -46,6 +47,7 @@ router.post('/reset', protect, async (req, res) => {
     await Settings.findOneAndUpdate(
       {}, { permissionMatrix: MODULES }, { upsert: true, new: true }
     );
+    clearPermissionMatrixCache();
     res.json(MODULES);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });

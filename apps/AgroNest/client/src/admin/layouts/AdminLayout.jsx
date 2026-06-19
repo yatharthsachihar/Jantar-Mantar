@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import Sidebar from "../components/navigation/Sidebar";
-import Topbar  from "../components/navigation/Topbar";
+import Topbar from "../components/navigation/Topbar";
+import { useAdminTheme } from "../store/themeStore";
 
 export default function AdminLayout() {
   const { loading, token, admin, init, refreshMatrix } = useAuthStore();
+  const { theme } = useAdminTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,17 +42,17 @@ export default function AdminLayout() {
   // to optimistically render yet (no token at all, brand-new visit).
   if (loading && !hasStoredToken) return (
     <div style={{
-      display:"flex", alignItems:"center", justifyContent:"center",
-      height:"100vh", background:"var(--bg)",
-      flexDirection:"column", gap:16,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      height: "100vh", background: "var(--bg)",
+      flexDirection: "column", gap: 16,
     }}>
       <div style={{
-        width:48, height:48, borderRadius:"50%",
-        border:"3px solid var(--border)",
-        borderTop:"3px solid var(--primary)",
-        animation:"spin 0.8s linear infinite",
+        width: 48, height: 48, borderRadius: "50%",
+        border: "3px solid var(--border)",
+        borderTop: "3px solid var(--primary)",
+        animation: "spin 0.8s linear infinite",
       }} />
-      <span style={{ fontSize:15, color:"var(--text-muted)" }}>Loading AgroNest…</span>
+      <span style={{ fontSize: 15, color: "var(--text-muted)" }}>Loading Axiom Seeds…</span>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
@@ -60,7 +62,7 @@ export default function AdminLayout() {
   if (!loading && !token && !hasStoredToken) return null;
 
   return (
-    <div className={`admin-layout role-${admin?.role || 'viewer'}`}>
+    <div className={`admin-layout role-${admin?.role || 'viewer'}`} data-theme={theme}>
       <Sidebar />
       <div className="admin-main">
 

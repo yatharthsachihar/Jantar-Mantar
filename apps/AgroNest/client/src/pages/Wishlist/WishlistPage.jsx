@@ -6,6 +6,7 @@ import Footer from "../../components/navigation/Footer";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import { useSettings } from "../../context/SettingsContext";
+import { mediaUrl } from "../../api/axios";
 import "../../styles/site.css";
 
 export default function WishlistPage() {
@@ -47,7 +48,7 @@ export default function WishlistPage() {
                 
                 <Link to={`/products/${item.slug}`} style={{ display: "block", aspectRatio: "1", background: "var(--site-bg-alt)", position: "relative" }}>
                   <img 
-                    src={item.image || item.images?.[0] || "https://placehold.co/400?text=No+Image"} 
+                    src={mediaUrl(item.image || item.images?.[0]) || "https://placehold.co/400?text=No+Image"}
                     alt={item.name} 
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />

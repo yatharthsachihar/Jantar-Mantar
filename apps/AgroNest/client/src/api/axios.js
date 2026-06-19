@@ -1,6 +1,22 @@
 import axios from 'axios';
 
-const API = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api' });
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+// Origin that serves uploaded files (the API host without the trailing /api).
+// Empty string when the API is same-origin (relative '/api' base).
+export const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+
+// Resolve a stored image path to a loadable URL. Full http(s) URLs and data
+// URIs pass through untouched; server-relative paths (e.g. /uploads/media/x.png)
+// are prefixed with the API origin so they load no matter where the frontend
+// is hosted relative to the API.
+export const mediaUrl = (u) => {
+  if (!u) return u;
+  if (/^(https?:)?\/\//i.test(u) || u.startsWith('data:')) return u;
+  return `${API_ORIGIN}${u.startsWith('/') ? '' : '/'}${u}`;
+};
+
+const API = axios.create({ baseURL: API_BASE });
 
 API.interceptors.request.use((config) => {
   const adminToken = localStorage.getItem('agronest_token');

@@ -19,6 +19,7 @@ import AdminBanners             from "./admin/pages/Banners/BannersPage";
 import AdminBlogs               from "./admin/pages/Blogs/BlogsPage";
 import AdminPages               from "./admin/pages/Pages/PagesPage";
 import AdminHomepageBuilder     from "./admin/pages/HomepageBuilder/HomepageBuilderPage";
+import AdminAboutBuilder        from "./admin/pages/AboutBuilder/AboutBuilderPage";
 import AdminWebsiteBuilder      from "./admin/pages/WebsiteBuilder/WebsiteBuilderPage";
 import AdminThemeBuilder        from "./admin/pages/ThemeBuilder/ThemeBuilderPage";
 import AdminHeaderBuilder       from "./admin/pages/HeaderBuilder/HeaderBuilderPage";
@@ -53,6 +54,7 @@ import OrdersHistoryPage        from "./pages/Account/OrdersHistoryPage";
 import ForgotPasswordPage       from "./pages/Account/ForgotPasswordPage";
 import DeactivatedPage          from "./pages/Account/DeactivatedPage";
 import WishlistPage             from "./pages/Wishlist/WishlistPage";
+import PoliciesPage             from "./pages/Policies/PoliciesPage";
 import { useSettings }          from "./context/SettingsContext";
 
 const Stub = ({ title }) => (
@@ -108,6 +110,7 @@ export default function App() {
             <Route path="/blog/:slug"       element={<PageGate pageKey="blog"><BlogPostPage /></PageGate>} />
             <Route path="/about"            element={<PageGate pageKey="about"><AboutPage /></PageGate>} />
             <Route path="/contact"          element={<PageGate pageKey="contact"><ContactPage /></PageGate>} />
+            <Route path="/policies/:slug"   element={<PoliciesPage />} />
 
             {/* ── Auth pages ── */}
             <Route path="/login"            element={<LoginPage />} />
@@ -137,6 +140,7 @@ export default function App() {
               <Route path="blogs"               element={<AdminBlogs />} />
               <Route path="pages"               element={<AdminPages />} />
               <Route path="homepage-builder"    element={<AdminHomepageBuilder />} />
+              <Route path="about-builder"       element={<AdminAboutBuilder />} />
               <Route path="website-builder"     element={<AdminWebsiteBuilder />} />
               <Route path="theme-builder"       element={<AdminThemeBuilder />} />
               <Route path="header-builder"      element={<AdminHeaderBuilder />} />

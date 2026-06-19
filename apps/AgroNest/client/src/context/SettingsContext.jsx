@@ -48,19 +48,20 @@ const DEFAULTS = {
   },
   storeEmail: 'info@agronest.in',
   storePhone: '+91 98765 43210',
-  storeAddress: 'Jaipur, Rajasthan',
+  storeAddress: 'B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210',
   freeShippingAbove: 999,
   taxRate: 0,
   codActive: true,
   razorpayActive: true,
   phonepeActive: true,
   socialLinks: {},
-  colorPrimary:   '#1F7A3D',
-  colorSecondary: '#C68A3A',
-  colorBg:        '#faf7f2',
+  // Axiom Seeds brand palette (matched to logo: forest green + lime accent)
+  colorPrimary:   '#1B7A3D',
+  colorSecondary: '#A8D95C',
+  colorBg:        '#f6f9f3',
   colorCard:      '#ffffff',
-  colorText:      '#1A1A1A',
-  colorBorder:    '#E8E0D5',
+  colorText:      '#18241c',
+  colorBorder:    '#dfe9d4',
   fontBody:       'Inter',
   fontDisplay:    'Playfair Display',
   borderRadius:   '16px',
@@ -92,6 +93,28 @@ function hexToRgba(hex, alpha) {
   } catch { return `rgba(0,0,0,${alpha})`; }
 }
 
+// Returns a darker shade of a hex colour (factor 0–1, lower = darker). Used for
+// the `--site-primary-dark` hover shade so buttons don't depend on an undefined
+// variable (which would render them transparent on hover).
+function darkenHex(hex, factor = 0.82) {
+  try {
+    const h = hex.startsWith('#') ? hex : '#' + hex;
+    const clamp = (v) => Math.max(0, Math.min(255, Math.round(v * factor)));
+    const r = clamp(parseInt(h.slice(1,3),16));
+    const g = clamp(parseInt(h.slice(3,5),16));
+    const b = clamp(parseInt(h.slice(5,7),16));
+    return `#${[r,g,b].map(v => v.toString(16).padStart(2,'0')).join('')}`;
+  } catch { return hex; }
+}
+
+// "#1B7A3D" -> "27,122,61" for use inside rgba(var(--x), a).
+function hexToTriplet(hex) {
+  try {
+    const h = hex.startsWith('#') ? hex : '#' + hex;
+    return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`;
+  } catch { return '27,122,61'; }
+}
+
 function applyThemeVars(s, theme) {
   const root = document.documentElement;
   const isDark = theme === 'dark';
@@ -104,6 +127,27 @@ function applyThemeVars(s, theme) {
   root.style.setProperty('--site-text-muted', isDark ? '#8A9490' : '#6B7280');
   const p = s.colorPrimary || DEFAULTS.colorPrimary;
   const sec = s.colorSecondary || DEFAULTS.colorSecondary;
+  // Hover/active shade of the primary — was referenced in CSS but never set,
+  // which made buttons (e.g. Buy Now) turn transparent on hover.
+  root.style.setProperty('--site-primary-dark', darkenHex(p));
+  // The accent colour is used by some badges/labels; default it to the secondary.
+  root.style.setProperty('--site-accent', sec);
+
+  // ── Previously-undefined variables referenced across the storefront.
+  //    Without these, every usage rendered as an invalid value (transparent
+  //    backgrounds / missing colours) in checkout, cart, forms, product pages. ──
+  root.style.setProperty('--site-primary-rgb',   hexToTriplet(p));
+  root.style.setProperty('--site-primary-light', hexToRgba(p, isDark ? 0.22 : 0.13));
+  root.style.setProperty('--site-green',   '#16a34a');                 // success / positive
+  root.style.setProperty('--site-red',     '#ef4444');                 // error
+  root.style.setProperty('--site-danger',  '#ef4444');
+  root.style.setProperty('--site-warning', '#f59e0b');                 // warning
+  root.style.setProperty('--site-card-bg',      isDark ? '#111813' : (s.colorCard || DEFAULTS.colorCard));
+  root.style.setProperty('--site-bg-secondary', isDark ? '#0e130f' : '#eef2ea');
+  root.style.setProperty('--site-bg-alt',       isDark ? '#0e130f' : '#f1f5ee');
+  root.style.setProperty('--site-bg-hover',     isDark ? 'rgba(255,255,255,0.05)' : 'rgba(20,40,24,0.04)');
+  root.style.setProperty('--site-nav-offset',   '76px');
+
   root.style.setProperty('--site-green-light', hexToRgba(p,   isDark ? 0.12 : 0.08));
   root.style.setProperty('--site-amber-light', hexToRgba(sec, isDark ? 0.12 : 0.08));
   root.style.setProperty('--site-shadow-sm',  `0 2px 8px   ${hexToRgba(p, isDark ? 0.3 : 0.08)}`);

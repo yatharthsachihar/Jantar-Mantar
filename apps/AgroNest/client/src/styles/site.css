@@ -26,6 +26,21 @@
   --site-shadow-lg:   0 20px 60px rgba(31,122,61,0.15);
   --site-shadow-card: 0 4px 24px rgba(0,0,0,0.06);
   --site-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Static fallbacks for variables the JS theme layer also sets at runtime.
+     Defined here so they're never invalid before SettingsContext mounts. */
+  --site-primary-dark:  #145C2D;
+  --site-primary-light: rgba(27,122,61,0.13);
+  --site-primary-rgb:   27,122,61;
+  --site-green:         #16a34a;
+  --site-red:           #ef4444;
+  --site-danger:        #ef4444;
+  --site-warning:       #f59e0b;
+  --site-card-bg:       #ffffff;
+  --site-bg-secondary:  #eef2ea;
+  --site-bg-alt:        #f1f5ee;
+  --site-bg-hover:      rgba(20,40,24,0.04);
+  --site-nav-offset:    76px;
 }
 
 /* ── DARK mode — triggers from ThemeContext via data-site-theme or data-theme ── */
@@ -173,7 +188,7 @@ html, body {
 }
 
 /* ── Form inputs (site-wide) ── */
-.input-field {
+.site-input {
   width: 100%;
   height: 50px;
   background: var(--site-card);
@@ -186,21 +201,23 @@ html, body {
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.input-field:focus {
+.site-input:focus {
   border-color: var(--site-primary);
   box-shadow: 0 0 0 3px rgba(74,186,114,0.15);
 }
-.input-field.input-error { border-color: #ef4444; }
+.site-input.input-error { border-color: #ef4444; }
 
 /* ── form-group utility ── */
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-group label { font-size: 13px; font-weight: 600; color: var(--site-text-muted); }
+.site-form-group { display: flex; flex-direction: column; gap: 6px; }
+.site-form-group label { font-size: 13px; font-weight: 600; color: var(--site-text-muted); }
 
 .required { color: #ef4444; margin-left: 2px; }
 .error-text { font-size: 12px; color: #ef4444; }
 
 /* ── Announcement bar offset ── */
-.site-root { padding-top: 0; }
+/* Only hero pages (transparent navbar) cancel the top padding;
+   regular pages keep the 108px offset set by Navbar.css */
+.site-root.site-root-hero { padding-top: 0; }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar        { width: 6px; height: 6px; }

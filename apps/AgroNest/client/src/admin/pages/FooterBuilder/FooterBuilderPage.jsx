@@ -11,31 +11,31 @@ const s = {
   input: { padding: "10px 14px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text)", fontSize: 13, fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box" },
   label: { fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 6 },
   field: { display: "flex", flexDirection: "column", gap: 6 },
-  card:  { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 20, padding: 24, marginBottom: 16 },
-  head:  { fontWeight: 700, fontSize: 14, paddingBottom: 14, borderBottom: "1px solid var(--border)", marginBottom: 16, color: "var(--text)" },
+  card: { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 20, padding: 24, marginBottom: 16 },
+  head: { fontWeight: 700, fontSize: 14, paddingBottom: 14, borderBottom: "1px solid var(--border)", marginBottom: 16, color: "var(--text)" },
 };
 
 const DEFAULT_QUICK = [
-  { label: "Home",        href: "/"           },
-  { label: "Shop All",    href: "/products"   },
-  { label: "Categories",  href: "/categories" },
-  { label: "Best Sellers",href: "/products?filter=bestseller" },
-  { label: "New Arrivals",href: "/products?filter=new"  },
-  { label: "Blog",        href: "/blog"       },
+  { label: "Home", href: "/" },
+  { label: "Shop All", href: "/products" },
+  { label: "Categories", href: "/categories" },
+  { label: "Best Sellers", href: "/products?filter=bestseller" },
+  { label: "New Arrivals", href: "/products?filter=new" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const DEFAULT_SUPPORT = [
-  { label: "FAQs",        href: "/faq"              },
-  { label: "Track Order", href: "/account/orders"   },
-  { label: "Returns",     href: "/policies/returns" },
-  { label: "Contact Us",  href: "/contact"          },
+  { label: "FAQs", href: "/faq" },
+  { label: "Track Order", href: "/account/orders" },
+  { label: "Returns", href: "/policies/returns" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 const DEFAULT_COMPANY = [
-  { label: "About AgroNest", href: "/about"        },
-  { label: "Careers",        href: "/careers"      },
-  { label: "Sustainability",  href: "/sustainability"},
-  { label: "Partner With Us",href: "/partners"     },
+  { label: "About Axiom Seeds", href: "/about" },
+  { label: "Careers", href: "/careers" },
+  { label: "Sustainability", href: "/sustainability" },
+  { label: "Partner With Us", href: "/partners" },
 ];
 
 function LinkGroup({ title, links, onChange }) {
@@ -44,7 +44,7 @@ function LinkGroup({ title, links, onChange }) {
     copy[i] = { ...copy[i], [field]: val };
     onChange(copy);
   };
-  const add    = () => onChange([...links, { label: "New Link", href: "/" }]);
+  const add = () => onChange([...links, { label: "New Link", href: "/" }]);
   const remove = (i) => onChange(links.filter((_, idx) => idx !== i));
 
   return (
@@ -84,7 +84,7 @@ export default function FooterBuilderPage() {
     if (settings && !form) {
       setForm({
         ...settings,
-        footerQuickLinks:   settings.footerQuickLinks?.length   ? settings.footerQuickLinks   : DEFAULT_QUICK,
+        footerQuickLinks: settings.footerQuickLinks?.length ? settings.footerQuickLinks : DEFAULT_QUICK,
         footerSupportLinks: settings.footerSupportLinks?.length ? settings.footerSupportLinks : DEFAULT_SUPPORT,
         footerCompanyLinks: settings.footerCompanyLinks?.length ? settings.footerCompanyLinks : DEFAULT_COMPANY,
       });
@@ -137,8 +137,8 @@ export default function FooterBuilderPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div style={s.field}>
             <label style={s.label}>Store Name (footer)</label>
-            <input style={s.input} value={form.storeName || "AgroNest"}
-              onChange={e => set("storeName", e.target.value)} placeholder="AgroNest" />
+            <input style={s.input} value={form.storeName || "Axiom Seeds"}
+              onChange={e => set("storeName", e.target.value)} placeholder="Axiom Seeds" />
           </div>
           <div style={s.field}>
             <label style={s.label}>Footer Logo Height (px)</label>
@@ -180,12 +180,12 @@ export default function FooterBuilderPage() {
         <div style={s.head}>📱 Social Media Links</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           {[
-            { key: "socialFacebook",  label: "Facebook URL",  placeholder: "https://facebook.com/agronest" },
+            { key: "socialFacebook", label: "Facebook URL", placeholder: "https://facebook.com/agronest" },
             { key: "socialInstagram", label: "Instagram URL", placeholder: "https://instagram.com/agronest" },
-            { key: "socialWhatsapp",  label: "WhatsApp Link", placeholder: "https://wa.me/919876543210"     },
-            { key: "socialYoutube",   label: "YouTube URL",   placeholder: "https://youtube.com/@agronest"  },
-            { key: "socialTwitter",   label: "Twitter/X URL", placeholder: "https://twitter.com/agronest"   },
-            { key: "socialLinkedin",  label: "LinkedIn URL",  placeholder: "https://linkedin.com/company/agronest" },
+            { key: "socialWhatsapp", label: "WhatsApp Link", placeholder: "https://wa.me/919876543210" },
+            { key: "socialYoutube", label: "YouTube URL", placeholder: "https://youtube.com/@agronest" },
+            { key: "socialTwitter", label: "Twitter/X URL", placeholder: "https://twitter.com/agronest" },
+            { key: "socialLinkedin", label: "LinkedIn URL", placeholder: "https://linkedin.com/company/agronest" },
           ].map(({ key, label, placeholder }) => (
             <div key={key} style={s.field}>
               <label style={s.label}>{label}</label>

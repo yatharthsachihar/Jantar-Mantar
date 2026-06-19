@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { FiBell, FiSearch, FiMoon, FiSun, FiLogOut, FiExternalLink } from "react-icons/fi";
 import { useNavigate, Link } from "react-router-dom";
-import { useTheme } from "../../../context/ThemeContext";
+import { useAdminTheme } from "../../store/themeStore";
 import { useAuthStore } from "../../store/authStore";
 import useNotificationStore from "../../store/notificationStore";
 import GlobalSearchModal from "./GlobalSearchModal";
@@ -10,7 +10,7 @@ import "../../styles/notifications.css";
 
 export default function Topbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useAdminTheme();
   const { admin, logout } = useAuthStore();
   const navigate = useNavigate();
 

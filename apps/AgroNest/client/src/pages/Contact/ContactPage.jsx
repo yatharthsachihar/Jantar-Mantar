@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiCheck, FiArrowRight, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import toast from "react-hot-toast";
 import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
 import { useSettings } from "../../context/SettingsContext";
@@ -11,7 +12,7 @@ import "../../styles/site.css";
 import "./ContactPage.css";
 
 const OFFICES = [
-  { city:"Jaipur (HQ)",  address:"Plot 47, Agro Industrial Estate, Sikar Road, Jaipur – 302023, Rajasthan", phone:"+91 98765 43210", email:"info@agronest.in",   hours:"Mon – Sat: 9 AM – 7 PM" },
+  { city:"Ahmedabad (HQ)",  address:"B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210", phone:"+91 7340008599", email:"axiomcropsciences@gmail.com",   hours:"Mon – Sat: 9 AM – 7 PM" },
   { city:"Ludhiana",     address:"G-14, Focal Point, Ludhiana – 141010, Punjab",                              phone:"+91 98765 11223", email:"punjab@agronest.in", hours:"Mon – Sat: 9 AM – 6 PM" },
   { city:"Pune",         address:"Office 301, Agri Hub, Hadapsar, Pune – 411028, Maharashtra",               phone:"+91 98765 55678", email:"pune@agronest.in",   hours:"Mon – Sat: 9 AM – 6 PM" },
 ];
@@ -163,6 +164,10 @@ export default function ContactPage() {
     staleTime: 1000 * 60 * 5,
   });
 
+  // Admin-managed office blocks (Homepage Builder › Contact Blocks). Only real,
+  // configured offices are shown — no fake placeholder branches.
+  const offices = settings?.contactOffices || [];
+
   const sections            = pageData?.sections ? pageData.sections.filter(s => s.visible !== false) : [];
   const heroSection         = sections.find(s => s.type === "hero");
   const contactInfoSection  = sections.find(s => s.type === "contact_info");
@@ -186,7 +191,7 @@ export default function ContactPage() {
       setSubmitted(true);
       setForm({ name:"", email:"", phone:"", subject: SUBJECTS[0], message:"" });
     } catch (err) {
-      alert(err?.response?.data?.message || "Failed to send message. Please try again or call us directly.");
+      toast.error(err?.response?.data?.message || "Failed to send message. Please try again or call us directly.");
     } finally {
       setLoading(false);
     }
@@ -273,7 +278,7 @@ export default function ContactPage() {
               <div className="contact-chip-icon"><FiMapPin size={22} /></div>
               <div>
                 <div className="contact-chip-label">Headquarters</div>
-                <div className="contact-chip-value">Jaipur, Rajasthan</div>
+                <div className="contact-chip-value">{settings.storeAddress || "B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210"}</div>
               </div>
             </div>
           </div>
@@ -300,30 +305,30 @@ export default function ContactPage() {
             ) : (
               <form className="contact-form" onSubmit={handleSubmit}>
                 <div className="contact-form-row">
-                  <div className="form-group">
+                  <div className="site-form-group">
                     <label>Full Name <span className="required">*</span></label>
-                    <input className="input-field" name="name" placeholder="Ramesh Kumar" value={form.name} onChange={handleChange} required />
+                    <input className="site-input" name="name" placeholder="Ramesh Kumar" value={form.name} onChange={handleChange} required />
                   </div>
-                  <div className="form-group">
+                  <div className="site-form-group">
                     <label>Email Address <span className="required">*</span></label>
-                    <input className="input-field" type="email" name="email" placeholder="you@example.com" value={form.email} onChange={handleChange} required />
+                    <input className="site-input" type="email" name="email" placeholder="you@example.com" value={form.email} onChange={handleChange} required />
                   </div>
                 </div>
                 <div className="contact-form-row">
-                  <div className="form-group">
+                  <div className="site-form-group">
                     <label>Phone Number</label>
-                    <input className="input-field" name="phone" placeholder="+91 98765 43210" value={form.phone} onChange={handleChange} />
+                    <input className="site-input" name="phone" placeholder="+91 98765 43210" value={form.phone} onChange={handleChange} />
                   </div>
-                  <div className="form-group">
+                  <div className="site-form-group">
                     <label>Subject <span className="required">*</span></label>
-                    <select className="input-field" name="subject" value={form.subject} onChange={handleChange} required>
+                    <select className="site-input" name="subject" value={form.subject} onChange={handleChange} required>
                       {SUBJECTS.map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>
-                <div className="form-group">
+                <div className="site-form-group">
                   <label>Your Message <span className="required">*</span></label>
-                  <textarea className="input-field contact-textarea" name="message" rows={5}
+                  <textarea className="site-input contact-textarea" name="message" rows={5}
                     placeholder="Tell us how we can help — product queries, bulk pricing, delivery questions…"
                     value={form.message} onChange={handleChange} required />
                 </div>
@@ -335,15 +340,17 @@ export default function ContactPage() {
           </div>
 
           <div className="contact-offices">
+            {offices.length > 0 && <>
             <h2 className="contact-form-title">Our Offices</h2>
-            <p className="contact-form-sub">Walk in or call your nearest AgroNest centre.</p>
-            {OFFICES.map(o => (
-              <div key={o.city} className="contact-office-card">
+            <p className="contact-form-sub">Visit or call your nearest {settings.storeName || "AgroNest"} centre.</p>
+            </>}
+            {offices.map((o, i) => (
+              <div key={o.city || i} className="contact-office-card">
                 <div className="contact-office-city">📍 {o.city}</div>
-                <div className="contact-office-row"><FiMapPin size={14} />{o.address}</div>
-                <div className="contact-office-row"><FiPhone  size={14} /><a href={`tel:${o.phone}`}>{o.phone}</a></div>
-                <div className="contact-office-row"><FiMail   size={14} /><a href={`mailto:${o.email}`}>{o.email}</a></div>
-                <div className="contact-office-row"><FiClock  size={14} />{o.hours}</div>
+                {o.address && <div className="contact-office-row"><FiMapPin size={14} />{o.address}</div>}
+                {o.phone   && <div className="contact-office-row"><FiPhone  size={14} /><a href={`tel:${o.phone}`}>{o.phone}</a></div>}
+                {o.email   && <div className="contact-office-row"><FiMail   size={14} /><a href={`mailto:${o.email}`}>{o.email}</a></div>}
+                {o.hours   && <div className="contact-office-row"><FiClock  size={14} />{o.hours}</div>}
               </div>
             ))}
             <div className="contact-faq-box">

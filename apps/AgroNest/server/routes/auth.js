@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
+const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -19,11 +20,9 @@ router.post('/login', async (req, res) => {
 });
 
 // GET /api/auth/me — verify token and return admin info
-router.get('/me', require('../middleware/authMiddleware').protect, (req, res) => {
+router.get('/me', protect, (req, res) => {
   res.json(req.admin);
 });
-
-const { protect } = require('../middleware/authMiddleware');
 
 // GET /api/auth/users
 router.get('/users', protect, async (req, res) => {
