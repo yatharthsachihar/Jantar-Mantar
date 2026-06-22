@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
-  FiMail, FiLock, FiEye, FiEyeOff,
-  FiArrowRight, FiAlertCircle, FiArrowLeft,
+  FiMail, FiLock, FiEye, FiEyeOff, FiPhone,
+  FiArrowRight, FiAlertCircle, FiArrowLeft, FiShield, FiCheckCircle,
 } from "react-icons/fi";
+import toast from "react-hot-toast";
 import { useUser } from "../../context/UserContext";
 import { useSettings } from "../../context/SettingsContext";
 import "../../styles/site.css";
 import "./AuthPage.css";
+
+// TEMP: mock OTP gate. The OTP is prefilled with this value until a real
+// SMS/OTP service is wired up — verifying it proves the flow works end-to-end.
+const MOCK_OTP = "123456";
 
 const STATS = [
   { icon: "👨‍🌾", val: "25,000+", label: "Happy Farmers" },
@@ -37,11 +42,46 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // ── Mock OTP verification gate ──
+  const [otpMobile, setOtpMobile] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
+  const handleSendOtp = () => {
+    if (!/^\d{10}$/.test(otpMobile)) {
+      setOtpError("Enter a valid 10-digit mobile number.");
+      return;
+    }
+    setError("");
+    setOtpSent(true);
+    setOtp(MOCK_OTP);           // prefilled for now
+    setOtpVerified(false);
+    setOtpError("");
+    toast.success(`OTP sent to ${otpMobile} (demo OTP: ${MOCK_OTP})`);
+  };
+
+  const handleVerifyOtp = () => {
+    if (otp.trim() === MOCK_OTP) {
+      setOtpVerified(true);
+      setOtpError("");
+      toast.success("OTP verified!");
+    } else {
+      setOtpVerified(false);
+      setOtpError("Incorrect OTP. Please try again.");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!identifier.trim() || !password) {
       setError("Please enter your email / mobile and password.");
+      return;
+    }
+    if (!otpVerified) {
+      setError("Please verify the OTP before logging in.");
       return;
     }
     setLoading(true);
@@ -165,6 +205,51 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Mobile Number + OTP Verification */}
+            <div className="auth-field">
+              <label className="auth-label">Mobile Number (OTP) <span style={{ color:"#EF4444" }}>*</span></label>
+              <div className={`auth-input-wrap${otpError && !otpSent ? " error" : ""}`}>
+                <span className="auth-input-icon"><FiPhone size={17} /></span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="Enter your 10-digit mobile number"
+                  value={otpMobile}
+                  onChange={e => {
+                    setOtpMobile(e.target.value.replace(/\D/g, "").slice(0, 10));
+                    setOtpError(""); setOtpSent(false); setOtpVerified(false);
+                  }}
+                  autoComplete="tel"
+                  disabled={otpVerified}
+                />
+                {!otpSent && !otpVerified && (
+                  <button type="button" className="auth-otp-verify" onClick={handleSendOtp}>Send OTP</button>
+                )}
+                {otpVerified && <FiCheckCircle size={18} style={{ color:"#16a34a", flexShrink:0 }} />}
+              </div>
+
+              {otpSent && !otpVerified && (
+                <>
+                  <div className={`auth-input-wrap${otpError ? " error" : ""}`} style={{ marginTop: 10 }}>
+                    <span className="auth-input-icon"><FiShield size={17} /></span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="Enter 6-digit OTP"
+                      value={otp}
+                      onChange={e => { setOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setOtpError(""); }}
+                    />
+                    <button type="button" className="auth-otp-verify" onClick={handleVerifyOtp}>Verify</button>
+                  </div>
+                  <div className="auth-otp-hint">Demo OTP is prefilled ({MOCK_OTP}). Click Verify to continue.</div>
+                </>
+              )}
+              {otpError && <div className="auth-field-error">{otpError}</div>}
+              {otpVerified && <div className="auth-otp-ok"><FiCheckCircle size={13} /> Mobile verified</div>}
+            </div>
+
             {/* Remember + Forgot */}
             <div className="auth-extras">
               <label className="auth-remember">
@@ -179,7 +264,7 @@ export default function LoginPage() {
             </div>
 
             {/* Submit */}
-            <button type="submit" className="auth-submit" disabled={loading}>
+            <button type="submit" className="auth-submit" disabled={loading || !otpVerified}>
               {loading
                 ? <span className="auth-btn-spinner" />
                 : <>Login to {storeName} <FiArrowRight size={18} /></>

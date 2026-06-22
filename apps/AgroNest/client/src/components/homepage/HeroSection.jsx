@@ -6,7 +6,7 @@ import {
 } from "react-icons/fi";
 import { useQuery } from "@tanstack/react-query";
 import { useSettings } from "../../context/SettingsContext";
-import API from "../../api/axios";
+import API, { mediaUrl } from "../../api/axios";
 import "./HeroSection.css";
 
 const TRUST_ITEMS = [
@@ -106,7 +106,7 @@ export default function HeroSection() {
       {/* ── BG Image ── */}
       <div
         className="hero-bg-img"
-        style={{ backgroundImage: `url(${slide?.image})` }}
+        style={{ backgroundImage: `url(${mediaUrl(slide?.image)})` }}
       />
       <div className="hero-bg-overlay" />
 
@@ -176,7 +176,7 @@ export default function HeroSection() {
                 onClick={() => goTo(i)}
                 data-title={s.title}
               >
-                <img src={s.image} alt="" loading="lazy" />
+                <img src={mediaUrl(s.image)} alt="" loading="lazy" />
                 <div className="hero-slide-thumb-overlay">
                   <span className="hero-slide-thumb-title">{s.title?.slice(0, 40)}</span>
                 </div>

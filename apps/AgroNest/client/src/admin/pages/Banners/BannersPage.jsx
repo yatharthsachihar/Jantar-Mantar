@@ -5,18 +5,22 @@ import gsap from "gsap";
 import toast from "react-hot-toast";
 import { FiPlus, FiEdit, FiTrash2, FiImage, FiEye, FiEyeOff } from "react-icons/fi";
 import { bannerApi } from "../../../api/bannerApi";
+import { mediaUrl } from "../../../api/axios";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import Skeleton from "../../components/common/Skeleton";
 import { useForm } from "react-hook-form";
 import { useAuthStore } from "../../store/authStore";
+import ImageInput from "../../components/common/ImageInput";
+
 
 // ── Banner form (used for both create and edit) ───────────────
 function BannerForm({ banner, onSuccess }) {
   const queryClient = useQueryClient();
   const isEdit = !!banner;
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+
     defaultValues: {
       title:       banner?.title       || "",
       subtitle:    banner?.subtitle    || "",
@@ -66,10 +70,16 @@ function BannerForm({ banner, onSuccess }) {
           <input style={inputStyle} {...register("subtitle")} placeholder="Fresh from the farm, delivered to your door" />
         </div>
         <div style={{ gridColumn: "1 / -1" }}>
-          <label style={labelStyle}>Image URL *</label>
-          <input style={inputStyle} {...register("image", { required: true })} placeholder="https://..." />
-          {errors.image && <span style={{ fontSize: 12, color: "#ef4444", marginTop: 4, display: "block" }}>Image URL is required</span>}
+          <input type="hidden" {...register("image", { required: true })} />
+          <ImageInput
+            label="Banner Image *"
+            value={watch("image")}
+            onChange={(url) => setValue("image", url, { shouldValidate: true })}
+            placeholder="https://..."
+          />
+          {errors.image && <span style={{ fontSize: 12, color: "#ef4444", marginTop: 4, display: "block" }}>Image is required</span>}
         </div>
+
         <div>
           <label style={labelStyle}>Link URL</label>
           <input style={inputStyle} {...register("link")} placeholder="/products?category=seeds" />
@@ -177,7 +187,7 @@ export default function BannersPage() {
               {/* Image preview */}
               <div style={{ height: 130, overflow: "hidden", position: "relative" }}>
                 {banner.image ? (
-                  <img src={banner.image} alt={banner.title}
+                  <img src={mediaUrl(banner.image)} alt={banner.title}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     onError={e => { e.target.style.display = "none"; }}
                   />

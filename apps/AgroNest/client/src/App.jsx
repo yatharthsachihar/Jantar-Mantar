@@ -1,7 +1,18 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider }        from "@tanstack/react-query";
 import { Toaster }                                  from "react-hot-toast";
 import { UserProvider }                             from "./context/UserContext";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 // Admin
 import AdminLayout              from "./admin/layouts/AdminLayout";
@@ -12,6 +23,7 @@ import AdminProductEdit         from "./admin/pages/Products/ProductEditPage";
 import AdminCategories          from "./admin/pages/Categories/CategoriesPage";
 import AdminOrders              from "./admin/pages/Orders/OrdersPage";
 import AdminInventory           from "./admin/pages/Inventory/InventoryPage";
+import AdminCollections         from "./admin/pages/Collections/CollectionsPage";
 import AdminCustomers           from "./admin/pages/Customers/CustomersPage";
 import AdminCoupons             from "./admin/pages/Coupons/CouponsPage";
 import AdminEnquiries           from "./admin/pages/Enquiries/EnquiriesPage";
@@ -55,6 +67,8 @@ import ForgotPasswordPage       from "./pages/Account/ForgotPasswordPage";
 import DeactivatedPage          from "./pages/Account/DeactivatedPage";
 import WishlistPage             from "./pages/Wishlist/WishlistPage";
 import PoliciesPage             from "./pages/Policies/PoliciesPage";
+import DynamicPage              from "./pages/DynamicPage/DynamicPage";
+import CollectionPage           from "./pages/Collection/CollectionPage";
 import { useSettings }          from "./context/SettingsContext";
 
 const Stub = ({ title }) => (
@@ -93,6 +107,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollToTop />
         <UserProvider>
           <Routes>
 
@@ -110,6 +125,7 @@ export default function App() {
             <Route path="/blog/:slug"       element={<PageGate pageKey="blog"><BlogPostPage /></PageGate>} />
             <Route path="/about"            element={<PageGate pageKey="about"><AboutPage /></PageGate>} />
             <Route path="/contact"          element={<PageGate pageKey="contact"><ContactPage /></PageGate>} />
+            <Route path="/collections/:key" element={<CollectionPage />} />
             <Route path="/policies/:slug"   element={<PoliciesPage />} />
 
             {/* ── Auth pages ── */}
@@ -132,6 +148,7 @@ export default function App() {
               <Route path="products/edit/:id"   element={<AdminProductEdit />} />
               <Route path="categories"          element={<AdminCategories />} />
               <Route path="inventory"           element={<AdminInventory />} />
+              <Route path="collections"         element={<AdminCollections />} />
               <Route path="orders"              element={<AdminOrders />} />
               <Route path="customers"           element={<AdminCustomers />} />
               <Route path="coupons"             element={<AdminCoupons />} />
@@ -154,6 +171,10 @@ export default function App() {
               <Route path="integrations"        element={<AdminIntegrations />} />
               <Route path="settings"            element={<AdminSettings />} />
             </Route>
+
+            {/* Custom CMS pages (created in admin → Pages). Static routes above
+                always win over this dynamic one in React Router's ranking. */}
+            <Route path="/:slug" element={<DynamicPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

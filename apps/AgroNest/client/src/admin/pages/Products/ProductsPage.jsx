@@ -315,155 +315,157 @@ export default function ProductsPage() {
 
       {/* Table */}
       <div className="table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th className="col-check">
-                <input
-                  type="checkbox"
-                  className="row-checkbox"
-                  checked={selected.length === products.length && products.length > 0}
-                  onChange={toggleAll}
-                />
-              </th>
-              <th>Product</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Visibility</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 8 }).map((__, j) => (
-                    <td key={j}><Skeleton height={18} /></td>
-                  ))}
-                </tr>
-              ))
-            ) : products.length === 0 ? (
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <td colSpan={8}>
-                  <div className="empty-state">
-                    <FiPackage />
-                    <h3>No Products Found</h3>
-                    <p>Add your first product to get started</p>
-                    <Button size="sm" onClick={() => navigate("/admin/products/create")}>
-                      <FiPlus /> Add Product
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ) : products.map(p => (
-              <React.Fragment key={p.parentGroupId || p._id}>
-              <tr>
-                <td className="col-check">
+                <th className="col-check">
                   <input
                     type="checkbox"
                     className="row-checkbox"
-                    checked={selected.includes(p._id)}
-                    onChange={() => toggleSelect(p._id)}
+                    checked={selected.length === products.length && products.length > 0}
+                    onChange={toggleAll}
                   />
-                </td>
-                <td>
-                  <div className="table-product">
-                    {p.images?.[0] ? (
-                      <img className="table-product-img" src={mediaUrl(p.images[0])} alt={p.name} />
-                    ) : (
-                      <div className="table-product-img-placeholder"><FiPackage /></div>
-                    )}
-                    <div>
-                      <div className="table-product-name" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {p.name}
-                        {p.hasVariations && p.variations?.length > 0 && (
-                          <span className="badge badge-info" style={{ cursor: "pointer" }} onClick={() => toggleExpand(p._id)}>
-                            {p.variations.length} Variations {expandedGroup === p._id ? <FiChevronUp /> : <FiChevronDown />}
-                          </span>
-                        )}
-                      </div>
-                      <div className="table-product-meta">{p.slug}</div>
-                    </div>
-                  </div>
-                </td>
-                <td>{p.category?.name || "—"}</td>
-                <td>₹{p.price?.toLocaleString()}</td>
-                <td>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {p.stock} {p.unit}
-                    {isOutOfStock(p) ? (
-                      <span title="Out of Stock" style={{ color: "var(--site-danger)", display: "flex" }}>
-                        <FiAlertTriangle className="pulse-warning" />
-                      </span>
-                    ) : isLowStock(p) ? (
-                      <span title="Low Stock" style={{ color: "var(--site-warning)", display: "flex" }}>
-                        <FiAlertTriangle />
-                      </span>
-                    ) : null}
-                  </div>
-                </td>
-                <td>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    {p.visibleInB2B && <span className="badge badge-info">B2B</span>}
-                    {p.visibleInB2C && <span className="badge badge-primary">B2C</span>}
-                    {!p.visibleInB2B && !p.visibleInB2C && (
-                      <span className="badge badge-muted"><FiEyeOff style={{ marginRight: 4 }}/> Hidden</span>
-                    )}
-                  </div>
-                </td>
-                <td>
-                  <span className={STATUS_BADGE[p.status] || "badge badge-muted"}>
-                    {p.status}
-                  </span>
-                </td>
-                <td>
-                  <div className="table-actions">
-                    <button className="btn-view" onClick={() => window.open(`/products/${p.slug || p._id}`, '_blank')} title="View on Site">
-                      <FiExternalLink />
-                    </button>
-                    <button className="btn-edit" onClick={() => navigate(`/admin/products/edit/${p._id}`)}>
-                      <FiEdit />
-                    </button>
-                    <button className="btn-delete" onClick={() => setDeleteTarget(p)}>
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                </td>
+                </th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Visibility</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-              {expandedGroup === p._id && p.variations && (
-                p.variations.map((v, i) => (
-                  <tr key={v._id || i} style={{ background: "var(--site-bg-secondary)" }}>
-                    <td></td>
-                    <td style={{ paddingLeft: 40 }}>
-                      <div className="table-product-name" style={{ fontSize: 13, color: "var(--site-text-muted)" }}>
-                        ↳ {v.weight}
-                      </div>
-                    </td>
-                    <td>—</td>
-                    <td style={{ fontSize: 13 }}>₹{v.price?.toLocaleString()}</td>
-                    <td style={{ fontSize: 13 }}>{v.stock}</td>
-                    <td></td>
-                    <td>
-                      <span className={STATUS_BADGE[p.status] || "badge badge-muted"} style={{ transform: "scale(0.85)" }}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="table-actions">
-                        <button className="btn-edit" onClick={() => navigate(`/admin/products/edit/${p._id}`)}>
-                          <FiEdit />
-                        </button>
-                      </div>
-                    </td>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 8 }).map((__, j) => (
+                      <td key={j}><Skeleton height={18} /></td>
+                    ))}
                   </tr>
                 ))
-              )}
-            </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>
+                    <div className="empty-state">
+                      <FiPackage />
+                      <h3>No Products Found</h3>
+                      <p>Add your first product to get started</p>
+                      <Button size="sm" onClick={() => navigate("/admin/products/create")}>
+                        <FiPlus /> Add Product
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ) : products.map(p => (
+                <React.Fragment key={p.parentGroupId || p._id}>
+                <tr>
+                  <td className="col-check">
+                    <input
+                      type="checkbox"
+                      className="row-checkbox"
+                      checked={selected.includes(p._id)}
+                      onChange={() => toggleSelect(p._id)}
+                    />
+                  </td>
+                  <td>
+                    <div className="table-product">
+                      {p.images?.[0] ? (
+                        <img className="table-product-img" src={mediaUrl(p.images[0])} alt={p.name} />
+                      ) : (
+                        <div className="table-product-img-placeholder"><FiPackage /></div>
+                      )}
+                      <div>
+                        <div className="table-product-name" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          {p.name}
+                          {p.hasVariations && p.variations?.length > 0 && (
+                            <span className="badge badge-info" style={{ cursor: "pointer" }} onClick={() => toggleExpand(p._id)}>
+                              {p.variations.length} Variations {expandedGroup === p._id ? <FiChevronUp /> : <FiChevronDown />}
+                            </span>
+                          )}
+                        </div>
+                        <div className="table-product-meta">{p.slug}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{p.category?.name || "—"}</td>
+                  <td>₹{p.price?.toLocaleString()}</td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {p.stock} {p.unit}
+                      {isOutOfStock(p) ? (
+                        <span title="Out of Stock" style={{ color: "var(--danger)", display: "flex" }}>
+                          <FiAlertTriangle className="pulse-warning" />
+                        </span>
+                      ) : isLowStock(p) ? (
+                        <span title="Low Stock" style={{ color: "var(--warning)", display: "flex" }}>
+                          <FiAlertTriangle />
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {p.visibleInB2B && <span className="badge badge-info">B2B</span>}
+                      {p.visibleInB2C && <span className="badge badge-primary">B2C</span>}
+                      {!p.visibleInB2B && !p.visibleInB2C && (
+                        <span className="badge badge-muted"><FiEyeOff style={{ marginRight: 4 }}/> Hidden</span>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <span className={STATUS_BADGE[p.status] || "badge badge-muted"}>
+                      {p.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="table-actions">
+                      <button className="btn-view" onClick={() => window.open(`/products/${p.slug || p._id}`, '_blank')} title="View on Site">
+                        <FiExternalLink />
+                      </button>
+                      <button className="btn-edit" onClick={() => navigate(`/admin/products/edit/${p._id}`)}>
+                        <FiEdit />
+                      </button>
+                      <button className="btn-delete" onClick={() => setDeleteTarget(p)}>
+                        <FiTrash2 />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {expandedGroup === p._id && p.variations && (
+                  p.variations.map((v, i) => (
+                    <tr key={v._id || i} style={{ background: "var(--bg-secondary)" }}>
+                      <td></td>
+                      <td style={{ paddingLeft: 40 }}>
+                        <div className="table-product-name" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                          ↳ {v.weight}
+                        </div>
+                      </td>
+                      <td>—</td>
+                      <td style={{ fontSize: 13 }}>₹{v.price?.toLocaleString()}</td>
+                      <td style={{ fontSize: 13 }}>{v.stock}</td>
+                      <td></td>
+                      <td>
+                        <span className={STATUS_BADGE[p.status] || "badge badge-muted"} style={{ transform: "scale(0.85)" }}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button className="btn-edit" onClick={() => navigate(`/admin/products/edit/${p._id}`)}>
+                            <FiEdit />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (

@@ -8,6 +8,7 @@ import Footer from "../../components/navigation/Footer";
 import { useSettings } from "../../context/SettingsContext";
 import { pageApi } from "../../api/pageApi";
 import { enquiryApi } from "../../api/enquiryApi";
+import { mediaUrl } from "../../api/axios";
 import "../../styles/site.css";
 import "./ContactPage.css";
 
@@ -76,7 +77,7 @@ function SectionTeam({ data }) {
             <div key={i} className="about-team-card">
               <div className="about-team-avatar">
                 {m.avatar
-                  ? <img src={m.avatar} alt={m.name} style={{ width:"100%", height:"100%", borderRadius:"50%", objectFit:"cover" }} />
+                  ? <img src={mediaUrl(m.avatar)} alt={m.name} style={{ width:"100%", height:"100%", borderRadius:"50%", objectFit:"cover" }} />
                   : (m.name ? m.name[0] : "?")}
               </div>
               <h3 className="about-team-name">{m.name}</h3>
@@ -93,7 +94,7 @@ function SectionTeam({ data }) {
 function SectionFAQ({ data }) {
   const [activeIdx, setActiveIdx] = useState(null);
   return (
-    <section className="home-section alt-bg">
+    <section id="faq-section" className="home-section alt-bg">
       <div className="site-container" style={{ maxWidth:800 }}>
         <div className="home-section-head center">
           <div className="site-section-label">FAQ</div>
@@ -147,9 +148,34 @@ function SectionCTA({ data }) {
   );
 }
 
+function SectionContactInfo({ data }) {
+  return (
+    <section className="contact-chips-section">
+      <div className="site-container contact-chips-grid">
+        {(data.cards || []).map((c, idx) => (
+          <a key={idx}
+            href={(c.title || "").toLowerCase().includes("call") ? `tel:${c.value}` : (c.title || "").toLowerCase().includes("email") ? `mailto:${c.value}` : undefined}
+            className="contact-chip">
+            <div className="contact-chip-icon" style={{ fontSize: 22 }}>
+              {c.icon === "📞" ? <FiPhone size={22} /> : c.icon === "📧" ? <FiMail size={22} /> :
+               c.icon === "📍" ? <FiMapPin size={22} /> : c.icon === "💬" ? <FiSend size={22} /> : c.icon}
+            </div>
+            <div>
+              <div className="contact-chip-label">{c.title}</div>
+              <div className="contact-chip-value">{c.value}</div>
+              {c.note && <div style={{ fontSize: 11, color: "rgba(255, 255, 255, 0.7)", marginTop: 2 }}>{c.note}</div>}
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ContactPage() {
   const { settings } = useSettings();
   const [form,      setForm]      = useState({ name:"", email:"", phone:"", subject:SUBJECTS[0], message:"" });
+  const [errors,    setErrors]    = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading,   setLoading]   = useState(false);
 
@@ -161,7 +187,8 @@ export default function ContactPage() {
   const { data: pageData } = useQuery({
     queryKey: ["page-contact"],
     queryFn: () => pageApi.getOne("contact").then(r => r.data),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,                 // always reflect the latest admin edits
+    refetchOnWindowFocus: true,
   });
 
   // Admin-managed office blocks (Homepage Builder › Contact Blocks). Only real,
@@ -171,12 +198,45 @@ export default function ContactPage() {
   const sections            = pageData?.sections ? pageData.sections.filter(s => s.visible !== false) : [];
   const heroSection         = sections.find(s => s.type === "hero");
   const contactInfoSection  = sections.find(s => s.type === "contact_info");
-  const otherSections       = sections.filter(s => s.type !== "hero" && s.type !== "contact_info");
+  const otherSections       = sections.filter(s => s.type !== "hero" && s !== contactInfoSection);
 
-  const handleChange  = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange  = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errs = {};
+    if (!form.name.trim()) {
+      errs.name = "Full name is required";
+    }
+
+    if (!form.email.trim()) {
+      errs.email = "Email address is required";
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+      errs.email = "Enter a valid email address";
+    }
+
+    if (!form.phone.trim()) {
+      errs.phone = "Phone number is required";
+    } else if (!/^[6-9]\d{9}$/.test(form.phone.replace(/[\s\-]/g, ""))) {
+      errs.phone = "Enter a valid 10-digit mobile number";
+    }
+
+    if (!form.message.trim()) {
+      errs.message = "Message is required";
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+
+    setErrors({});
     setLoading(true);
     try {
       await enquiryApi.submit({
@@ -205,7 +265,7 @@ export default function ContactPage() {
       {/* ── Hero ── */}
       {heroSection ? (
         <section className="contact-hero"
-          style={heroSection.data.image ? { backgroundImage:`url(${heroSection.data.image})` } : {}}>
+          style={heroSection.data.image ? { backgroundImage:`url(${mediaUrl(heroSection.data.image)})` } : {}}>
           <div className="contact-hero-overlay" />
           <div className="site-container contact-hero-inner">
             {heroSection.data.badge && (
@@ -244,7 +304,7 @@ export default function ContactPage() {
                 <div>
                   <div className="contact-chip-label">{c.title}</div>
                   <div className="contact-chip-value">{c.value}</div>
-                  {c.note && <div style={{ fontSize:11, color:"var(--site-text-muted)", marginTop:2 }}>{c.note}</div>}
+                  {c.note && <div style={{ fontSize:11, color:"rgba(255, 255, 255, 0.7)", marginTop:2 }}>{c.note}</div>}
                 </div>
               </a>
             ))}
@@ -260,11 +320,11 @@ export default function ContactPage() {
                 <div className="contact-chip-value">{settings.storePhone || "+91 98765 43210"}</div>
               </div>
             </a>
-            <a href={`mailto:${settings.storeEmail || "info@agronest.in"}`} className="contact-chip">
+            <a href={`mailto:${settings.storeEmail || "axiomcropsciences@gmail.com"}`} className="contact-chip">
               <div className="contact-chip-icon"><FiMail size={22} /></div>
               <div>
                 <div className="contact-chip-label">Email Us</div>
-                <div className="contact-chip-value">{settings.storeEmail || "info@agronest.in"}</div>
+                <div className="contact-chip-value">{settings.storeEmail || "axiomcropsciences@gmail.com"}</div>
               </div>
             </a>
             <div className="contact-chip">
@@ -298,26 +358,29 @@ export default function ContactPage() {
                 <div className="contact-success-icon"><FiCheck size={32} /></div>
                 <h3>Message Received!</h3>
                 <p>Thank you for reaching out. Our team will get back to you within 4 hours on business days.</p>
-                <button className="site-btn-primary" style={{ marginTop:16 }} onClick={() => setSubmitted(false)}>
+                <button className="site-btn-primary" style={{ marginTop:16 }} onClick={() => { setSubmitted(false); setErrors({}); }}>
                   Send Another Message
                 </button>
               </div>
             ) : (
-              <form className="contact-form" onSubmit={handleSubmit}>
+              <form className="contact-form" onSubmit={handleSubmit} noValidate>
                 <div className="contact-form-row">
                   <div className="site-form-group">
                     <label>Full Name <span className="required">*</span></label>
-                    <input className="site-input" name="name" placeholder="Ramesh Kumar" value={form.name} onChange={handleChange} required />
+                    <input className={`site-input ${errors.name ? "input-error" : ""}`} name="name" placeholder="Ramesh Kumar" value={form.name} onChange={handleChange} required />
+                    {errors.name && <span className="error-text">{errors.name}</span>}
                   </div>
                   <div className="site-form-group">
                     <label>Email Address <span className="required">*</span></label>
-                    <input className="site-input" type="email" name="email" placeholder="you@example.com" value={form.email} onChange={handleChange} required />
+                    <input className={`site-input ${errors.email ? "input-error" : ""}`} type="email" name="email" placeholder="you@example.com" value={form.email} onChange={handleChange} required />
+                    {errors.email && <span className="error-text">{errors.email}</span>}
                   </div>
                 </div>
                 <div className="contact-form-row">
                   <div className="site-form-group">
-                    <label>Phone Number</label>
-                    <input className="site-input" name="phone" placeholder="+91 98765 43210" value={form.phone} onChange={handleChange} />
+                    <label>Phone Number <span className="required">*</span></label>
+                    <input className={`site-input ${errors.phone ? "input-error" : ""}`} name="phone" placeholder="+91 98765 43210" value={form.phone} onChange={handleChange} required />
+                    {errors.phone && <span className="error-text">{errors.phone}</span>}
                   </div>
                   <div className="site-form-group">
                     <label>Subject <span className="required">*</span></label>
@@ -328,9 +391,10 @@ export default function ContactPage() {
                 </div>
                 <div className="site-form-group">
                   <label>Your Message <span className="required">*</span></label>
-                  <textarea className="site-input contact-textarea" name="message" rows={5}
+                  <textarea className={`site-input contact-textarea ${errors.message ? "input-error" : ""}`} name="message" rows={5}
                     placeholder="Tell us how we can help — product queries, bulk pricing, delivery questions…"
                     value={form.message} onChange={handleChange} required />
+                  {errors.message && <span className="error-text">{errors.message}</span>}
                 </div>
                 <button type="submit" className="site-btn-primary contact-submit-btn" disabled={loading}>
                   {loading ? <><span className="contact-spinner" /> Sending…</> : <><FiSend /> Send Message</>}
@@ -357,7 +421,14 @@ export default function ContactPage() {
               <div className="contact-faq-icon">❓</div>
               <h4>Common Questions</h4>
               <p>Before you write, check if your answer is already in our FAQ section.</p>
-              <Link to="/faq" className="site-btn-secondary" style={{ fontSize:13, padding:"10px 20px" }}>View FAQ</Link>
+              <button
+                className="site-btn-secondary"
+                style={{ fontSize:13, padding:"10px 20px" }}
+                onClick={() => {
+                  const el = document.getElementById('faq-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >View FAQ</button>
             </div>
           </div>
 
@@ -366,6 +437,7 @@ export default function ContactPage() {
 
       {otherSections.map((sec, i) => {
         switch (sec.type) {
+          case "contact_info": return <SectionContactInfo key={i} data={sec.data} />;
           case "stats":     return <SectionStats    key={i} data={sec.data} />;
           case "values":    return <SectionValues   key={i} data={sec.data} />;
           case "team":      return <SectionTeam     key={i} data={sec.data} />;

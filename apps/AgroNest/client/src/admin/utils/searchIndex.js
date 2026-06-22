@@ -80,6 +80,8 @@ export const FEATURE_INDEX = [
     keywords: ["add product", "new product", "create product"] },
   { label: "Manage Inventory & Stock", group: "Catalog", path: "/admin/inventory",
     keywords: ["inventory", "stock", "stock adjustment", "low stock", "restock"] },
+  { label: "Collections (Featured / Best Seller / New Arrival …)", group: "Catalog", path: "/admin/collections",
+    keywords: ["collections", "featured", "best seller", "new arrival", "top product", "trending", "seasonal", "merchandising", "homepage products"] },
   { label: "Manage Categories", group: "Catalog", path: "/admin/categories",
     keywords: ["category", "categories", "add category"] },
   { label: "Coupons & Discounts", group: "Marketing", path: "/admin/coupons",

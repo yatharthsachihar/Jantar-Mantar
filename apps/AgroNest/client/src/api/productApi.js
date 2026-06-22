@@ -19,6 +19,9 @@ export const productApi = {
   // Admin — quick stock/inventory update only
   updateStock: (id, data) => API.patch(`/products/${id}/stock`, data),
 
+  // Admin — toggle collection flags only (featured / bestseller / etc.)
+  updateFlags: (id, flags) => API.patch(`/products/${id}/flags`, flags),
+
   // Admin — delete by _id
   remove: (id) => API.delete(`/products/${id}`),
 

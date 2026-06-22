@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FiArrowRight, FiPackage } from "react-icons/fi";
+import { FiArrowRight } from "react-icons/fi";
+import { mediaUrl } from "../../api/axios";
 import "./CategoryCard.css";
 
-const DEFAULT_ICONS = ["🌾","🌿","🛡️","💧","🔧","🍃","🐾","🌻","🥬","🫘"];
-
-export default function CategoryCard({ category = {}, index = 0 }) {
+export default function CategoryCard({ category = {} }) {
   const {
     name         = "Category",
     slug         = "category",
     description  = "",
-    productCount = 0,
     image        = "",
   } = category;
 
@@ -18,7 +16,6 @@ export default function CategoryCard({ category = {}, index = 0 }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError,  setImgError]  = useState(false);
 
-  const icon     = category.icon || DEFAULT_ICONS[index % DEFAULT_ICONS.length];
   const hasImage = image && !imgError;
 
   return (
@@ -35,7 +32,7 @@ export default function CategoryCard({ category = {}, index = 0 }) {
         {/* Actual image — invisible until loaded, then fades in */}
         {hasImage && (
           <img
-            src={image}
+            src={mediaUrl(image)}
             alt={name}
             className={`site-cat-card-img${imgLoaded ? " loaded" : ""}`}
             onLoad={() => setImgLoaded(true)}
@@ -49,16 +46,6 @@ export default function CategoryCard({ category = {}, index = 0 }) {
 
       {/* Subtle shine sweep */}
       <div className="site-cat-card-shine" />
-
-      {/* Top — icon + count */}
-      <div className="site-cat-card-top">
-        <span className="site-cat-card-icon">{icon}</span>
-        {productCount > 0 && (
-          <span className="site-cat-card-count">
-            <FiPackage size={11} /> {productCount} products
-          </span>
-        )}
-      </div>
 
       {/* Bottom — name + desc + arrow */}
       <div className={`site-cat-card-body${hasImage && imgLoaded ? "" : " site-cat-card-body-dark"}`}>

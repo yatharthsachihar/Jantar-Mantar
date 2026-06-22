@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import Sidebar from "../components/navigation/Sidebar";
@@ -9,6 +9,7 @@ export default function AdminLayout() {
   const { loading, token, admin, init, refreshMatrix } = useAuthStore();
   const { theme } = useAdminTheme();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     init();
@@ -63,10 +64,9 @@ export default function AdminLayout() {
 
   return (
     <div className={`admin-layout role-${admin?.role || 'viewer'}`} data-theme={theme}>
-      <Sidebar />
+      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
       <div className="admin-main">
-
-        <Topbar />
+        <Topbar onMenuClick={() => setMobileOpen(true)} />
         <main style={{ overflowY: "auto" }}>
           <Outlet />
         </main>

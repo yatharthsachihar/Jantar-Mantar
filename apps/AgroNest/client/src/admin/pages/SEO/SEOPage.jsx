@@ -6,6 +6,7 @@ import { settingsApi } from "../../../api/settingsApi";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Skeleton from "../../components/common/Skeleton";
+import { mediaUrl } from "../../../api/axios";
 
 const TABS = [
   { id: "general",     icon: <FiGlobe />,   label: "General SEO"      },
@@ -170,7 +171,7 @@ export default function SEOPage() {
               onChange={e => set("ogImage", e.target.value)}
               placeholder="https://www.agronest.in/og-image.jpg" hint="Used when page is shared on Facebook, WhatsApp, LinkedIn" />
             {form.ogImage && (
-              <img src={form.ogImage} alt="OG Preview"
+              <img src={mediaUrl(form.ogImage)} alt="OG Preview"
                 style={{ width: "100%", maxWidth: 400, height: 210, objectFit: "cover", borderRadius: 12, border: "1px solid var(--border)" }}
                 onError={e => e.target.style.display = "none"} />
             )}
@@ -220,7 +221,7 @@ export default function SEOPage() {
               <Field label="Phone (E.164 format)" value={form.schemaOrgPhone || form.storePhone}
                 onChange={e => set("schemaOrgPhone", e.target.value)} placeholder="+919876543210" />
               <Field label="Email" value={form.schemaOrgEmail || form.storeEmail}
-                onChange={e => set("schemaOrgEmail", e.target.value)} placeholder="info@agronest.in" />
+                onChange={e => set("schemaOrgEmail", e.target.value)} placeholder="axiomcropsciences@gmail.com" />
             </div>
           </div>
 

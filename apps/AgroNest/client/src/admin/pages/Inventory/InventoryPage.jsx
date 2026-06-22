@@ -67,7 +67,7 @@ function QuickStockAdjustPanel() {
   return (
     <div className="inventory-card" style={{ marginBottom: 24, padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-        <FiBox style={{ color: "var(--site-primary)" }} />
+        <FiBox style={{ color: "var(--primary)" }} />
         <h3 style={{ fontSize: 16, fontWeight: 600 }}>Quick Stock Adjustment</h3>
       </div>
       
@@ -282,7 +282,7 @@ export default function InventoryPage() {
       <PageHeader
         title="Inventory Management"
         subtitle={`Track and update stock for ${total} products seamlessly`}
-        icon={<FiTrendingUp style={{ color: "var(--site-primary)" }} />}
+        icon={<FiTrendingUp style={{ color: "var(--primary)" }} />}
       />
 
       <QuickStockAdjustPanel />
@@ -306,40 +306,42 @@ export default function InventoryPage() {
       {/* Table Card */}
       <div className="inventory-card">
         <div className="table-wrap">
-          <table className="admin-table inventory-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>SKU</th>
-                <th>Track Inventory</th>
-                <th>Stock Quantity</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={i}>
-                    {Array.from({ length: 5 }).map((__, j) => (
-                      <td key={j}><Skeleton height={28} style={{ borderRadius: 6 }} /></td>
-                    ))}
-                  </tr>
-                ))
-              ) : products.length === 0 ? (
+          <div className="table-responsive">
+            <table className="admin-table inventory-table">
+              <thead>
                 <tr>
-                  <td colSpan={5}>
-                    <div className="empty-state glass-empty">
-                      <div className="empty-icon"><FiBox size={40} /></div>
-                      <h3>No Products Found</h3>
-                      <p>Try adjusting your search criteria or add new products.</p>
-                    </div>
-                  </td>
+                  <th>Product</th>
+                  <th>SKU</th>
+                  <th>Track Inventory</th>
+                  <th>Stock Quantity</th>
+                  <th>Actions</th>
                 </tr>
-              ) : products.map(p => (
-                <InventoryRow key={p._id} product={p} />
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i}>
+                      {Array.from({ length: 5 }).map((__, j) => (
+                        <td key={j}><Skeleton height={28} style={{ borderRadius: 6 }} /></td>
+                      ))}
+                    </tr>
+                  ))
+                ) : products.length === 0 ? (
+                  <tr>
+                    <td colSpan={5}>
+                      <div className="empty-state glass-empty">
+                        <div className="empty-icon"><FiBox size={40} /></div>
+                        <h3>No Products Found</h3>
+                        <p>Try adjusting your search criteria or add new products.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : products.map(p => (
+                  <InventoryRow key={p._id} product={p} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}
@@ -481,9 +483,9 @@ export default function InventoryPage() {
         }
         .premium-input:focus {
           outline: none;
-          border-color: var(--site-primary);
+          border-color: var(--primary);
           background: rgba(255, 255, 255, 0.05);
-          box-shadow: 0 0 0 3px rgba(var(--site-primary-rgb), 0.1);
+          box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
         }
         .premium-input:disabled {
           opacity: 0.5;
@@ -555,12 +557,12 @@ export default function InventoryPage() {
           transition: cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.4s;
         }
         .premium-switch input:checked + .slider {
-          background-color: rgba(var(--site-primary-rgb), 0.15);
-          border-color: var(--site-primary);
+          background-color: rgba(var(--primary-rgb), 0.15);
+          border-color: var(--primary);
         }
         .premium-switch input:checked + .slider:before {
           transform: translateX(20px);
-          background-color: var(--site-primary);
+          background-color: var(--primary);
         }
         .premium-switch .slider.round {
           border-radius: 24px;
@@ -584,15 +586,15 @@ export default function InventoryPage() {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .save-btn.active {
-          background: var(--site-primary);
-          border-color: var(--site-primary);
+          background: var(--primary);
+          border-color: var(--primary);
           color: white;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(var(--site-primary-rgb), 0.2);
+          box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
         }
         .save-btn.active:hover {
           transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(var(--site-primary-rgb), 0.3);
+          box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.3);
         }
         .save-btn.active:active {
           transform: translateY(1px);

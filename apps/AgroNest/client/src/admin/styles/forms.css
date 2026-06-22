@@ -31,6 +31,13 @@
   width: 100%;
 }
 
+.form-group select option,
+.admin-layout select option {
+  background: var(--card);
+  color: var(--text);
+}
+
+
 .form-group textarea {
   height: auto;
   padding: 14px 16px;
@@ -331,7 +338,7 @@ input:checked + .slider::before { transform: translateX(20px); }
 }
 
 .reorder-image-content.is-main {
-  box-shadow: 0 0 0 3px var(--site-primary, #d6a46a);
+  box-shadow: 0 0 0 3px var(--primary, #d6a46a);
 }
 
 .reorder-image-content img {

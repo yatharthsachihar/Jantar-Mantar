@@ -5,7 +5,7 @@ import { FiArrowRight, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import Navbar       from "../../components/navigation/Navbar";
 import Footer       from "../../components/navigation/Footer";
 import CategoryCard from "../../components/category/CategoryCard";
-import API          from "../../api/axios";
+import API, { mediaUrl } from "../../api/axios";
 import { pageApi }  from "../../api/pageApi";
 import "../../styles/site.css";
 import "../About/AboutPage.css";
@@ -65,7 +65,7 @@ function SectionTeam({ data }) {
             <div key={idx} className="about-team-card">
               <div className="about-team-avatar">
                 {m.avatar ? (
-                  <img src={m.avatar} alt={m.name} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                  <img src={mediaUrl(m.avatar)} alt={m.name} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
                 ) : (
                   m.name ? m.name[0] : "?"
                 )}
@@ -127,7 +127,7 @@ function SectionContactInfo({ data }) {
             <div>
               <div className="contact-chip-label">{c.title}</div>
               <div className="contact-chip-value">{c.value}</div>
-              {c.note && <div style={{ fontSize: 11, color: "var(--site-text-muted)", marginTop: 2 }}>{c.note}</div>}
+              {c.note && <div style={{ fontSize: 11, color: "rgba(255, 255, 255, 0.7)", marginTop: 2 }}>{c.note}</div>}
             </div>
           </div>
         ))}
@@ -222,7 +222,7 @@ export default function CategoriesPage() {
       {heroSection ? (
         <section 
           className="cats-page-hero" 
-          style={heroSection.data.image ? { backgroundImage: `url(${heroSection.data.image})`, backgroundSize: "cover", backgroundPosition: "center", position: "relative" } : {}}
+          style={heroSection.data.image ? { backgroundImage: `url(${mediaUrl(heroSection.data.image)})`, backgroundSize: "cover", backgroundPosition: "center", position: "relative" } : {}}
         >
           {heroSection.data.image && <div className="about-hero-overlay" style={{ position: "absolute", inset: 0, zIndex: 1 }} />}
           <div className="site-container" style={heroSection.data.image ? { position: "relative", zIndex: 2 } : {}}>

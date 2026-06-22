@@ -80,7 +80,7 @@ export default function DeactivatedPage() {
           <div style={{ fontWeight: 700, color: "var(--site-text)" }}>Support Contacts:</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--site-text)" }}>
             <FiMail style={{ color: "var(--site-primary)" }} />
-            <span>info@agronest.in</span>
+            <span>axiomcropsciences@gmail.com</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--site-text)" }}>
             <FiPhone style={{ color: "var(--site-primary)" }} />

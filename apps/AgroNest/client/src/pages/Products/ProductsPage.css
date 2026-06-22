@@ -43,6 +43,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
 .plp-sidebar-head {
@@ -64,13 +66,32 @@
 
 .plp-filter-group { display: flex; flex-direction: column; gap: 6px; }
 
-.plp-filter-label {
+.plp-filter-group details summary {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--site-text-muted);
   margin-bottom: 8px;
+  cursor: pointer;
+  list-style: none; /* Hide default triangle */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plp-filter-group details summary::-webkit-details-marker {
+  display: none;
+}
+
+.plp-filter-group details summary::after {
+  content: "▼";
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.plp-filter-group details[open] summary::after {
+  transform: rotate(180deg);
 }
 
 .plp-search-box {

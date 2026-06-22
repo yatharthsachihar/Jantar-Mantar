@@ -46,7 +46,7 @@ const DEFAULTS = {
     about:      false,
     contact:    true,
   },
-  storeEmail: 'info@agronest.in',
+  storeEmail: 'axiomcropsciences@gmail.com',
   storePhone: '+91 98765 43210',
   storeAddress: 'B-235 Sobo Centre Gym Khana Road Bhopal Ahmedabad (Gujrat)382210',
   freeShippingAbove: 999,
@@ -200,6 +200,19 @@ export function SettingsProvider({ children }) {
   useEffect(() => {
     const id = setInterval(fetchSettings, 15000);
     return () => clearInterval(id);
+  }, [fetchSettings]);
+
+  // Refetch the moment the tab regains focus / becomes visible, so a store-mode
+  // (or any settings) change made in the admin shows immediately when you
+  // switch back to the storefront tab — no waiting for the 15s poll.
+  useEffect(() => {
+    const onFocus = () => { if (document.visibilityState !== "hidden") fetchSettings(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, [fetchSettings]);
 
   const setSettings = useCallback((data) => {

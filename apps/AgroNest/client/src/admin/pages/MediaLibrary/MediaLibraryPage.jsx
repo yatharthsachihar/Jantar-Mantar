@@ -196,45 +196,47 @@ export default function MediaLibraryPage() {
           {/* List view */}
           {view === "list" && filtered.length > 0 && (
             <div className="table-wrap">
-              <table className="admin-table">
-                <thead>
-                  <tr><th>File</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr>
-                </thead>
-                <tbody>
-                  {isLoading
-                    ? Array.from({ length: 8 }).map((_, i) => (
-                        <tr key={i}>{Array.from({ length: 5 }).map((__, j) => <td key={j}><Skeleton height={16} /></td>)}</tr>
-                      ))
-                    : filtered.map(f => (
-                      <tr key={f._id} onClick={() => setSelected(f === selected ? null : f)}
-                        style={{ cursor: "pointer", background: selected?._id === f._id ? "var(--card-hover)" : undefined }}>
-                        <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{ width: 40, height: 40, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              {isImg(f)
-                                ? <img src={f.url} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                : <FiFile size={18} style={{ color: "var(--text-muted)" }} />}
+              <div className="table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr><th>File</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr>
+                  </thead>
+                  <tbody>
+                    {isLoading
+                      ? Array.from({ length: 8 }).map((_, i) => (
+                          <tr key={i}>{Array.from({ length: 5 }).map((__, j) => <td key={j}><Skeleton height={16} /></td>)}</tr>
+                        ))
+                      : filtered.map(f => (
+                        <tr key={f._id} onClick={() => setSelected(f === selected ? null : f)}
+                          style={{ cursor: "pointer", background: selected?._id === f._id ? "var(--card-hover)" : undefined }}>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ width: 40, height: 40, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {isImg(f)
+                                  ? <img src={f.url} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  : <FiFile size={18} style={{ color: "var(--text-muted)" }} />}
+                              </div>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{f.name || "Unnamed"}</span>
                             </div>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{f.name || "Unnamed"}</span>
-                          </div>
-                        </td>
-                        <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{f.type || "—"}</td>
-                        <td style={{ fontSize: 13 }}>{formatBytes(f.size)}</td>
-                        <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{f.createdAt ? timeAgo(f.createdAt) : "—"}</td>
-                        <td>
-                          <div className="table-actions">
-                            <button className="btn-view" title="Copy URL" onClick={e => { e.stopPropagation(); copyUrl(f.url); }}>
-                              {copied === f.url ? <FiCheck /> : <FiCopy />}
-                            </button>
-                            <button className="btn-delete" title="Delete" onClick={e => { e.stopPropagation(); deleteMutation.mutate(f._id); }}>
-                              <FiTrash2 />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+                          </td>
+                          <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{f.type || "—"}</td>
+                          <td style={{ fontSize: 13 }}>{formatBytes(f.size)}</td>
+                          <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{f.createdAt ? timeAgo(f.createdAt) : "—"}</td>
+                          <td>
+                            <div className="table-actions">
+                              <button className="btn-view" title="Copy URL" onClick={e => { e.stopPropagation(); copyUrl(f.url); }}>
+                                {copied === f.url ? <FiCheck /> : <FiCopy />}
+                              </button>
+                              <button className="btn-delete" title="Delete" onClick={e => { e.stopPropagation(); deleteMutation.mutate(f._id); }}>
+                                <FiTrash2 />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

@@ -54,7 +54,7 @@
 }
 
 .nc-actions button:hover {
-  color: var(--site-primary, #d6a46a);
+  color: var(--primary, #d6a46a);
 }
 
 /* List */
@@ -107,7 +107,7 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: var(--site-primary, #d6a46a);
+  background: var(--primary, #d6a46a);
 }
 
 /* Icon */

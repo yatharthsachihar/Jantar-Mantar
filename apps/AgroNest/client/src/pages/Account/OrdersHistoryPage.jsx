@@ -6,6 +6,7 @@ import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
 import { useUser } from "../../context/UserContext";
 import { orderApi } from "../../api/orderApi";
+import { mediaUrl } from "../../api/axios";
 import "../../styles/site.css";
 
 export default function OrdersHistoryPage() {
@@ -202,7 +203,7 @@ export default function OrdersHistoryPage() {
                                 <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed var(--site-border)" }}>
                                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                                     {item.image && (
-                                      <img src={item.image} alt={item.name} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid var(--site-border)" }} />
+                                      <img src={mediaUrl(item.image)} alt={item.name} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid var(--site-border)" }} />
                                     )}
                                     <div>
                                       <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--site-text)" }}>{item.name}</div>

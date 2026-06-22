@@ -14,6 +14,7 @@ import Button from "../../components/common/Button";
 import Switch from "../../components/common/Switch";
 import Input from "../../components/common/Input";
 import Textarea from "../../components/common/Textarea";
+import ImageInput from "../../components/common/ImageInput";
 import "./WebsiteBuilderPage.css";
 
 /* ─── Reusable accordion panel ─── */
@@ -333,16 +334,11 @@ export default function WebsiteBuilderPage() {
             <FieldRow label="Tagline" hint="Short brand description">
               <WbInput value={form.tagline} onChange={v => set("tagline", v)} placeholder="Grow Better. Harvest More." />
             </FieldRow>
-            <FieldRow label="Logo URL" hint="Paste hosted image URL">
-              <WbInput value={form.storeLogo} onChange={v => set("storeLogo", v)} placeholder="https://..." />
+            <FieldRow label="Logo URL" hint="Drag & drop, browse Media Library, or link an image directly">
+              <ImageInput value={form.storeLogo} onChange={v => set("storeLogo", v)} placeholder="https://..." />
             </FieldRow>
-            {form.storeLogo && (
-              <FieldRow label="Preview">
-                <img src={form.storeLogo} alt="Logo"
-                  style={{ maxHeight: 60, maxWidth: 200, objectFit:"contain", borderRadius:8, border:"1px solid var(--border)" }} />
-              </FieldRow>
-            )}
           </Panel>
+
 
           <Panel icon={<FiMail />} title="Social Links">
             {["facebook","instagram","twitter","youtube","linkedin"].map(platform => (
@@ -563,7 +559,7 @@ export default function WebsiteBuilderPage() {
 
           <Panel icon={<FiGlobe />} title="Contact Information" defaultOpen>
             <FieldRow label="Email">
-              <WbInput value={form.storeEmail} onChange={v => set("storeEmail", v)} placeholder="info@agronest.in" />
+              <WbInput value={form.storeEmail} onChange={v => set("storeEmail", v)} placeholder="axiomcropsciences@gmail.com" />
             </FieldRow>
             <FieldRow label="Phone">
               <WbInput value={form.storePhone} onChange={v => set("storePhone", v)} placeholder="+91 98765 43210" />

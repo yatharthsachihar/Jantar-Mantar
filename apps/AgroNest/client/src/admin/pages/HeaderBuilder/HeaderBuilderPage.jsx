@@ -6,6 +6,8 @@ import { settingsApi } from "../../../api/settingsApi";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Skeleton from "../../components/common/Skeleton";
+import { mediaUrl } from "../../../api/axios";
+import ImageInput from "../../components/common/ImageInput";
 
 const s = {
   input:  { padding: "10px 14px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text)", fontSize: 13, fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box" },
@@ -124,11 +126,13 @@ export default function HeaderBuilderPage() {
       <div style={s.card}>
         <div style={s.head}>🖼️ Logo</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          <div style={s.field}>
-            <label style={s.label}>Logo Image URL</label>
-            <input style={s.input} value={form.storeLogo || ""}
-              onChange={e => set("storeLogo", e.target.value)}
-              placeholder="https://... (leave blank for default AN logo)" />
+          <div style={{ ...s.field, gridColumn: "1 / -1" }}>
+            <ImageInput
+              label="Logo Image"
+              value={form.storeLogo}
+              onChange={v => set("storeLogo", v)}
+              placeholder="https://... (leave blank for default AN logo)"
+            />
           </div>
           <div style={s.field}>
             <label style={s.label}>Logo Height (px)</label>
@@ -147,7 +151,7 @@ export default function HeaderBuilderPage() {
         </div>
         {form.storeLogo && (
           <div style={{ marginTop: 14, padding: 14, background: "var(--bg)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img src={form.storeLogo} alt="Logo preview"
+            <img src={mediaUrl(form.storeLogo)} alt="Logo preview"
               style={{ height: `${form.storeLogoHeight || 52}px`, objectFit: "contain", marginLeft: `${form.storeLogoXOffset || 0}px` }}
               onError={e => e.target.style.display = "none"} />
           </div>

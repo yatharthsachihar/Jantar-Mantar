@@ -189,72 +189,74 @@ export default function UsersPage() {
 
       {/* Table */}
       <div className="table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr><th>User</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {isLoading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>{Array.from({ length: 5 }).map((__, j) => <td key={j}><Skeleton height={16} /></td>)}</tr>
-                ))
-              : filtered.length === 0
-              ? (
-                <tr><td colSpan={5}>
-                  <div className="empty-state">
-                    <FiShield />
-                    <h3>No Admin Users</h3>
-                    <p>Create the first admin account</p>
-                    {canEdit && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> New Admin User</Button>}
-                  </div>
-                </td></tr>
-              )
-              : filtered.map(u => {
-                const rc = ROLE_COLOR[u.role] || ROLE_COLOR.viewer;
-                const initials = u.name ? u.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() : "?";
-                return (
-                  <tr key={u._id}>
-                    <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
-                          {initials}
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
+              <tr><th>User</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {isLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}>{Array.from({ length: 5 }).map((__, j) => <td key={j}><Skeleton height={16} /></td>)}</tr>
+                  ))
+                : filtered.length === 0
+                ? (
+                  <tr><td colSpan={5}>
+                    <div className="empty-state">
+                      <FiShield />
+                      <h3>No Admin Users</h3>
+                      <p>Create the first admin account</p>
+                      {canEdit && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> New Admin User</Button>}
+                    </div>
+                  </td></tr>
+                )
+                : filtered.map(u => {
+                  const rc = ROLE_COLOR[u.role] || ROLE_COLOR.viewer;
+                  const initials = u.name ? u.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() : "?";
+                  return (
+                    <tr key={u._id}>
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
+                            {initials}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>{u.name}</div>
+                            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{u.email}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>{u.name}</div>
-                          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{u.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ padding: "4px 12px", borderRadius: 100, fontSize: 11, fontWeight: 800, background: rc.bg, color: rc.color }}>
-                        {u.role?.replace("_", " ").toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                      {u.lastLogin ? new Date(u.lastLogin).toLocaleDateString("en-IN") : "Never"}
-                    </td>
-                    <td>
-                      <button onClick={() => toggleMutation.mutate({ id: u._id, isActive: !u.isActive })}
-                        disabled={!canEdit}
-                        style={{ background: "none", border: "none", cursor: !canEdit ? "not-allowed" : "pointer", fontSize: 22, color: u.isActive !== false ? "#22c55e" : "var(--border)", opacity: !canEdit ? 0.5 : 1 }}>
-                        {u.isActive !== false ? <FiToggleRight /> : <FiToggleLeft />}
-                      </button>
-                    </td>
-                    <td>
-                      {canEdit ? (
-                        <div className="table-actions">
-                          <button className="btn-view" onClick={() => setModal(u)}><FiEdit /></button>
-                          <button className="btn-delete" onClick={() => setDeleting(u)}><FiTrash2 /></button>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Read only</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
+                      </td>
+                      <td>
+                        <span style={{ padding: "4px 12px", borderRadius: 100, fontSize: 11, fontWeight: 800, background: rc.bg, color: rc.color }}>
+                          {u.role?.replace("_", " ").toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        {u.lastLogin ? new Date(u.lastLogin).toLocaleDateString("en-IN") : "Never"}
+                      </td>
+                      <td>
+                        <button onClick={() => toggleMutation.mutate({ id: u._id, isActive: !u.isActive })}
+                          disabled={!canEdit}
+                          style={{ background: "none", border: "none", cursor: !canEdit ? "not-allowed" : "pointer", fontSize: 22, color: u.isActive !== false ? "#22c55e" : "var(--border)", opacity: !canEdit ? 0.5 : 1 }}>
+                          {u.isActive !== false ? <FiToggleRight /> : <FiToggleLeft />}
+                        </button>
+                      </td>
+                      <td>
+                        {canEdit ? (
+                          <div className="table-actions">
+                            <button className="btn-view" onClick={() => setModal(u)}><FiEdit /></button>
+                            <button className="btn-delete" onClick={() => setDeleting(u)}><FiTrash2 /></button>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Read only</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Create / Edit Modal */}

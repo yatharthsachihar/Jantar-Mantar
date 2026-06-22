@@ -120,3 +120,81 @@
   align-items:center;
   gap:12px;
 }
+
+.topbar-hamburger-btn {
+  display: none;
+  width: 46px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.topbar-hamburger-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--card-hover);
+}
+
+@media(max-width:768px){
+  .admin-topbar {
+    padding: 0 16px;
+    height: 70px;
+  }
+  .topbar-hamburger-btn {
+    display: flex;
+  }
+  .topbar-search {
+    width: 46px !important;
+    height: 46px !important;
+    padding: 0 !important;
+    justify-content: center;
+    border-radius: 13px !important;
+  }
+  .topbar-search span {
+    display: none !important;
+  }
+  .topbar-right {
+    gap: 8px;
+  }
+  .topbar-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+  }
+  .topbar-site-btn {
+    width: 46px !important;
+    height: 46px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    border-radius: 13px !important;
+  }
+  .topbar-site-label {
+    display: none !important;
+  }
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+  .topbar-user > div:last-child {
+    display: none !important;
+  }
+  /* Hide store mode switch on mobile to save space */
+  .admin-topbar div[title*="Switch the storefront"] {
+    display: none !important;
+  }
+}
+
+@media(max-width:480px){
+  /* Hide live site button and theme toggle on extremely narrow screens */
+  .topbar-site-btn,
+  .topbar-btn[title="Toggle theme"] {
+    display: none !important;
+  }
+}

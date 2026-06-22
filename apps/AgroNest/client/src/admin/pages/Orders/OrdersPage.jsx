@@ -75,73 +75,75 @@ export default function OrdersPage() {
       </div>
 
       <div className="table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Payment</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>{Array.from({ length: 8 }).map((__, j) => <td key={j}><Skeleton height={18} /></td>)}</tr>
-              ))
-            ) : filtered.map(order => (
-              <tr key={order._id}>
-                <td style={{ fontFamily: "monospace", fontSize: 12, color: "var(--text-muted)" }}>
-                  #{order._id?.slice(-8).toUpperCase()}
-                </td>
-                <td>
-                  <div style={{ fontWeight: 600 }}>{order.customerName}</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{order.customerPhone}</div>
-                </td>
-                <td>{order.items?.length || 0} items</td>
-                <td style={{ fontWeight: 700, color: "var(--primary)" }}>₹{order.totalAmount?.toLocaleString()}</td>
-                <td><span className="badge badge-muted">{order.paymentMethod || "COD"}</span></td>
-                <td>
-                  <span className={`badge ${STATUS_BADGE[order.status] || "badge-muted"}`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                  {new Date(order.createdAt).toLocaleDateString()}
-                </td>
-                <td>
-                  <div className="table-actions">
-                    <button className="btn-view" onClick={() => setViewOrder(order)}><FiEye /></button>
-                    <select
-                      style={{ height: 34, borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", padding: "0 8px", fontSize: 12, cursor: "pointer" }}
-                      value={order.status}
-                      onChange={e => updateMutation.mutate({ id: order._id, status: e.target.value })}
-                    >
-                      {STATUS_OPTIONS.filter(s => s.value).map(s => (
-                        <option key={s.value} value={s.value}>{s.label}</option>
-                      ))}
-                    </select>
-                    <button 
-                      className="btn-delete" 
-                      onClick={() => {
-                        if (window.confirm("Are you sure you want to delete this order?")) {
-                          deleteMutation.mutate(order._id);
-                        }
-                      }}
-                      title="Delete Order"
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                </td>
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>{Array.from({ length: 8 }).map((__, j) => <td key={j}><Skeleton height={18} /></td>)}</tr>
+                ))
+              ) : filtered.map(order => (
+                <tr key={order._id}>
+                  <td style={{ fontFamily: "monospace", fontSize: 12, color: "var(--text-muted)" }}>
+                    #{order._id?.slice(-8).toUpperCase()}
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{order.customerName}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{order.customerPhone}</div>
+                  </td>
+                  <td>{order.items?.length || 0} items</td>
+                  <td style={{ fontWeight: 700, color: "var(--primary)" }}>₹{order.totalAmount?.toLocaleString()}</td>
+                  <td><span className="badge badge-muted">{order.paymentMethod || "COD"}</span></td>
+                  <td>
+                    <span className={`badge ${STATUS_BADGE[order.status] || "badge-muted"}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </td>
+                  <td>
+                    <div className="table-actions">
+                      <button className="btn-view" onClick={() => setViewOrder(order)}><FiEye /></button>
+                      <select
+                        style={{ height: 34, borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", padding: "0 8px", fontSize: 12, cursor: "pointer" }}
+                        value={order.status}
+                        onChange={e => updateMutation.mutate({ id: order._id, status: e.target.value })}
+                      >
+                        {STATUS_OPTIONS.filter(s => s.value).map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                      <button 
+                        className="btn-delete" 
+                        onClick={() => {
+                          if (window.confirm("Are you sure you want to delete this order?")) {
+                            deleteMutation.mutate(order._id);
+                          }
+                        }}
+                        title="Delete Order"
+                      >
+                        <FiTrash2 />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Order Detail Modal */}

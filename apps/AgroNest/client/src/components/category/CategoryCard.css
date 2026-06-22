@@ -1,47 +1,81 @@
 /* ============================================================
-   CATEGORY CARD — Professional with image & hover effects
+   CATEGORY CARD — Clean, crisp design (no gradient overlays)
    ============================================================ */
 
 .site-cat-card {
   position: relative;
   aspect-ratio: 4 / 3;
-  border-radius: 24px;
+  border-radius: 20px;
   overflow: hidden;
   text-decoration: none;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 22px;
+  justify-content: flex-end;
+  padding: 18px;
+  background: var(--site-card);
+  border: 1.5px solid var(--site-border);
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.35s;
+              box-shadow 0.35s, border-color 0.35s;
   cursor: pointer;
 }
 
 .site-cat-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.14);
+  border-color: var(--site-primary);
 }
 
-/* Background image */
+/* Background layer — solid, no gradient */
 .site-cat-card-bg {
   position: absolute;
   inset: 0;
+  background: var(--site-card);
   transition: transform 0.5s ease;
 }
 
 .site-cat-card:hover .site-cat-card-bg {
-  transform: scale(1.08);
+  transform: scale(1.04);
 }
 
-/* Gradient overlay */
+/* The category image — contained & uniform, bigger than before.
+   Reduced padding so the image takes up more card real-estate. */
+.site-cat-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center 40%;
+  padding: 10px 10px 60px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.site-cat-card-img.loaded { opacity: 1; }
+
+/* Loading placeholder shimmer */
+.site-cat-card-shimmer-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg,
+    var(--site-border) 30%,
+    var(--site-card) 50%,
+    var(--site-border) 70%);
+  background-size: 200% 100%;
+  animation: catShimmer 1.4s ease-in-out infinite;
+}
+@keyframes catShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Subtle overlay — only when image is visible, much lighter */
 .site-cat-card-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(0,0,0,0.1) 0%,
-    rgba(0,0,0,0.35) 40%,
-    rgba(0,0,0,0.75) 100%
+    transparent 40%,
+    rgba(0,0,0,0.50) 100%
   );
   transition: background 0.35s;
 }
@@ -49,32 +83,31 @@
 .site-cat-card:hover .site-cat-card-overlay {
   background: linear-gradient(
     to bottom,
-    rgba(0,0,0,0.15) 0%,
-    rgba(0,0,0,0.45) 40%,
-    rgba(0,0,0,0.85) 100%
+    transparent 35%,
+    rgba(0,0,0,0.60) 100%
   );
 }
 
-/* Shimmer sweep on hover */
-.site-cat-card-shimmer {
+/* Shine sweep on hover */
+.site-cat-card-shine {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     105deg,
     transparent 40%,
-    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.06) 50%,
     transparent 60%
   );
   transform: translateX(-100%);
   transition: transform 0s;
 }
 
-.site-cat-card:hover .site-cat-card-shimmer {
+.site-cat-card:hover .site-cat-card-shine {
   transform: translateX(100%);
   transition: transform 0.6s ease;
 }
 
-/* Top row */
+/* Top row (icon/count — if needed) */
 .site-cat-card-top {
   position: relative;
   z-index: 2;
@@ -116,18 +149,32 @@
   gap: 4px;
 }
 
+/* When no image loaded, dark text on light card */
+.site-cat-card-body-dark .site-cat-card-name {
+  color: var(--site-text);
+  text-shadow: none;
+}
+.site-cat-card-body-dark .site-cat-card-desc {
+  color: var(--site-text-muted);
+}
+.site-cat-card-body-dark .site-cat-card-link {
+  color: var(--site-primary);
+  background: var(--site-green-light);
+  border-color: var(--site-border);
+}
+
 .site-cat-card-name {
   font-family: var(--site-font-display);
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: white;
   line-height: 1.2;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.45);
 }
 
 .site-cat-card-desc {
   font-size: 13px;
-  color: rgba(255,255,255,0.78);
+  color: rgba(255,255,255,0.82);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -158,19 +205,29 @@
   transform: translateX(4px);
 }
 
-/* Grid — 3 cols default, 2 on tablet, 1 on mobile */
+/* Skeleton placeholder card */
+.site-cat-card-skeleton {
+  aspect-ratio: 4 / 3;
+  border-radius: 20px;
+  background: linear-gradient(90deg, var(--site-border) 25%, var(--site-card) 50%, var(--site-border) 75%);
+  background-size: 200% 100%;
+  animation: catShimmer 1.4s ease-in-out infinite;
+}
+
+/* Grid — 3 cols default, 2 on tablet, 2 on mobile */
 .feat-cat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 22px;
 }
 
 @media (max-width: 960px)  { .feat-cat-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px)  { 
   .feat-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } 
-  .site-cat-card { padding: 14px; border-radius: 16px; }
+  .site-cat-card { padding: 12px; border-radius: 14px; aspect-ratio: 3 / 3; }
+  .site-cat-card-img { padding: 8px 8px 50px; }
   .site-cat-card-icon { font-size: 1.6rem; }
-  .site-cat-card-name { font-size: 1.1rem; }
+  .site-cat-card-name { font-size: 1.05rem; }
   .site-cat-card-desc { font-size: 11px; -webkit-line-clamp: 2; }
   .site-cat-card-count { font-size: 9px; padding: 2px 8px; }
   .site-cat-card-link { font-size: 11px; padding: 4px 12px; margin-top: 6px; }

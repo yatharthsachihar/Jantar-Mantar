@@ -251,111 +251,113 @@ export default function CouponsPage() {
 
       {/* Table */}
       <div className="table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Type</th>
-              <th>Value</th>
-              <th>Min Order</th>
-              <th>Used / Limit</th>
-              <th>Expiry</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>{Array.from({ length: 8 }).map((__, j) => (
-                  <td key={j}><Skeleton height={16} /></td>
-                ))}</tr>
-              ))
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={8}>
-                <div className="empty-state">
-                  <FiTag />
-                  <h3>No Coupons Yet</h3>
-                  <p>Create your first discount code</p>
-                  <Button size="sm" onClick={() => setModal("create")}><FiPlus /> New Coupon</Button>
-                </div>
-              </td></tr>
-            ) : filtered.map(c => {
-              const isExpired = c.expiryDate && new Date(c.expiryDate) < now;
-              return (
-                <tr key={c._id} style={{ opacity: (!c.isActive || isExpired) ? 0.6 : 1 }}>
-                  {/* Code */}
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontFamily: "monospace", fontWeight: 800, fontSize: 14,
-                        letterSpacing: 1, color: "var(--primary)" }}>
-                        {c.code}
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Min Order</th>
+                <th>Used / Limit</th>
+                <th>Expiry</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>{Array.from({ length: 8 }).map((__, j) => (
+                    <td key={j}><Skeleton height={16} /></td>
+                  ))}</tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={8}>
+                  <div className="empty-state">
+                    <FiTag />
+                    <h3>No Coupons Yet</h3>
+                    <p>Create your first discount code</p>
+                    <Button size="sm" onClick={() => setModal("create")}><FiPlus /> New Coupon</Button>
+                  </div>
+                </td></tr>
+              ) : filtered.map(c => {
+                const isExpired = c.expiryDate && new Date(c.expiryDate) < now;
+                return (
+                  <tr key={c._id} style={{ opacity: (!c.isActive || isExpired) ? 0.6 : 1 }}>
+                    {/* Code */}
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontFamily: "monospace", fontWeight: 800, fontSize: 14,
+                          letterSpacing: 1, color: "var(--primary)" }}>
+                          {c.code}
+                        </span>
+                        <button onClick={() => copyCode(c.code)}
+                          style={{ background: "none", border: "none", cursor: "pointer",
+                            color: "var(--text-muted)", fontSize: 14, padding: 2 }}>
+                          <FiCopy />
+                        </button>
+                      </div>
+                      {c.description && (
+                        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{c.description}</div>
+                      )}
+                    </td>
+                    {/* Type */}
+                    <td>
+                      <span className={`badge ${TYPE_BADGE[c.type] || "badge-muted"}`} style={{ fontSize: 11 }}>
+                        {c.type}
                       </span>
-                      <button onClick={() => copyCode(c.code)}
+                    </td>
+                    {/* Value */}
+                    <td style={{ fontWeight: 700, color: "var(--primary)" }}>
+                      {c.type === "percentage"
+                        ? `${c.value}%`
+                        : c.type === "flat"
+                        ? `₹${c.value}`
+                        : "Free Ship"}
+                    </td>
+                    {/* Min Order */}
+                    <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                      {c.minOrderAmount > 0 ? `₹${c.minOrderAmount}` : "—"}
+                    </td>
+                    {/* Used / Limit */}
+                    <td style={{ fontSize: 13 }}>
+                      <span style={{ fontWeight: 600 }}>{c.usedCount || 0}</span>
+                      <span style={{ color: "var(--text-muted)" }}>
+                        {" / "}{c.usageLimit || "∞"}
+                      </span>
+                    </td>
+                    {/* Expiry */}
+                    <td style={{ fontSize: 12, color: isExpired ? "#ef4444" : "var(--text-muted)" }}>
+                      {c.expiryDate
+                        ? new Date(c.expiryDate).toLocaleDateString("en-IN")
+                        : "No expiry"}
+                      {isExpired && (
+                        <span style={{ display: "block", fontSize: 10, color: "#ef4444", fontWeight: 700 }}>EXPIRED</span>
+                      )}
+                    </td>
+                    {/* Status */}
+                    <td>
+                      <button
+                        onClick={() => toggleMutation.mutate({ id: c._id, isActive: !c.isActive })}
                         style={{ background: "none", border: "none", cursor: "pointer",
-                          color: "var(--text-muted)", fontSize: 14, padding: 2 }}>
-                        <FiCopy />
+                          fontSize: 22, color: c.isActive ? "#22c55e" : "var(--border)" }}>
+                        {c.isActive ? <FiToggleRight /> : <FiToggleLeft />}
                       </button>
-                    </div>
-                    {c.description && (
-                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{c.description}</div>
-                    )}
-                  </td>
-                  {/* Type */}
-                  <td>
-                    <span className={`badge ${TYPE_BADGE[c.type] || "badge-muted"}`} style={{ fontSize: 11 }}>
-                      {c.type}
-                    </span>
-                  </td>
-                  {/* Value */}
-                  <td style={{ fontWeight: 700, color: "var(--primary)" }}>
-                    {c.type === "percentage"
-                      ? `${c.value}%`
-                      : c.type === "flat"
-                      ? `₹${c.value}`
-                      : "Free Ship"}
-                  </td>
-                  {/* Min Order */}
-                  <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                    {c.minOrderAmount > 0 ? `₹${c.minOrderAmount}` : "—"}
-                  </td>
-                  {/* Used / Limit */}
-                  <td style={{ fontSize: 13 }}>
-                    <span style={{ fontWeight: 600 }}>{c.usedCount || 0}</span>
-                    <span style={{ color: "var(--text-muted)" }}>
-                      {" / "}{c.usageLimit || "∞"}
-                    </span>
-                  </td>
-                  {/* Expiry */}
-                  <td style={{ fontSize: 12, color: isExpired ? "#ef4444" : "var(--text-muted)" }}>
-                    {c.expiryDate
-                      ? new Date(c.expiryDate).toLocaleDateString("en-IN")
-                      : "No expiry"}
-                    {isExpired && (
-                      <span style={{ display: "block", fontSize: 10, color: "#ef4444", fontWeight: 700 }}>EXPIRED</span>
-                    )}
-                  </td>
-                  {/* Status */}
-                  <td>
-                    <button
-                      onClick={() => toggleMutation.mutate({ id: c._id, isActive: !c.isActive })}
-                      style={{ background: "none", border: "none", cursor: "pointer",
-                        fontSize: 22, color: c.isActive ? "#22c55e" : "var(--border)" }}>
-                      {c.isActive ? <FiToggleRight /> : <FiToggleLeft />}
-                    </button>
-                  </td>
-                  {/* Actions */}
-                  <td>
-                    <div className="table-actions">
-                      <button className="btn-view" onClick={() => setModal(c)}><FiEdit /></button>
-                      <button className="btn-delete" onClick={() => setDeleting(c)}><FiTrash2 /></button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    {/* Actions */}
+                    <td>
+                      <div className="table-actions">
+                        <button className="btn-view" onClick={() => setModal(c)}><FiEdit /></button>
+                        <button className="btn-delete" onClick={() => setDeleting(c)}><FiTrash2 /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Create / Edit Modal */}

@@ -2,12 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   FiUser, FiPhone, FiMail, FiLock,
-  FiEye, FiEyeOff, FiMapPin, FiArrowRight, FiAlertCircle, FiArrowLeft,
+  FiEye, FiEyeOff, FiMapPin, FiArrowRight, FiAlertCircle, FiArrowLeft, FiShield, FiCheckCircle,
 } from "react-icons/fi";
+import toast from "react-hot-toast";
 import { useUser } from "../../context/UserContext";
 import { useSettings } from "../../context/SettingsContext";
 import "../../styles/site.css";
 import "./AuthPage.css";
+
+// TEMP: mock OTP gate, prefilled until a real SMS/OTP service is wired up.
+const MOCK_OTP = "123456";
 
 /* ── Indian states list ── */
 const INDIAN_STATES = [
@@ -61,9 +65,40 @@ export default function RegisterPage() {
   const [error,   setError]   = useState("");
   const [errors,  setErrors]  = useState({});
 
+  // ── Mock OTP verification gate ──
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
   const set = (field, val) => {
     setForm(prev => ({ ...prev, [field]: val }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
+    // Re-verification needed if the mobile number changes after verifying.
+    if (field === "mobile" && otpVerified) { setOtpVerified(false); setOtpSent(false); }
+  };
+
+  const handleSendOtp = () => {
+    if (!/^\d{10}$/.test(form.mobile)) {
+      setErrors(prev => ({ ...prev, mobile: "Enter a valid 10-digit mobile number first." }));
+      return;
+    }
+    setOtpSent(true);
+    setOtp(MOCK_OTP);          // prefilled for now
+    setOtpVerified(false);
+    setOtpError("");
+    toast.success(`OTP sent to ${form.mobile} (demo OTP: ${MOCK_OTP})`);
+  };
+
+  const handleVerifyOtp = () => {
+    if (otp.trim() === MOCK_OTP) {
+      setOtpVerified(true);
+      setOtpError("");
+      toast.success("Mobile verified!");
+    } else {
+      setOtpVerified(false);
+      setOtpError("Incorrect OTP. Please try again.");
+    }
   };
 
   /* ── Client-side validation ── */
@@ -85,6 +120,10 @@ export default function RegisterPage() {
     setError("");
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (!otpVerified) {
+      setError("Please verify your mobile number with the OTP before creating an account.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -183,21 +222,47 @@ export default function RegisterPage() {
               {errors.fullName && <div className="auth-field-error">{errors.fullName}</div>}
             </div>
 
-            {/* Mobile */}
+            {/* Mobile Number + inline OTP (same layout as login) */}
             <div className="auth-field">
-              <label className="auth-label">Mobile Number <span style={{ color:"#EF4444" }}>*</span></label>
-              <div className={`auth-input-wrap${errors.mobile ? " error" : ""}`}>
+              <label className="auth-label">Mobile Number (OTP) <span style={{ color:"#EF4444" }}>*</span></label>
+              <div className={`auth-input-wrap${(errors.mobile || (otpError && !otpSent)) ? " error" : ""}`}>
                 <span className="auth-input-icon"><FiPhone size={17} /></span>
                 <input
                   type="tel"
-                  placeholder="Enter your mobile number"
+                  inputMode="numeric"
+                  placeholder="Enter your 10-digit mobile number"
                   value={form.mobile}
                   onChange={e => set("mobile", e.target.value.replace(/\D/g, "").slice(0, 10))}
                   autoComplete="tel"
                   maxLength={10}
+                  disabled={otpVerified}
                 />
+                {!otpSent && !otpVerified && (
+                  <button type="button" className="auth-otp-verify" onClick={handleSendOtp}>Send OTP</button>
+                )}
+                {otpVerified && <FiCheckCircle size={18} style={{ color:"#16a34a", flexShrink:0 }} />}
               </div>
               {errors.mobile && <div className="auth-field-error">{errors.mobile}</div>}
+
+              {otpSent && !otpVerified && (
+                <>
+                  <div className={`auth-input-wrap${otpError ? " error" : ""}`} style={{ marginTop: 10 }}>
+                    <span className="auth-input-icon"><FiShield size={17} /></span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="Enter 6-digit OTP"
+                      value={otp}
+                      onChange={e => { setOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setOtpError(""); }}
+                    />
+                    <button type="button" className="auth-otp-verify" onClick={handleVerifyOtp}>Verify</button>
+                  </div>
+                  <div className="auth-otp-hint">Demo OTP is prefilled ({MOCK_OTP}). Click Verify to continue.</div>
+                </>
+              )}
+              {otpError && otpSent && <div className="auth-field-error">{otpError}</div>}
+              {otpVerified && <div className="auth-otp-ok"><FiCheckCircle size={13} /> Mobile verified</div>}
             </div>
 
             {/* Email */}
@@ -320,7 +385,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Submit */}
-            <button type="submit" className="auth-submit" disabled={loading}>
+            <button type="submit" className="auth-submit" disabled={loading || !otpVerified}>
               {loading
                 ? <span className="auth-btn-spinner" />
                 : <>Create My Account <FiArrowRight size={18} /></>

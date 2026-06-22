@@ -6,6 +6,7 @@ import { useCart }     from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import toast           from "react-hot-toast";
 import { mediaUrl }    from "../../api/axios";
+import EnquiryModal    from "./EnquiryModal";
 import "./ProductCard.css";
 
 const StarRating = React.memo(function StarRating({ rating = 4.5 }) {
@@ -28,6 +29,7 @@ const ProductCard = React.memo(function ProductCard({ product = {} }) {
   const navigate = useNavigate();
 
   const wished = isWishlisted(product._id);
+  const [enquiryOpen, setEnquiryOpen] = useState(false);
 
   const {
     _id          = "1",
@@ -116,8 +118,9 @@ const ProductCard = React.memo(function ProductCard({ product = {} }) {
 
   const handleEnquire = useCallback((e) => {
     e.preventDefault();
-    navigate(`/products/${slug || _id}?enquire=1`);
-  }, [navigate, slug, _id]);
+    e.stopPropagation();
+    setEnquiryOpen(true);
+  }, []);
 
   const handleToggleWishlist = useCallback((e) => {
     e.preventDefault();
@@ -248,6 +251,13 @@ const ProductCard = React.memo(function ProductCard({ product = {} }) {
           </button>
         )}
       </div>
+
+      {/* Enquiry modal — opens directly without navigating away */}
+      <EnquiryModal
+        product={product}
+        open={enquiryOpen}
+        onClose={() => setEnquiryOpen(false)}
+      />
     </div>
   );
 });

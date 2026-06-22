@@ -6,6 +6,7 @@ import { settingsApi } from "../../../api/settingsApi";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Skeleton from "../../components/common/Skeleton";
+import ImageInput from "../../components/common/ImageInput";
 
 /* ── Reusable field primitives (match Homepage Builder styling) ── */
 const inputBase = {
@@ -114,9 +115,10 @@ export default function AboutBuilderPage() {
             <Field label="Badge" value={form.aboutHeroBadge} onChange={e => set("aboutHeroBadge", e.target.value)} placeholder="Our Story" />
             <Field label="Title" value={form.aboutHeroTitle} onChange={e => set("aboutHeroTitle", e.target.value)} placeholder="Quality Seeds for the Self-Reliant Farmer" />
             <Textarea label="Subtitle" value={form.aboutHeroSubtitle} onChange={e => set("aboutHeroSubtitle", e.target.value)} rows={2} />
-            <Field label="Background Image URL (optional)" value={form.aboutHeroImage} onChange={e => set("aboutHeroImage", e.target.value)} placeholder="/uploads/media/… or https://… (leave blank for a brand gradient)" />
+            <ImageInput label="Background Image (optional)" value={form.aboutHeroImage} onChange={url => set("aboutHeroImage", url)} />
           </div>
         </div>
+
       )}
 
       {tab === "story" && (
@@ -177,8 +179,9 @@ export default function AboutBuilderPage() {
                 <Field label="Name" value={m.name} onChange={e => updateItem("aboutTeam", i, "name", e.target.value)} placeholder="Full name" />
                 <Field label="Role" value={m.role} onChange={e => updateItem("aboutTeam", i, "role", e.target.value)} placeholder="Founder & Director" />
               </div>
-              <Field label="Photo URL (optional)" value={m.avatar} onChange={e => updateItem("aboutTeam", i, "avatar", e.target.value)} placeholder="/uploads/media/… (blank shows initials)" />
+              <ImageInput label="Photo (optional)" value={m.avatar} onChange={url => updateItem("aboutTeam", i, "avatar", url)} />
               <Textarea label="Bio" value={m.bio} onChange={e => updateItem("aboutTeam", i, "bio", e.target.value)} rows={2} />
+
               <div><Button variant="danger" size="sm" onClick={() => removeItem("aboutTeam", i)}>Remove</Button></div>
             </div>
           ))}

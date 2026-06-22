@@ -6,6 +6,7 @@ import { pageApi } from "../../../api/pageApi";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
+import ImageInput from "../../components/common/ImageInput";
 
 /* ── tiny inline field ── */
 const F = ({ label, value, onChange, type = "text", placeholder = "" }) => (
@@ -41,11 +42,14 @@ function SectionEditor({ section, onChange }) {
     case "hero": return (
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <F label="Badge text" value={d.badge} onChange={e => set("badge", e.target.value)} placeholder="Est. 2020" />
-        <F label="Image URL" value={d.image} onChange={e => set("image", e.target.value)} placeholder="https://..." />
+        <div style={{ gridColumn: "1 / -1" }}>
+          <ImageInput label="Image" value={d.image} onChange={url => set("image", url)} />
+        </div>
         <div style={{ gridColumn: "1/-1" }}><F label="Heading" value={d.heading} onChange={e => set("heading", e.target.value)} placeholder="Main headline" /></div>
         <div style={{ gridColumn: "1/-1" }}><F label="Subheading" type="textarea" value={d.subheading} onChange={e => set("subheading", e.target.value)} /></div>
       </div>
     );
+
     case "stats": return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Stat Items</label>
@@ -85,15 +89,18 @@ function SectionEditor({ section, onChange }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <F label="Section Heading" value={d.heading} onChange={e => set("heading", e.target.value)} />
         {(d.members || []).map((m, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 8, background: "var(--bg)", padding: 10, borderRadius: 10 }}>
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, background: "var(--bg)", padding: 10, borderRadius: 10 }}>
             <F label="Name" value={m.name} onChange={e => { const n = [...d.members]; n[i] = { ...n[i], name: e.target.value }; set("members", n); }} />
             <F label="Role" value={m.role} onChange={e => { const n = [...d.members]; n[i] = { ...n[i], role: e.target.value }; set("members", n); }} />
-            <F label="Avatar URL" value={m.avatar} onChange={e => { const n = [...d.members]; n[i] = { ...n[i], avatar: e.target.value }; set("members", n); }} placeholder="https://..." />
+            <div style={{ gridColumn: "1/-1" }}>
+              <ImageInput label="Avatar" value={m.avatar} onChange={url => { const n = [...d.members]; n[i] = { ...n[i], avatar: url }; set("members", n); }} />
+            </div>
             <button onClick={() => set("members", d.members.filter((_, j) => j !== i))}
               style={{ marginTop: 18, background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 18, alignSelf: "flex-start" }}>✕</button>
             <div style={{ gridColumn: "1/-1" }}><F label="Short Bio" type="textarea" value={m.bio} onChange={e => { const n = [...d.members]; n[i] = { ...n[i], bio: e.target.value }; set("members", n); }} /></div>
           </div>
         ))}
+
         <button onClick={() => set("members", [...(d.members || []), { name: "", role: "", avatar: "", bio: "" }])}
           style={{ alignSelf: "flex-start", padding: "6px 14px", background: "var(--bg)", border: "1px dashed var(--border)", borderRadius: 8, color: "var(--text-muted)", cursor: "pointer", fontSize: 13 }}>
           + Add Member
@@ -324,7 +331,7 @@ export default function PagesPage() {
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} style={{ height: 120, background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, animation: "pulse 1.5s infinite" }} />
             ))
-          : pages.map(page => (
+          : pages.filter(p => p.slug !== "about").map(page => (
               <div key={page._id} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: 20 }}>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{page.title}</div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>/{page.slug} · {page.sections?.length || 0} sections</div>
@@ -340,12 +347,10 @@ export default function PagesPage() {
         }
       </div>
 
-      {/* Also show system pages that may not exist in DB yet */}
-      {!isLoading && !pages.find(p => p.slug === "about") && (
-        <div style={{ marginTop: 16, padding: 16, background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 12, fontSize: 13, color: "#fbbf24" }}>
-          💡 The <strong>About</strong> and <strong>Contact</strong> pages will be auto-created the first time a visitor loads them. Or seed them now by visiting <a href="/about" target="_blank" style={{ color: "#fbbf24" }}>/about</a> and <a href="/contact" target="_blank" style={{ color: "#fbbf24" }}>/contact</a>.
-        </div>
-      )}
+      {/* About is managed separately by the About Builder */}
+      <div style={{ marginTop: 16, padding: 16, background: "rgba(27,122,61,0.08)", border: "1px solid rgba(27,122,61,0.2)", borderRadius: 12, fontSize: 13, color: "var(--text-muted)" }}>
+        💡 The <strong>About</strong> page is edited in the dedicated <a href="/admin/about-builder" style={{ color: "var(--primary)", fontWeight: 600 }}>About Builder</a> (not here). Pages you create or edit here are live at <code>/&lt;slug&gt;</code>. The <strong>Contact</strong> page renders its sections too — if it isn't in the list yet, open <a href="/contact" target="_blank" style={{ color: "var(--primary)" }}>/contact</a> once to create it.
+      </div>
 
       {/* New Page Modal */}
       <Modal isOpen={newPageModal} onClose={() => setNewPageModal(false)} title="Create New Page">

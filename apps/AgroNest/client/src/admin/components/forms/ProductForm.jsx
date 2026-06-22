@@ -229,7 +229,7 @@ export default function ProductForm({ product = null }) {
 
       {/* Variations Builder */}
       <FormSection title="Product Variations">
-        <p style={{ fontSize: 13, color: "var(--site-text-muted)", marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>
           Adding variations (like 100g, 250g) will automatically attach them to this product. Prices are auto-calculated from the Base Weight/Price but you can override them manually.
         </p>
 
@@ -254,8 +254,8 @@ export default function ProductForm({ product = null }) {
               return (
                 <div key={v._id || i} style={{
                   display: "flex", flexDirection: "column", gap: 8,
-                  background: "var(--site-bg-secondary)", padding: 16,
-                  borderRadius: 12, border: `1px solid ${weightInvalid ? "#ef4444" : "var(--site-border)"}`,
+                  background: "var(--bg-secondary)", padding: 16,
+                  borderRadius: 12, border: `1px solid ${weightInvalid ? "var(--danger)" : "var(--border)"}`,
                 }}>
                   <div style={{
                     display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 10,
@@ -269,12 +269,12 @@ export default function ProductForm({ product = null }) {
                   </div>
 
                   {weightInvalid && (
-                    <span style={{ fontSize: 12, color: "#ef4444" }}>
+                    <span style={{ fontSize: 12, color: "var(--danger)" }}>
                       Couldn't read this weight — use a number plus unit, like "250g", "0.5kg", or "500ml".
                     </span>
                   )}
                   {!weightInvalid && ratioPct !== null && (
-                    <span style={{ fontSize: 12, color: "var(--site-text-muted)" }}>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
                       {ratioPct}% of base weight
                       {!v.priceTouched && ` — auto-priced at ${ratioPct}% of ₹${basePriceVal || 0}`}
                       {v.priceTouched && " — manually overridden"}

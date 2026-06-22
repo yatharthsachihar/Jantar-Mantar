@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import CategoryCard from "../category/CategoryCard";
 import ProductCard  from "../product/ProductCard";
 import { useSettings } from "../../context/SettingsContext";
-import API from "../../api/axios";
+import API, { mediaUrl } from "../../api/axios";
 import "./HomeSections.css";
 
 /* ── fetch helper ── */
@@ -60,15 +60,17 @@ export function FeaturedCategories() {
           </p>
         </div>
         <div className="feat-cat-grid">
-          {cats.map((cat, i) => (
+          {cats.slice(0, 6).map((cat, i) => (
             <CategoryCard key={cat._id} category={cat} index={i} />
           ))}
         </div>
-        <div className="home-section-cta">
-          <Link to="/categories" className="site-btn-secondary">
-            View All Categories <FiArrowRight />
-          </Link>
-        </div>
+        {cats.length > 6 && (
+          <div className="home-section-cta">
+            <Link to="/categories" className="site-btn-secondary">
+              View All Categories <FiArrowRight />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -139,15 +141,15 @@ function ProductSection({ queryKey, flag, label, title, viewAllLink, altBg }) {
 }
 
 export function FeaturedProducts() {
-  return <ProductSection queryKey="featured" flag="featured" label="Hand-Picked" title="Featured Products" viewAllLink="/products?filter=featured" />;
+  return <ProductSection queryKey="featured" flag="featured" label="Hand-Picked" title="Featured Products" viewAllLink="/collections/featured" />;
 }
 
 export function BestSellingProducts() {
-  return <ProductSection queryKey="bestseller" flag="bestseller" label="Top Picks" title="Best Selling Products" viewAllLink="/products?filter=bestseller" altBg />;
+  return <ProductSection queryKey="bestseller" flag="bestseller" label="Top Picks" title="Best Selling Products" viewAllLink="/collections/bestseller" altBg />;
 }
 
 export function NewArrivals() {
-  return <ProductSection queryKey="newarrival" flag="newarrival" label="Just In" title="New Arrivals" viewAllLink="/products?filter=new" />;
+  return <ProductSection queryKey="newarrival" flag="newarrival" label="Just In" title="New Arrivals" viewAllLink="/collections/new-arrivals" />;
 }
 
 /* ─────────────────────────────────────────────
@@ -165,7 +167,7 @@ export function SeasonalProducts() {
               Stock up for the monsoon season. Up to 40% off on paddy seeds,
               sugarcane saplings & kharif fertilizers.
             </p>
-            <Link to="/products?seasonal=true" className="site-btn-primary"
+            <Link to="/collections/seasonal" className="site-btn-primary"
               style={{ background:"white", color:"#1F7A3D" }}>
               Shop Kharif Range <FiArrowRight />
             </Link>
@@ -287,7 +289,7 @@ export function BlogSection() {
             <Link key={b._id} to={`/blog/${b.slug || b._id}`} className="blog-card">
               <div className="blog-card-img-wrap">
                 {b.featuredImage
-                  ? <img src={b.featuredImage} alt={b.title} style={{ width:"100%", height:200, objectFit:"cover" }} />
+                  ? <img src={mediaUrl(b.featuredImage)} alt={b.title} style={{ width:"100%", height:200, objectFit:"cover" }} />
                   : <div className="blog-card-img">📰</div>
                 }
               </div>

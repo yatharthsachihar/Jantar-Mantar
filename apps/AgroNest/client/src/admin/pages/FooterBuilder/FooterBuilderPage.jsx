@@ -164,7 +164,7 @@ export default function FooterBuilderPage() {
           <div style={s.field}>
             <label style={s.label}>Support Email</label>
             <input style={s.input} value={form.storeEmail || ""}
-              onChange={e => set("storeEmail", e.target.value)} placeholder="support@agronest.in" />
+              onChange={e => set("storeEmail", e.target.value)} placeholder="axiomcropsciences@gmail.com" />
           </div>
           <div style={{ ...s.field, gridColumn: "1 / -1" }}>
             <label style={s.label}>Office Address</label>

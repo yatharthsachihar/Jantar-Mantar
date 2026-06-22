@@ -11,6 +11,9 @@ import logo from "/uploads/LOGO.png";
 import { useSettings } from "../../context/SettingsContext";
 import { useCart } from "../../context/CartContext";
 import { useUser } from "../../context/UserContext";
+import API, { mediaUrl } from "../../api/axios";
+import { useQuery } from "@tanstack/react-query";
+import SearchDropdown from "../common/SearchDropdown";
 import "./Navbar.css";
 
 const NAV_LINKS = [
@@ -40,6 +43,12 @@ export default function Navbar() {
   const { activeMode, isB2B, settings, loading: settingsLoading } = useSettings();
   const { totalItems } = useCart();
   const { user, logout } = useUser();
+
+  const { data: allProducts = [] } = useQuery({
+    queryKey: ["all-products-search"],
+    queryFn: () => API.get("/products?limit=1000").then((r) => Array.isArray(r.data) ? r.data : r.data?.products || []),
+    staleTime: 1000 * 60 * 10,
+  });
 
   // Filter nav links by page visibility flags from admin settings
   const pageVisibility = settings.pageVisibility || {};
@@ -150,7 +159,7 @@ export default function Navbar() {
               top: `${settings.storeLogoYOffset || 0}px`,
             }}>
             <img
-              src={settings.storeLogo || logo}
+              src={settings.storeLogo ? mediaUrl(settings.storeLogo) : logo}
               alt={settings.storeName || "Axiom Seeds"}
               className="site-nav-logo-img"
               style={{ height: `${settings.storeLogoHeight || 48}px`, width: "auto", objectFit: "contain" }}
@@ -169,14 +178,22 @@ export default function Navbar() {
           </div>
 
           {/* Search */}
-          <form className="site-nav-search" onSubmit={handleSearch}>
-            <FiSearch size={16} />
-            <input
-              placeholder="Search seeds, fertilizers…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+          <div style={{ position: "relative", flex: 1, maxWidth: 300 }}>
+            <form className="site-nav-search" onSubmit={handleSearch}>
+              <FiSearch size={16} />
+              <input
+                placeholder="Search seeds, fertilizers…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </form>
+            <SearchDropdown 
+              query={search} 
+              allProducts={allProducts} 
+              onSelect={() => { setSearch(""); setMobileOpen(false); }}
+              onClose={() => setSearch("")} 
             />
-          </form>
+          </div>
 
           {/* Actions */}
           <div className="site-nav-actions">
@@ -294,10 +311,18 @@ export default function Navbar() {
       {/* Mobile drawer */}
       <div className={`site-nav-mobile${mobileOpen ? " open" : ""}`}>
         {/* Search bar in mobile drawer */}
-        <form className="site-nav-search" style={{ marginBottom: 12, width: "100%" }} onSubmit={handleSearch}>
-          <FiSearch size={16} />
-          <input placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)} />
-        </form>
+        <div style={{ position: "relative", marginBottom: 12, width: "100%" }}>
+          <form className="site-nav-search" style={{ width: "100%" }} onSubmit={handleSearch}>
+            <FiSearch size={16} />
+            <input placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)} />
+          </form>
+          <SearchDropdown 
+            query={search} 
+            allProducts={allProducts} 
+            onSelect={() => { setSearch(""); setMobileOpen(false); }}
+            onClose={() => setSearch("")} 
+          />
+        </div>
 
         {visibleNavLinks.map((l, idx) => (
           <NavLink key={`${l.to}-${idx}`} to={l.to} end={l.to === "/"}

@@ -199,105 +199,107 @@ export default function CustomersPage() {
             <p>Try refining your search terms or filters.</p>
           </div>
         ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Customer Details</th>
-                <th>Account Type</th>
-                <th>Status</th>
-                <th>Joined On</th>
-                <th style={{ textAlign: "right" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCustomers.map((user) => {
-                const status = getUserStatus(user);
-                return (
-                  <tr key={user._id} style={{ cursor: "default" }}>
-                    
-                    {/* User profile details column */}
-                    <td>
-                      <div className="cust-profile-cell">
-                        <div className="cust-avatar">
-                          {user.avatar ? (
-                            <img src={user.avatar} className="cust-avatar-img" alt={user.fullName} />
+          <div className="table-responsive">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Customer Details</th>
+                  <th>Account Type</th>
+                  <th>Status</th>
+                  <th>Joined On</th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCustomers.map((user) => {
+                  const status = getUserStatus(user);
+                  return (
+                    <tr key={user._id} style={{ cursor: "default" }}>
+                      
+                      {/* User profile details column */}
+                      <td>
+                        <div className="cust-profile-cell">
+                          <div className="cust-avatar">
+                            {user.avatar ? (
+                              <img src={user.avatar} className="cust-avatar-img" alt={user.fullName} />
+                            ) : (
+                              getInitials(user.fullName)
+                            )}
+                          </div>
+                          <div>
+                            <div className="cust-name-text">{user.fullName}</div>
+                            <div className="cust-meta-text">{user.email} · {user.mobile}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Account Type column */}
+                      <td>
+                        <span className={`badge ${
+                          user.accountType === "farmer" ? "badge-primary" : 
+                          user.accountType === "retail_customer" ? "badge-info" : 
+                          "badge-warning"
+                        }`}>
+                          {formatAccountType(user.accountType)}
+                        </span>
+                      </td>
+
+                      {/* Status Column */}
+                      <td>
+                        <span className={`cust-status-badge ${status}`}>
+                          {status}
+                        </span>
+                      </td>
+
+                      {/* Joined date column */}
+                      <td className="cust-joined-col">
+                        {formatJoinedDate(user.createdAt)}
+                      </td>
+
+                      {/* Action buttons column */}
+                      <td>
+                        <div className="cust-actions-wrap" style={{ justifyContent: "flex-end" }}>
+                          
+                          {/* Toggle active / deactivate button */}
+                          {user.isActive ? (
+                            <>
+                              <button 
+                                type="button" 
+                                title="Deactivate customer account"
+                                className="cust-btn-action toggle-status deactivate"
+                                onClick={() => toggleActive(user._id, user.isActive)}
+                              >
+                                <FiSlash /> Deactivate
+                              </button>
+                              <button 
+                                type="button" 
+                                title="Remove account (soft-delete)"
+                                className="cust-btn-action remove"
+                                onClick={() => handleDeleteClick(user)}
+                              >
+                                <FiTrash2 /> Remove
+                              </button>
+                            </>
                           ) : (
-                            getInitials(user.fullName)
-                          )}
-                        </div>
-                        <div>
-                          <div className="cust-name-text">{user.fullName}</div>
-                          <div className="cust-meta-text">{user.email} · {user.mobile}</div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Account Type column */}
-                    <td>
-                      <span className={`badge ${
-                        user.accountType === "farmer" ? "badge-primary" : 
-                        user.accountType === "retail_customer" ? "badge-info" : 
-                        "badge-warning"
-                      }`}>
-                        {formatAccountType(user.accountType)}
-                      </span>
-                    </td>
-
-                    {/* Status Column */}
-                    <td>
-                      <span className={`cust-status-badge ${status}`}>
-                        {status}
-                      </span>
-                    </td>
-
-                    {/* Joined date column */}
-                    <td className="cust-joined-col">
-                      {formatJoinedDate(user.createdAt)}
-                    </td>
-
-                    {/* Action buttons column */}
-                    <td>
-                      <div className="cust-actions-wrap" style={{ justifyContent: "flex-end" }}>
-                        
-                        {/* Toggle active / deactivate button */}
-                        {user.isActive ? (
-                          <>
                             <button 
                               type="button" 
-                              title="Deactivate customer account"
-                              className="cust-btn-action toggle-status deactivate"
+                              title="Reactivate customer account"
+                              className="cust-btn-action toggle-status activate"
                               onClick={() => toggleActive(user._id, user.isActive)}
                             >
-                              <FiSlash /> Deactivate
+                              <FiCheckCircle /> Reactivate
                             </button>
-                            <button 
-                              type="button" 
-                              title="Remove account (soft-delete)"
-                              className="cust-btn-action remove"
-                              onClick={() => handleDeleteClick(user)}
-                            >
-                              <FiTrash2 /> Remove
-                            </button>
-                          </>
-                        ) : (
-                          <button 
-                            type="button" 
-                            title="Reactivate customer account"
-                            className="cust-btn-action toggle-status activate"
-                            onClick={() => toggleActive(user._id, user.isActive)}
-                          >
-                            <FiCheckCircle /> Reactivate
-                          </button>
-                        )}
+                          )}
 
-                      </div>
-                    </td>
+                        </div>
+                      </td>
 
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

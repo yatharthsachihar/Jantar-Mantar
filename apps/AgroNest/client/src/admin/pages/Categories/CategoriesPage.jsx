@@ -13,6 +13,9 @@ import Textarea from "../../components/common/Textarea";
 import Select from "../../components/common/Select";
 import Skeleton from "../../components/common/Skeleton";
 import { useForm } from "react-hook-form";
+import ImageInput from "../../components/common/ImageInput";
+import { mediaUrl } from "../../../api/axios";
+
 
 /* ───────────────────────────────────────────────────────────────
    QuickPicks — stored in localStorage, fully editable by admin
@@ -178,24 +181,17 @@ function CategoryForm({ category, onSuccess }) {
         />
         <Input label="Slug" {...register("slug")} />
       </div>
-      <Input label="Image URL" placeholder="https://..." {...register("image")} />
+      <input type="hidden" {...register("image")} />
+      <ImageInput
+        label="Category Image"
+        value={watch("image")}
+        onChange={(url) => setValue("image", url)}
+        placeholder="https://..."
+      />
 
       {/* ── Quick Picks manager ── */}
       <QuickPicks currentImage={watch("image")} onPick={(url) => setValue("image", url)} />
 
-      {/* Live preview */}
-      {watch("image") && (
-        <div style={{ marginTop: 4 }}>
-          <img
-            src={watch("image")}
-            alt="preview"
-            style={{ width:"100%", height:160, objectFit:"cover", borderRadius:14, border:"1px solid var(--border)" }}
-            onError={e => { e.target.style.display="none"; }}
-            onLoad={e  => { e.target.style.display="block"; }}
-          />
-          <p style={{ fontSize:11, color:"var(--text-muted)", marginTop:6 }}>✅ This is what the category card will look like</p>
-        </div>
-      )}
       <Textarea label="Description" rows={3} {...register("description")} />
       <div className="form-grid-2">
         <Input label="Display Order" type="number" {...register("displayOrder", { valueAsNumber: true })} />
@@ -306,7 +302,7 @@ export default function CategoriesPage() {
               {/* Image */}
               <div style={{ height:140, background:"var(--bg)", position:"relative", overflow:"hidden" }}>
                 {cat.image ? (
-                  <img src={cat.image} alt={cat.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                  <img src={mediaUrl(cat.image)} alt={cat.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
                 ) : (
                   <div style={{ height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:48, color:"var(--border)" }}>
                     🌿

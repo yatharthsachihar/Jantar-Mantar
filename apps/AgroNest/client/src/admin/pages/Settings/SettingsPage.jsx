@@ -15,6 +15,7 @@ import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Skeleton from "../../components/common/Skeleton";
 import { useAuthStore } from "../../store/authStore";
+import ImageInput from "../../components/common/ImageInput";
 
 // ── Reusable field ────────────────────────────────────────────
 function Field({ label, type = "text", value, onChange, placeholder, hint, children }) {
@@ -374,12 +375,11 @@ export default function SettingsPage() {
             />
             <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
               <div style={{ gridColumn: "1 / -1" }}>
-                <Field
-                  label="Logo URL"
+                <ImageInput
+                  label="Logo Image"
                   value={form.storeLogo}
-                  onChange={e => set("storeLogo", e.target.value)}
+                  onChange={v => set("storeLogo", v)}
                   placeholder="https://your-cdn.com/logo.png"
-                  hint="Paste a public image URL — shown in navbar and footer"
                 />
               </div>
               <Field
@@ -542,7 +542,7 @@ export default function SettingsPage() {
               type="email"
               value={form.storeEmail}
               onChange={e => set("storeEmail", e.target.value)}
-              placeholder="hello@agronest.in"
+              placeholder="axiomcropsciences@gmail.com"
             />
             <Field
               label="Store Phone"

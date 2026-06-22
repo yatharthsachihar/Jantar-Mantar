@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
 import { blogApi } from "../../api/blogApi";
+import { mediaUrl } from "../../api/axios";
 import "../../styles/site.css";
 import "./BlogPostPage.css";
 
@@ -89,7 +90,7 @@ export default function BlogPostPage() {
       <Navbar />
 
       {/* ── Hero with featured image ── */}
-      <div className="blog-post-hero" style={post.featuredImage ? { backgroundImage: `url(${post.featuredImage})` } : {}}>
+      <div className="blog-post-hero" style={post.featuredImage ? { backgroundImage: `url(${mediaUrl(post.featuredImage)})` } : {}}>
         <div className="blog-post-hero-overlay" />
         <div className="site-container">
           <div className="blog-post-hero-inner">
@@ -188,7 +189,7 @@ export default function BlogPostPage() {
                     {related.map(r => (
                       <Link key={r._id} to={`/blog/${r.slug}`} className="blog-related-item">
                         {r.featuredImage && (
-                          <img src={r.featuredImage} alt={r.title} className="blog-related-img" />
+                          <img src={mediaUrl(r.featuredImage)} alt={r.title} className="blog-related-img" />
                         )}
                         <div className="blog-related-title">{r.title}</div>
                         <FiArrowRight size={13} style={{ flexShrink: 0, color: "var(--site-primary)" }} />

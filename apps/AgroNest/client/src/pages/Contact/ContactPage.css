@@ -285,3 +285,19 @@
   line-height: 1.6;
   margin: 0 0 8px;
 }
+
+/* Validation styles */
+.site-input.input-error:focus,
+.contact-textarea.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+  border-color: #ef4444 !important;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+  display: block;
+}
+

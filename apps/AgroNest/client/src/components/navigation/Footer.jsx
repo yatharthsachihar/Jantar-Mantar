@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { FiPhone, FiMail, FiMapPin, FiFacebook, FiInstagram, FiYoutube, FiTwitter, FiLinkedin } from "react-icons/fi";
 import { useSettings } from "../../context/SettingsContext";
+import { mediaUrl } from "../../api/axios";
+import logo from "/uploads/LOGO.png";
 import "./Footer.css";
 
 const QUICK_LINKS = [
@@ -68,22 +70,9 @@ export default function Footer() {
           {/* ── Brand Column ── */}
           <div className="site-footer-brand">
             <div className="site-footer-logo" style={{ position: "relative", left: `${settings.footerLogoXOffset || 0}px` }}>
-              {settings.storeLogo ? (
-                <img src={settings.storeLogo} alt={name}
-                  style={{ height: `${settings.footerLogoHeight || 40}px`, width: "auto", objectFit: "contain" }} />
-              ) : (
-                <>
-                  <div className="site-footer-logo-mark" style={{
-                    width: `${settings.footerLogoHeight ? (settings.footerLogoHeight * 1.0) : 44}px`,
-                    height: `${settings.footerLogoHeight ? (settings.footerLogoHeight * 1.0) : 44}px`,
-                    fontSize: `${settings.footerLogoHeight ? (settings.footerLogoHeight * 0.36) : 16}px`,
-                    borderRadius: `${settings.footerLogoHeight ? (settings.footerLogoHeight * 0.32) : 14}px`
-                  }}>AN</div>
-                  <span className="site-footer-logo-name" style={{
-                    fontSize: `${settings.footerLogoHeight ? (settings.footerLogoHeight * 0.5) : 22}px`
-                  }}>{name}</span>
-                </>
-              )}
+              <img src={settings.storeLogo ? mediaUrl(settings.storeLogo) : logo} alt={name}
+                style={{ height: `${settings.footerLogoHeight || 40}px`, width: "auto", objectFit: "contain" }}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = logo; }} />
             </div>
 
             <p className="site-footer-tagline">{tagline}</p>

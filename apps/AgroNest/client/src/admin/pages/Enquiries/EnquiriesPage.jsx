@@ -162,110 +162,112 @@ export default function EnquiriesPage() {
 
       {/* ── Table ──────────────────────────────────────────── */}
       <div className="table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Contact</th>
-              <th>Type</th>
-              <th>Product / Subject</th>
-              <th>Company</th>
-              <th>Quantity</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 8 }).map((__, j) => (
-                    <td key={j}><Skeleton height={18} /></td>
-                  ))}
-                </tr>
-              ))
-            ) : filtered.length === 0 ? (
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <td colSpan={8}>
-                  <div className="empty-state">
-                    <FiMessageSquare />
-                    <h3>No Enquiries Found</h3>
-                    <p>Enquiries submitted from the frontend will appear here</p>
-                  </div>
-                </td>
+                <th>Contact</th>
+                <th>Type</th>
+                <th>Product / Subject</th>
+                <th>Company</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
               </tr>
-            ) : filtered.map(enq => (
-              <tr key={enq._id}>
-                {/* Contact */}
-                <td>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{enq.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{enq.email}</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{enq.phone}</div>
-                </td>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 8 }).map((__, j) => (
+                      <td key={j}><Skeleton height={18} /></td>
+                    ))}
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>
+                    <div className="empty-state">
+                      <FiMessageSquare />
+                      <h3>No Enquiries Found</h3>
+                      <p>Enquiries submitted from the frontend will appear here</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : filtered.map(enq => (
+                <tr key={enq._id}>
+                  {/* Contact */}
+                  <td>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{enq.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{enq.email}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{enq.phone}</div>
+                  </td>
 
-                {/* Type */}
-                <td>
-                  <span className={`badge ${TYPE_BADGE[enq.type] || "badge-muted"}`}>
-                    {enq.type}
-                  </span>
-                </td>
+                  {/* Type */}
+                  <td>
+                    <span className={`badge ${TYPE_BADGE[enq.type] || "badge-muted"}`}>
+                      {enq.type}
+                    </span>
+                  </td>
 
-                {/* Product / Subject */}
-                <td style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {enq.type === 'faq'
-                    ? (enq.subject || enq.productName || 'FAQ Question')
-                    : (enq.productName || enq.product?.name || 'General Enquiry')
-                  }
-                </td>
+                  {/* Product / Subject */}
+                  <td style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {enq.type === 'faq'
+                      ? (enq.subject || enq.productName || 'FAQ Question')
+                      : (enq.productName || enq.product?.name || 'General Enquiry')
+                    }
+                  </td>
 
-                {/* Company */}
-                <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                  {enq.companyName || "—"}
-                </td>
+                  {/* Company */}
+                  <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    {enq.companyName || "—"}
+                  </td>
 
-                {/* Quantity */}
-                <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                  {enq.quantity || "—"}
-                </td>
+                  {/* Quantity */}
+                  <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    {enq.quantity || "—"}
+                  </td>
 
-                {/* Status dropdown — admin can change directly from table */}
-                <td>
-                  <select
-                    style={{
-                      padding: "5px 10px", borderRadius: 10,
-                      border: "1px solid var(--border)",
-                      background: "var(--bg)", color: "var(--text)",
-                      fontSize: 12, cursor: "pointer", outline: "none",
-                    }}
-                    value={enq.status}
-                    onChange={e => updateMutation.mutate({ id: enq._id, status: e.target.value })}
-                  >
-                    <option value="new">New</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                  </select>
-                </td>
+                  {/* Status dropdown — admin can change directly from table */}
+                  <td>
+                    <select
+                      style={{
+                        padding: "5px 10px", borderRadius: 10,
+                        border: "1px solid var(--border)",
+                        background: "var(--bg)", color: "var(--text)",
+                        fontSize: 12, cursor: "pointer", outline: "none",
+                      }}
+                      value={enq.status}
+                      onChange={e => updateMutation.mutate({ id: enq._id, status: e.target.value })}
+                    >
+                      <option value="new">New</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                  </td>
 
-                {/* Date */}
-                <td style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                  {new Date(enq.createdAt).toLocaleDateString()}
-                </td>
+                  {/* Date */}
+                  <td style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                    {new Date(enq.createdAt).toLocaleDateString()}
+                  </td>
 
-                {/* Actions */}
-                <td>
-                  <div className="table-actions">
-                    <button className="btn-view" onClick={() => setSelected(enq)} title="View details">
-                      <FiEye />
-                    </button>
-                    <button className="btn-delete" onClick={() => setDeleting(enq)} title="Delete">
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  {/* Actions */}
+                  <td>
+                    <div className="table-actions">
+                      <button className="btn-view" onClick={() => setSelected(enq)} title="View details">
+                        <FiEye />
+                      </button>
+                      <button className="btn-delete" onClick={() => setDeleting(enq)} title="Delete">
+                        <FiTrash2 />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* ── View Enquiry Modal ──────────────────────────────── */}

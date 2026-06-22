@@ -6,7 +6,7 @@ const storeSettingsSchema = new mongoose.Schema({
   tagline: { type: String, default: 'Grow Better. Harvest More.' },
   logo: { type: String, default: '' },
   storeMode: { type: String, enum: ['b2b', 'b2c', 'hybrid'], default: 'b2b' },
-  contactEmail: { type: String, default: 'info@agronest.in' },
+  contactEmail: { type: String, default: 'axiomcropsciences@gmail.com' },
   contactPhone: { type: String, default: '+91 98765 43210' },
   address: { type: String, default: '' },
   socialLinks: {

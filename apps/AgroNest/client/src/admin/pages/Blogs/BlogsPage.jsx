@@ -6,6 +6,8 @@ import { blogApi } from "../../../api/blogApi";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import SearchInput from "../../components/common/SearchInput";
+import ImageInput from "../../components/common/ImageInput";
+
 
 const F = ({ label, value, onChange, type = "text", placeholder = "", options }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -126,12 +128,9 @@ function BlogEditor({ blog, onClose }) {
 
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Featured Image</div>
-            <F label="Image URL" value={form.featuredImage} onChange={e => set("featuredImage", e.target.value)} placeholder="https://..." />
-            {form.featuredImage && (
-              <img src={form.featuredImage} alt="Preview" style={{ width: "100%", height: 160, objectFit: "cover", borderRadius: 10, marginTop: 4 }}
-                onError={e => { e.target.style.display = "none"; }} />
-            )}
+            <ImageInput value={form.featuredImage} onChange={url => set("featuredImage", url)} />
           </div>
+
 
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>SEO Settings</div>
@@ -190,51 +189,53 @@ export default function BlogsPage() {
       </div>
 
       <div className="table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Author</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>{Array.from({ length: 6 }).map((__, j) => <td key={j}><div style={{ height: 16, background: "var(--border)", borderRadius: 6 }} /></td>)}</tr>
-              ))
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={6}>
-                <div className="empty-state">
-                  <div style={{ fontSize: 40 }}>📝</div>
-                  <h3>No blog posts yet</h3>
-                  <p>Click "New Post" to write your first article</p>
-                  <Button size="sm" onClick={() => setEditing({})}><FiPlus /> Write First Post</Button>
-                </div>
-              </td></tr>
-            ) : filtered.map(blog => (
-              <tr key={blog._id}>
-                <td>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{blog.title}</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>/{blog.slug}</div>
-                </td>
-                <td><span className="badge badge-primary" style={{ fontSize: 11 }}>{blog.category}</span></td>
-                <td style={{ fontSize: 13, color: "var(--text-muted)" }}>{blog.author}</td>
-                <td><span className={`badge ${STATUS_BADGE[blog.status] || "badge-muted"}`}>{blog.status}</span></td>
-                <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{new Date(blog.createdAt).toLocaleDateString()}</td>
-                <td>
-                  <div className="table-actions">
-                    <button className="btn-view" onClick={() => setEditing(blog)} title="Edit"><FiEdit /></button>
-                    <button className="btn-delete" onClick={() => { if (confirm(`Delete "${blog.title}"?`)) deleteMutation.mutate(blog._id); }} title="Delete"><FiTrash2 /></button>
-                  </div>
-                </td>
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Author</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>{Array.from({ length: 6 }).map((__, j) => <td key={j}><div style={{ height: 16, background: "var(--border)", borderRadius: 6 }} /></td>)}</tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={6}>
+                  <div className="empty-state">
+                    <div style={{ fontSize: 40 }}>📝</div>
+                    <h3>No blog posts yet</h3>
+                    <p>Click "New Post" to write your first article</p>
+                    <Button size="sm" onClick={() => setEditing({})}><FiPlus /> Write First Post</Button>
+                  </div>
+                </td></tr>
+              ) : filtered.map(blog => (
+                <tr key={blog._id}>
+                  <td>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{blog.title}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>/{blog.slug}</div>
+                  </td>
+                  <td><span className="badge badge-primary" style={{ fontSize: 11 }}>{blog.category}</span></td>
+                  <td style={{ fontSize: 13, color: "var(--text-muted)" }}>{blog.author}</td>
+                  <td><span className={`badge ${STATUS_BADGE[blog.status] || "badge-muted"}`}>{blog.status}</span></td>
+                  <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{new Date(blog.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    <div className="table-actions">
+                      <button className="btn-view" onClick={() => setEditing(blog)} title="Edit"><FiEdit /></button>
+                      <button className="btn-delete" onClick={() => { if (confirm(`Delete "${blog.title}"?`)) deleteMutation.mutate(blog._id); }} title="Delete"><FiTrash2 /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -355,6 +355,30 @@ router.post('/', protect, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────
+// PATCH /api/products/:id/flags — toggle collection flags only
+// (Featured / Top / New Arrival / Best Seller / Trending / Seasonal).
+// Separate from the full PUT so it never touches variations or other fields.
+// ─────────────────────────────────────────────────
+const FLAG_KEYS = ['isFeatured', 'isTopProduct', 'isNewArrival', 'isBestSeller', 'isTrending', 'isSeasonal'];
+router.patch('/:id/flags', protect, async (req, res) => {
+  try {
+    const update = {};
+    for (const key of FLAG_KEYS) {
+      if (req.body[key] !== undefined) update[key] = !!req.body[key];
+    }
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ message: 'No collection flags provided' });
+    }
+    const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true })
+      .populate('category', 'name slug');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json(product);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────
 // PATCH /api/products/:id/stock — quick stock update
 // ─────────────────────────────────────────────────
 router.patch('/:id/stock', protect, async (req, res) => {

@@ -6,6 +6,7 @@ import { FiSearch, FiCalendar, FiUser, FiTag, FiArrowRight, FiClock } from "reac
 import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
 import { blogApi } from "../../api/blogApi";
+import { mediaUrl } from "../../api/axios";
 import "../../styles/site.css";
 import "./BlogPage.css";
 
@@ -69,7 +70,7 @@ function BlogCard({ post, featured = false }) {
     <Link to={`/blog/${post.slug}`} className={`blog-card ${featured ? "blog-card-featured" : ""}`}>
       <div className="blog-card-img-wrap">
         {post.featuredImage
-          ? <img src={post.featuredImage} alt={post.title} />
+          ? <img src={mediaUrl(post.featuredImage)} alt={post.title} />
           : <div className="blog-card-img-placeholder">📰</div>
         }
         {post.category && <span className="blog-card-cat">{post.category}</span>}

@@ -21,6 +21,7 @@
   overflow-y: auto;
   box-shadow: 0 30px 80px rgba(0,0,0,.5);
   animation: modalIn 0.25s ease;
+  color: var(--text);
 }
 
 .modal-lg { max-width: 880px; }

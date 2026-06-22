@@ -7,6 +7,7 @@ import Footer from "../../components/navigation/Footer";
 import { useSettings } from "../../context/SettingsContext";
 import { useCart } from "../../context/CartContext";
 import API, { mediaUrl } from "../../api/axios";
+import EnquiryModal from "../../components/product/EnquiryModal";
 import "../../styles/site.css";
 import "./ProductDetail.css";
 
@@ -22,9 +23,6 @@ export default function ProductDetail() {
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
-  const [form, setForm] = useState({ name:"", email:"", phone:"", companyName:"", quantity:"1", message:"" });
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     API.get(`/products/${slug}`)
@@ -61,20 +59,7 @@ export default function ProductDetail() {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  const handleEnquiry = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await API.post('/enquiries', {
-        ...form,
-        type: 'product',
-        product: product._id,
-        productName: product.name,
-      });
-      setSubmitted(true);
-    } catch { toast.error("Failed to send enquiry. Please try again."); }
-    finally { setSubmitting(false); }
-  };
+
 
   useEffect(() => {
     const root = document.getElementById("root");
@@ -319,61 +304,11 @@ export default function ProductDetail() {
       </div>
 
       {/* Enquiry Modal */}
-      {enquiryOpen && (
-        <div className="pd-modal-overlay" onClick={() => setEnquiryOpen(false)}>
-          <div className="pd-modal" onClick={e => e.stopPropagation()}>
-            <button className="pd-modal-close" onClick={() => setEnquiryOpen(false)}>✕</button>
-
-            {submitted ? (
-              <div className="pd-enquiry-success">
-                <div className="pd-enquiry-success-icon">✓</div>
-                <h3>Enquiry Sent!</h3>
-                <p>We'll contact you within 24 hours.</p>
-                <button className="site-btn-primary" onClick={() => { setEnquiryOpen(false); setSubmitted(false); }}>
-                  Done
-                </button>
-              </div>
-            ) : (
-              <>
-                <h3>Enquire About: {product.name}</h3>
-                <form className="pd-enquiry-form" onSubmit={handleEnquiry}>
-                  <div className="pd-form-row">
-                    <div className="pd-form-group">
-                      <label>Full Name *</label>
-                      <input required value={form.name} onChange={e => setForm({...form, name:e.target.value})} placeholder="Your name" />
-                    </div>
-                    <div className="pd-form-group">
-                      <label>Phone *</label>
-                      <input required value={form.phone} onChange={e => setForm({...form, phone:e.target.value})} placeholder="+91 XXXXX XXXXX" />
-                    </div>
-                  </div>
-                  <div className="pd-form-row">
-                    <div className="pd-form-group">
-                      <label>Email *</label>
-                      <input type="email" required value={form.email} onChange={e => setForm({...form, email:e.target.value})} placeholder="your@email.com" />
-                    </div>
-                    <div className="pd-form-group">
-                      <label>Company Name</label>
-                      <input value={form.companyName} onChange={e => setForm({...form, companyName:e.target.value})} placeholder="Optional" />
-                    </div>
-                  </div>
-                  <div className="pd-form-group">
-                    <label>Required Quantity</label>
-                    <input value={form.quantity} onChange={e => setForm({...form, quantity:e.target.value})} placeholder="e.g. 50 kg, 100 packets" />
-                  </div>
-                  <div className="pd-form-group">
-                    <label>Message</label>
-                    <textarea rows="3" value={form.message} onChange={e => setForm({...form, message:e.target.value})} placeholder="Any specific requirements..." />
-                  </div>
-                  <button type="submit" className="site-btn-primary" style={{ width:"100%" }} disabled={submitting}>
-                    {submitting ? "Sending..." : "Send Enquiry"}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <EnquiryModal
+        product={product}
+        open={enquiryOpen}
+        onClose={() => setEnquiryOpen(false)}
+      />
 
       <Footer />
     </div>

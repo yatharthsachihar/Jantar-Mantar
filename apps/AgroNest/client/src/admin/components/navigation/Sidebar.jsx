@@ -8,6 +8,7 @@ import {
   FiChevronDown, FiChevronRight, FiMenu
 } from "react-icons/fi";
 import { useSettings } from "../../../context/SettingsContext";
+import { mediaUrl } from "../../../api/axios";
 
 // Server origin (uploads are served from the root, not under /api).
 const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:5001/api").replace(/\/api\/?$/, "");
@@ -28,6 +29,7 @@ export const MENU = [
       { icon: <FiPackage />, label: "Products", path: "/admin/products" },
       { icon: <FiGrid />, label: "Categories", path: "/admin/categories" },
       { icon: <FiLayers />, label: "Inventory", path: "/admin/inventory" },
+      { icon: <FiTrendingUp />, label: "Collections", path: "/admin/collections" },
     ],
   },
   {
@@ -78,13 +80,13 @@ export const MENU = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const [collapsed, setCollapsed] = useState(false);
   const [logoBroken, setLogoBroken] = useState(false);
   const { settings } = useSettings();
   const storeName = settings?.storeName || "Axiom Seeds";
   const tagline = settings?.tagline || "";
-  const logoSrc = settings?.storeLogo || FALLBACK_LOGO;
+  const logoSrc = settings?.storeLogo ? mediaUrl(settings.storeLogo) : FALLBACK_LOGO;
   const [openGroups, setOpenGroups] = useState(
     MENU.reduce((acc, s) => { acc[s.title] = true; return acc; }, {})
   );
@@ -100,7 +102,11 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`admin-sidebar${collapsed ? " collapsed" : ""}`}>
+    <>
+      {mobileOpen && (
+        <div className="admin-sidebar-overlay" onClick={() => setMobileOpen && setMobileOpen(false)} />
+      )}
+      <aside className={`admin-sidebar${collapsed ? " collapsed" : ""}${mobileOpen ? " mobile-open" : ""}`}>
 
       {/* Brand */}
       <div className={`sidebar-brand${collapsed ? " collapsed" : ""}`}>
@@ -148,6 +154,7 @@ export default function Sidebar() {
                   end={item.end}
                   className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}
                   title={collapsed ? item.label : undefined}
+                  onClick={() => setMobileOpen && setMobileOpen(false)}
                 >
                   <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
                   {!collapsed && <span style={{ fontSize: 14 }}>{item.label}</span>}
@@ -159,5 +166,6 @@ export default function Sidebar() {
       </div>
 
     </aside>
+    </>
   );
 }

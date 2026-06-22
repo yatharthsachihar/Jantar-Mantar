@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
-import { FiBell, FiSearch, FiMoon, FiSun, FiLogOut, FiExternalLink } from "react-icons/fi";
+import { FiBell, FiSearch, FiMoon, FiSun, FiLogOut, FiExternalLink, FiMenu } from "react-icons/fi";
 import { useNavigate, Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { useAdminTheme } from "../../store/themeStore";
 import { useAuthStore } from "../../store/authStore";
 import useNotificationStore from "../../store/notificationStore";
+import { settingsApi } from "../../../api/settingsApi";
 import GlobalSearchModal from "./GlobalSearchModal";
 import NotificationCenter from "./NotificationCenter";
 import "../../styles/notifications.css";
 
-export default function Topbar() {
+export default function Topbar({ onMenuClick }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { theme, toggleTheme } = useAdminTheme();
   const { admin, logout } = useAuthStore();
@@ -17,6 +20,22 @@ export default function Topbar() {
   const { fetchNotifications, connectSSE, unreadCount } = useNotificationStore();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isRinging, setIsRinging] = useState(false);
+
+  // ── Quick store-mode switch (Retail / Wholesale) ──
+  const queryClient = useQueryClient();
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.get().then(r => r.data),
+  });
+  const storeMode = settings?.storeMode || "hybrid";
+  const modeMutation = useMutation({
+    mutationFn: (mode) => settingsApi.update({ storeMode: mode }),
+    onSuccess: (_d, mode) => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      toast.success(`Store switched to ${mode === "b2c" ? "Retail" : "Wholesale"} mode`);
+    },
+    onError: () => toast.error("Failed to switch store mode"),
+  });
 
   useEffect(() => {
     fetchNotifications();
@@ -50,6 +69,9 @@ export default function Topbar() {
 
   return (
     <header className="admin-topbar">
+      <button className="topbar-hamburger-btn" onClick={onMenuClick} title="Open navigation">
+        <FiMenu size={20} />
+      </button>
 
       <div 
         className="topbar-search" 
@@ -63,6 +85,37 @@ export default function Topbar() {
       </div>
 
       <div className="topbar-right">
+
+        {/* Store mode quick-switch (Retail / Wholesale) */}
+        <div
+          title="Switch the storefront between Retail (B2C) and Wholesale (B2B)"
+          style={{
+            display: "flex", alignItems: "center", gap: 2, height: 48, padding: 4,
+            background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 14,
+          }}
+        >
+          {[
+            { key: "b2c", label: "Retail" },
+            { key: "b2b", label: "Wholesale" },
+          ].map(m => (
+            <button
+              key={m.key}
+              onClick={() => storeMode !== m.key && modeMutation.mutate(m.key)}
+              disabled={modeMutation.isPending}
+              style={{
+                height: 40, padding: "0 14px", borderRadius: 10, border: "none",
+                cursor: storeMode === m.key ? "default" : "pointer",
+                fontSize: 12.5, fontWeight: 700, fontFamily: "inherit",
+                whiteSpace: "nowrap",
+                background: storeMode === m.key ? "var(--primary)" : "transparent",
+                color: storeMode === m.key ? "#fff" : "var(--text-muted)",
+                transition: "background .2s, color .2s",
+              }}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
 
         {/* View live site */}
         <Link

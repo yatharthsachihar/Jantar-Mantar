@@ -4,6 +4,7 @@ import { FiSearch, FiX, FiFilter } from "react-icons/fi";
 import Navbar       from "../../components/navigation/Navbar";
 import Footer       from "../../components/navigation/Footer";
 import ProductCard  from "../../components/product/ProductCard";
+import SearchDropdown from "../../components/common/SearchDropdown";
 import API          from "../../api/axios";
 import "../../styles/site.css";
 import "./ProductsPage.css";
@@ -139,46 +140,62 @@ export default function SiteProductsPage() {
 
             {/* Search */}
             <div className="plp-filter-group">
-              <div className="plp-filter-label">Search</div>
-              <form className="plp-search-box" onSubmit={handleSearch}>
-                <FiSearch size={14} />
-                <input placeholder="Search products…" value={query} onChange={e => setQuery(e.target.value)} />
-                {query && <button type="button" onClick={handleClearSearch}><FiX size={13} /></button>}
-              </form>
+              <details open>
+                <summary>Search</summary>
+                <div style={{ position: "relative" }}>
+                  <form className="plp-search-box" onSubmit={handleSearch}>
+                    <FiSearch size={14} />
+                    <input placeholder="Search products…" value={query} onChange={e => setQuery(e.target.value)} />
+                    {query && <button type="button" onClick={handleClearSearch}><FiX size={13} /></button>}
+                  </form>
+                  <SearchDropdown 
+                    query={query} 
+                    allProducts={allProducts} 
+                    onSelect={() => setQuery("")}
+                    onClose={() => {}} 
+                  />
+                </div>
+              </details>
             </div>
 
             {/* Categories */}
             <div className="plp-filter-group">
-              <div className="plp-filter-label">Category</div>
-              {categories.map(cat => (
-                <div key={cat}
-                  className={`plp-filter-row${activeCategory === cat ? " active" : ""}`}
-                  onClick={() => handleCategory(cat)}
-                >
-                  <span>{cat}</span>
-                  <span className="plp-filter-count">{catCount(cat)}</span>
-                </div>
-              ))}
+              <details open>
+                <summary>Category</summary>
+                {categories.map(cat => (
+                  <div key={cat}
+                    className={`plp-filter-row${activeCategory === cat ? " active" : ""}`}
+                    onClick={() => handleCategory(cat)}
+                  >
+                    <span>{cat}</span>
+                    <span className="plp-filter-count">{catCount(cat)}</span>
+                  </div>
+                ))}
+              </details>
             </div>
 
             {/* Price Range */}
             <div className="plp-filter-group">
-              <div className="plp-filter-label">Max Price: <strong>₹{priceMax.toLocaleString("en-IN")}</strong></div>
-              <input type="range" min={0} max={5000} step={100}
-                value={priceMax} onChange={e => setPriceMax(Number(e.target.value))}
-                className="plp-slider" />
-              <div className="plp-slider-row"><span>₹0</span><span>₹5,000</span></div>
+              <details open>
+                <summary>Max Price: <strong>₹{priceMax.toLocaleString("en-IN")}</strong></summary>
+                <input type="range" min={0} max={5000} step={100}
+                  value={priceMax} onChange={e => setPriceMax(Number(e.target.value))}
+                  className="plp-slider" />
+                <div className="plp-slider-row"><span>₹0</span><span>₹5,000</span></div>
+              </details>
             </div>
 
             {/* Certifications */}
             <div className="plp-filter-group">
-              <div className="plp-filter-label">Certifications</div>
-              {["Organic Certified","ISI Certified","Govt Approved"].map(c => (
-                <label key={c} className="plp-check-row">
-                  <input type="checkbox" style={{accentColor:"var(--site-primary)"}} />
-                  <span>{c}</span>
-                </label>
-              ))}
+              <details open>
+                <summary>Certifications</summary>
+                {["Organic Certified","ISI Certified","Govt Approved"].map(c => (
+                  <label key={c} className="plp-check-row">
+                    <input type="checkbox" style={{accentColor:"var(--site-primary)"}} />
+                    <span>{c}</span>
+                  </label>
+                ))}
+              </details>
             </div>
 
             <button className="plp-clear-btn" onClick={handleClearAll}>Clear All Filters</button>

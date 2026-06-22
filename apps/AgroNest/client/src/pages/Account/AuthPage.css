@@ -634,6 +634,59 @@
   letter-spacing: -0.5px;
 }
 
+/* ── OTP verification gate ── */
+.auth-otp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--site-primary, #1B7A3D);
+  background: rgba(27,122,61,0.06);
+  color: var(--site-primary, #1B7A3D);
+  font-weight: 700;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.auth-otp-btn:hover { background: rgba(27,122,61,0.12); }
+
+.auth-otp-verify {
+  flex-shrink: 0;
+  border: none;
+  background: var(--site-primary, #1B7A3D);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter 0.2s;
+}
+.auth-otp-verify:hover { filter: brightness(0.92); }
+
+.auth-otp-ok {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #16a34a;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-top: 5px;
+}
+.auth-otp-hint {
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 5px;
+}
+.auth-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .auth-back-btn {
   display: inline-flex;
   align-items: center;
