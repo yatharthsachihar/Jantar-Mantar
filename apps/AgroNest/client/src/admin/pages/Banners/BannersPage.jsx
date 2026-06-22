@@ -115,15 +115,18 @@ export default function BannersPage() {
   const [modal,    setModal]    = useState(null);  // null | 'create' | banner object
   const [deleting, setDeleting] = useState(null);
 
-  useGSAP(() => {
-    gsap.from(".page-header",   { opacity: 0, y: -20, duration: 0.5 });
-    gsap.from(".banner-item",   { opacity: 0, y: 30, stagger: 0.07, duration: 0.6, delay: 0.15 });
-  }, { scope: pageRef });
-
   const { data: banners = [], isLoading } = useQuery({
     queryKey: ["banners"],
     queryFn: () => bannerApi.getAll().then(r => r.data),
   });
+
+  useGSAP(() => {
+    if (isLoading) return;
+    gsap.from(".page-header",   { opacity: 0, y: -20, duration: 0.5 });
+    if (banners && banners.length > 0) {
+      gsap.from(".banner-item",   { opacity: 0, y: 30, stagger: 0.07, duration: 0.6, delay: 0.15 });
+    }
+  }, { scope: pageRef, dependencies: [isLoading, banners] });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => bannerApi.remove(id),
