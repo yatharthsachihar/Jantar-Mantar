@@ -59,13 +59,21 @@ export const useDashboardStore = create((set, get) => ({
       }));
 
       // ── Orders by status chart ──
-      const STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+      // Count every status that actually appears, then render a canonical
+      // pipeline order plus any unexpected statuses found in the data (the DB
+      // contains `packed`/`refunded` which aren't in the Order enum, so a fixed
+      // 5-status list silently dropped those orders).
       const statusCounts = {};
       orders.forEach(o => {
         const status = o.status || 'pending';
         statusCounts[status] = (statusCounts[status] || 0) + 1;
       });
-      const ordersChart = STATUSES.map(status => ({
+      const KNOWN_STATUSES = ['pending', 'confirmed', 'packed', 'shipped', 'delivered', 'cancelled', 'refunded'];
+      const allStatuses = [
+        ...KNOWN_STATUSES,
+        ...Object.keys(statusCounts).filter(s => !KNOWN_STATUSES.includes(s)),
+      ];
+      const ordersChart = allStatuses.map(status => ({
         status: status.charAt(0).toUpperCase() + status.slice(1),
         count: statusCounts[status] || 0
       }));

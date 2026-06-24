@@ -173,7 +173,7 @@ export default function Navbar() {
           </div>
 
           {/* Search */}
-          <div style={{ position: "relative", flex: 1, maxWidth: 300 }}>
+          <div className="hide-on-mobile" style={{ position: "relative", flex: 1, maxWidth: 300 }}>
             <form className="site-nav-search" onSubmit={handleSearch}>
               <FiSearch size={16} />
               <input
@@ -411,7 +411,7 @@ export default function Navbar() {
           </div>
         )}
 
-        <button onClick={toggleTheme} style={{
+        <button onClick={() => { toggleTheme(); setMobileOpen(false); }} style={{
           marginTop: 8, display: "flex", alignItems: "center", gap: 10,
           padding: "12px 14px", background: "var(--site-green-light)",
           border: "1.5px solid var(--site-border)", borderRadius: 12,

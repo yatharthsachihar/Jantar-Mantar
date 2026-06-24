@@ -6,11 +6,12 @@ import {
 } from "react-icons/fi";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend
 } from "recharts";
 import { orderApi } from "../../../api/orderApi";
 import PageHeader from "../../components/common/PageHeader";
 import Skeleton from "../../components/common/Skeleton";
+import ChartFrame from "../../components/common/ChartFrame";
 
 const COLORS = ["#1F7A3D", "#C68A3A", "#3B82F6", "#8B5CF6", "#EF4444", "#F59E0B"];
 
@@ -140,8 +141,9 @@ export default function AnalyticsPage() {
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 20, padding: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 20 }}>Revenue Trend</div>
           {isLoading ? <Skeleton height={220} radius={12} /> : (
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={dailyData}>
+            <ChartFrame height={220}>
+             {(w, h) => (
+              <LineChart width={w} height={h} data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--text-muted)" }} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} tickLine={false} axisLine={false}
@@ -150,7 +152,8 @@ export default function AnalyticsPage() {
                   contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 13 }} />
                 <Line type="monotone" dataKey="revenue" stroke="#1F7A3D" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} />
               </LineChart>
-            </ResponsiveContainer>
+             )}
+            </ChartFrame>
           )}
         </div>
 
@@ -158,15 +161,17 @@ export default function AnalyticsPage() {
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 20, padding: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 20 }}>Daily Orders</div>
           {isLoading ? <Skeleton height={220} radius={12} /> : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={dailyData}>
+            <ChartFrame height={220}>
+             {(w, h) => (
+              <BarChart width={w} height={h} data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--text-muted)" }} tickLine={false} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 13 }} />
                 <Bar dataKey="orders" fill="#C68A3A" radius={[6, 6, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+             )}
+            </ChartFrame>
           )}
         </div>
       </div>
@@ -179,15 +184,17 @@ export default function AnalyticsPage() {
           {isLoading ? <Skeleton height={220} radius={12} /> : statusData.length === 0 ? (
             <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: 14 }}>No order data</div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
+            <ChartFrame height={220}>
+             {(w, h) => (
+              <PieChart width={w} height={h}>
                 <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" paddingAngle={3}>
                   {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 13 }} />
                 <Legend iconType="circle" iconSize={10} formatter={(v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v}</span>} />
               </PieChart>
-            </ResponsiveContainer>
+             )}
+            </ChartFrame>
           )}
         </div>
 

@@ -8,11 +8,12 @@ import {
 } from "react-icons/fi";
 import {
   AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  XAxis, YAxis, CartesianGrid, Tooltip
 } from "recharts";
 
 import { useDashboardStore } from "../../store/dashboardStore";
 import StatCard from "../../components/cards/StatCard";
+import ChartFrame from "../../components/common/ChartFrame";
 import Skeleton from "../../components/common/Skeleton";
 
 const ORDER_STATUS_COLOR = {
@@ -134,9 +135,10 @@ export default function DashboardPage() {
         {/* Revenue Chart */}
         <div className="dashboard-widget large">
           <h3 style={{ marginBottom: 24, fontSize: 17, fontWeight: 700 }}>Revenue Analytics</h3>
-          {revenueChart.length > 0 ? (
-            <ResponsiveContainer width="100%" height={320}>
-              <AreaChart data={revenueChart} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+          {revenueChart.some(d => d.revenue > 0) ? (
+            <ChartFrame height={320}>
+             {(w, h) => (
+              <AreaChart width={w} height={h} data={revenueChart} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#d6a46a" stopOpacity={0.25} />
@@ -151,7 +153,8 @@ export default function DashboardPage() {
                   <Area type="monotone" dataKey="revenue" stroke="#d6a46a" strokeWidth={3}
                     fill="url(#revenueGrad)" dot={{ fill: "#d6a46a", strokeWidth: 2, r: 5 }} />
               </AreaChart>
-            </ResponsiveContainer>
+             )}
+            </ChartFrame>
           ) : (
             <div className="empty-state" style={{ minHeight: 280, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 20 }}>
               <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(214,164,106,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
@@ -168,9 +171,10 @@ export default function DashboardPage() {
         {/* Orders Chart */}
         <div className="dashboard-widget">
           <h3 style={{ marginBottom: 24, fontSize: 17, fontWeight: 700 }}>Orders by Status</h3>
-          {ordersChart.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={ordersChart} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+          {ordersChart.some(d => d.count > 0) ? (
+            <ChartFrame height={240}>
+             {(w, h) => (
+              <BarChart width={w} height={h} data={ordersChart} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="status" tick={{ fill: "var(--text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: "var(--text-muted)", fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -180,7 +184,8 @@ export default function DashboardPage() {
                   />
                   <Bar dataKey="count" fill="#d6a46a" radius={[8,8,0,0]} />
               </BarChart>
-            </ResponsiveContainer>
+             )}
+            </ChartFrame>
           ) : (
             <div className="empty-state" style={{ minHeight: 240, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 20 }}>
               <FiShoppingCart size={32} style={{ marginBottom: 12, color: "var(--border)" }} />

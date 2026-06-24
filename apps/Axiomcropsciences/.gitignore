@@ -14,3 +14,8 @@ pnpm-debug.log*
 .vscode/
 coverage/
 # uploads/
+  
+# Local folders to ignore  
+.claude/  
+" brain "1.0/  
+docs/ 
