@@ -41,8 +41,8 @@ export default function OrdersPage() {
   const [viewOrder, setViewOrder] = useState(null);
 
   useGSAP(() => {
-    gsap.from(".page-header", { opacity: 0, y: -20, duration: 0.5, clearProps: "all" });
-    gsap.from(".table-wrap",  { opacity: 0, y: 30,  duration: 0.6, delay: 0.15, clearProps: "all" });
+    gsap.from(".page-header", { opacity: 0, y: -20, duration: 0.5, clearProps: "opacity,transform" });
+    gsap.from(".table-wrap",  { opacity: 0, y: 30,  duration: 0.6, delay: 0.15, clearProps: "opacity,transform" });
   }, { scope: pageRef });
 
   const { data: orders = [], isLoading } = useQuery({

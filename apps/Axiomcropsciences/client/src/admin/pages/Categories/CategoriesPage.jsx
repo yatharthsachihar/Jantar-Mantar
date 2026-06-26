@@ -207,9 +207,8 @@ function CategoryForm({ category, onSuccess }) {
 }
 
 export default function CategoriesPage() {
-  const pageRef     = useRef();
-  const hasAnimated = useRef(false);
-  const queryClient = useQueryClient();
+  const pageRef = useRef();
+  const { hasPermission } = useAuthStore();
   const [modal,    setModal]    = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [search,   setSearch]   = useState("");
@@ -220,11 +219,10 @@ export default function CategoriesPage() {
   });
 
   useGSAP(() => {
-    if (isLoading || hasAnimated.current) return;
-    hasAnimated.current = true;
+    if (isLoading) return;
     gsap.fromTo(".page-header", 
       { opacity: 0, y: -20 },
-      { opacity: 1, y: 0, duration: 0.5, clearProps: "all" }
+      { opacity: 1, y: 0, duration: 0.5, clearProps: "opacity,transform" }
     );
     if (categories.length > 0) {
       gsap.fromTo(".cat-card", 

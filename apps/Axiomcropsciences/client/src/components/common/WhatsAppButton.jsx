@@ -19,9 +19,17 @@ export default function WhatsAppButton() {
 
   if (!link) return null;
 
+  let finalLink = link;
+  const defaultMessage = settings.whatsappDefaultMessage || "Hello! I am interested in your agricultural products and would like to know more.";
+
+  if (link && !link.includes("text=")) {
+    const separator = link.includes("?") ? "&" : "?";
+    finalLink = `${link}${separator}text=${encodeURIComponent(defaultMessage)}`;
+  }
+
   return (
     <a
-      href={link}
+      href={finalLink}
       target="_blank"
       rel="noopener noreferrer"
       className="whatsapp-float"

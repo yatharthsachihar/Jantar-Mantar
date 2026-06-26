@@ -138,17 +138,15 @@ function Section({ icon, title, subtitle, children }) {
 // ── Main Settings Page ────────────────────────────────────────
 export default function SettingsPage() {
   const pageRef     = useRef();
-  const hasAnimated = useRef(false);
   const { hasPermission } = useAuthStore();
   const canEdit = hasPermission('settings', 'full');
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
 
   useGSAP(() => {
-    if (!form || hasAnimated.current) return;
-    hasAnimated.current = true;
-    gsap.from(".page-header",      { opacity: 0, y: -20, duration: 0.5, clearProps: "all" });
-    gsap.from(".settings-section", { opacity: 0, y: 30, stagger: 0.1, duration: 0.6, delay: 0.15, clearProps: "all" });
+    if (!form) return;
+    gsap.from(".page-header",      { opacity: 0, y: -20, duration: 0.5, clearProps: "opacity,transform" });
+    gsap.from(".settings-section", { opacity: 0, y: 30, stagger: 0.1, duration: 0.6, delay: 0.15, clearProps: "opacity,transform" });
   }, { scope: pageRef, dependencies: [!!form] });
 
   const { data: settings, isLoading } = useQuery({
@@ -453,6 +451,55 @@ export default function SettingsPage() {
               </Field>
 
               <Field
+                label="Footer Logo Size (Height)"
+                hint="Adjust footer logo height (40px to 400px)"
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12, height: 42 }}>
+                  <input
+                    type="range"
+                    min="40"
+                    max="400"
+                    value={form.footerLogoHeight ?? 150}
+                    onChange={e => set("footerLogoHeight", parseInt(e.target.value) || 150)}
+                    style={{
+                      flex: 1,
+                      cursor: "pointer",
+                      accentColor: "var(--primary)",
+                      height: 6,
+                      borderRadius: 3,
+                      outline: "none",
+                    }}
+                  />
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <input
+                      type="number"
+                      min="40"
+                      max="400"
+                      value={form.footerLogoHeight ?? 150}
+                      onChange={e => {
+                        let val = parseInt(e.target.value);
+                        if (isNaN(val)) val = 150;
+                        set("footerLogoHeight", val);
+                      }}
+                      style={{
+                        width: 65,
+                        padding: "6px 10px",
+                        background: "var(--bg)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 8,
+                        color: "var(--text)",
+                        textAlign: "center",
+                        fontSize: 14,
+                        fontFamily: "inherit",
+                        outline: "none",
+                      }}
+                    />
+                    <span style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 500 }}>px</span>
+                  </div>
+                </div>
+              </Field>
+
+              <Field
                 label="Logo Horizontal Position"
                 hint="Adjust the logo left/right position (-100px to 100px)"
               >
@@ -594,6 +641,7 @@ export default function SettingsPage() {
               { key: "twitter",   label: "Twitter / X", icon: <FiTwitter />,   placeholder: "https://x.com/axiomcropsciences" },
               { key: "youtube",   label: "YouTube",     icon: <FiYoutube />,   placeholder: "https://youtube.com/@axiomcropsciences" },
               { key: "linkedin",  label: "LinkedIn",    icon: <FiLinkedin />,  placeholder: "https://linkedin.com/company/axiomcropsciences" },
+              { key: "whatsapp",  label: "WhatsApp",    icon: <FiPhone />,     placeholder: "https://wa.me/919876543210" },
             ].map(({ key, label, icon, placeholder }) => (
               <div key={key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 20, color: "var(--text-muted)", flexShrink: 0 }}>{icon}</span>
@@ -607,6 +655,16 @@ export default function SettingsPage() {
                 </div>
               </div>
             ))}
+            <div style={{ gridColumn: "1 / -1" }}>
+              <TextareaField
+                label="WhatsApp Default Message"
+                value={form.whatsappDefaultMessage}
+                onChange={e => set("whatsappDefaultMessage", e.target.value)}
+                placeholder="Hello! I am interested in your agricultural products and would like to know more."
+                hint="This message will automatically pre-fill when customers click the floating WhatsApp button."
+                rows={2}
+              />
+            </div>
           </div>
         </Section>
       </div>

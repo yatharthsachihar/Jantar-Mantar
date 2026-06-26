@@ -151,6 +151,8 @@ const settingsSchema = new mongoose.Schema({
     whatsapp:  { type: String, default: '' },
   },
 
+  whatsappDefaultMessage: { type: String, default: 'Hello! I am interested in your agricultural products and would like to know more.' },
+
   socialFacebook: { type: String, default: '' },
   socialInstagram: { type: String, default: '' },
   socialWhatsapp: { type: String, default: '' },

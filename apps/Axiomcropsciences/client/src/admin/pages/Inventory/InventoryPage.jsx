@@ -66,7 +66,7 @@ function QuickStockAdjustPanel() {
   };
 
   return (
-    <div className="inventory-card" style={{ marginBottom: 24, padding: "20px 24px" }}>
+    <div className="inventory-card quick-adjust-panel">
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
         <FiBox style={{ color: "var(--primary)" }} />
         <h3 style={{ fontSize: 16, fontWeight: 600 }}>Quick Stock Adjustment</h3>
@@ -229,22 +229,21 @@ function InventoryRow({ product }) {
         </label>
       </td>
       <td data-label="Stock Quantity">
-        <div className="stock-input-wrapper">
-          <div className={`input-group ${isLowStock ? 'error' : ''}`}>
-            <FiBox className="input-icon" />
-            <input 
-              type="number" 
-              value={stock} 
-              onChange={(e) => setStock(e.target.value)} 
-              className="premium-input stock-input"
-              disabled={!trackInventory}
-            />
-            <span className="unit-label">{product.unit || 'units'}</span>
-          </div>
+        <div className={`stock-widget${isLowStock ? ' low' : ''}${!trackInventory ? ' is-disabled' : ''}`}>
+          <span className="stock-widget-icon"><FiPackage /></span>
+          <input
+            type="number"
+            value={stock}
+            onChange={(e) => setStock(e.target.value)}
+            className="stock-widget-input"
+            disabled={!trackInventory}
+            aria-label="Stock quantity"
+          />
+          <span className="stock-widget-unit">kg</span>
           {isLowStock && (
-            <div className="low-stock-warning" title="Low Stock Warning!">
+            <span className="stock-widget-warn" title="Low stock">
               <FiAlertCircle />
-            </div>
+            </span>
           )}
         </div>
       </td>
@@ -274,9 +273,9 @@ export default function InventoryPage() {
   const PER_PAGE = 20;
 
   useGSAP(() => {
-    gsap.from(".page-header",    { opacity: 0, y: -20, duration: 0.6, ease: "power3.out", clearProps: "all" });
-    gsap.from(".page-toolbar",   { opacity: 0, y: 20,  duration: 0.6, delay: 0.1, ease: "power3.out", clearProps: "all" });
-    gsap.from(".inventory-card", { opacity: 0, y: 30,  duration: 0.7, delay: 0.2, ease: "power3.out", clearProps: "all" });
+    gsap.from(".page-header",    { opacity: 0, y: -20, duration: 0.6, ease: "power3.out", clearProps: "opacity,transform" });
+    gsap.from(".page-toolbar",   { opacity: 0, y: 20,  duration: 0.6, delay: 0.1, ease: "power3.out", clearProps: "opacity,transform" });
+    gsap.from(".inventory-card", { opacity: 0, y: 30,  duration: 0.7, delay: 0.2, ease: "power3.out", clearProps: "opacity,transform" });
   }, { scope: pageRef });
 
   const { data, isLoading } = useQuery({
@@ -388,6 +387,11 @@ export default function InventoryPage() {
           border-radius: 16px;
           overflow: hidden;
           box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .quick-adjust-panel {
+          margin-bottom: 24px;
+          padding: 20px 24px;
         }
         
         .glass-toolbar {
@@ -523,6 +527,83 @@ export default function InventoryPage() {
           align-items: center;
           gap: 12px;
         }
+
+        /* ── Premium stock quantity widget ── */
+        .stock-widget {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          height: 46px;
+          padding: 0 12px 0 8px;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          box-shadow: var(--shadow-sm);
+          max-width: 100%;
+          box-sizing: border-box;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .stock-widget:hover {
+          border-color: var(--border-strong);
+          box-shadow: var(--shadow);
+          background: var(--card-hover);
+        }
+        .stock-widget:focus-within {
+          border-color: var(--primary);
+          background: var(--card);
+          box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+        }
+        .stock-widget-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 9px;
+          background: rgba(var(--primary-rgb), 0.10);
+          color: var(--primary);
+          font-size: 15px;
+          flex-shrink: 0;
+        }
+        .stock-widget-input {
+          width: 52px;
+          border: none;
+          outline: none;
+          background: transparent;
+          color: var(--text);
+          font-size: 19px;
+          font-weight: 700;
+          font-family: inherit;
+          padding: 0;
+          text-align: left;
+          -moz-appearance: textfield;
+          appearance: textfield;
+        }
+        .stock-widget-input::-webkit-outer-spin-button,
+        .stock-widget-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .stock-widget-input:disabled { color: var(--text-muted); cursor: not-allowed; }
+        .stock-widget-unit {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text-muted);
+          letter-spacing: 0.2px;
+          max-width: 70px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .stock-widget-warn {
+          display: inline-flex;
+          align-items: center;
+          color: var(--danger);
+          font-size: 14px;
+          flex-shrink: 0;
+        }
+        .stock-widget.low {
+          border-color: rgba(239, 68, 68, 0.4);
+          background: rgba(239, 68, 68, 0.05);
+        }
+        .stock-widget.is-disabled { opacity: 0.55; }
         
         .input-group.error .premium-input {
           border-color: rgba(239, 68, 68, 0.5);

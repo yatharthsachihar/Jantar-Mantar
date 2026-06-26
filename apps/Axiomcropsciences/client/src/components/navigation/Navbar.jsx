@@ -271,6 +271,7 @@ export default function Navbar() {
                         <FiUser size={14} /> My Profile
                       </Link>
                       
+                      {!isB2B && (
                       <Link to="/account/orders" onClick={() => setUserMenu(false)} style={{
                         textDecoration: "none", display: "flex", alignItems: "center", gap: 8,
                         padding: "8px 10px", background: "none", border: "none", borderRadius: 8,
@@ -279,6 +280,7 @@ export default function Navbar() {
                       }}>
                         <FiPackage size={14} /> View Orders
                       </Link>
+                      )}
                       
                       <button onClick={handleLogout} style={{
                         width: "100%", display: "flex", alignItems: "center", gap: 8,
@@ -381,6 +383,7 @@ export default function Navbar() {
                 <FiUser size={16} /> My Profile
               </Link>
               
+              {!isB2B && (
               <Link to="/account/orders" onClick={() => setMobileOpen(false)} style={{
                 textDecoration: "none", display: "flex", alignItems: "center", gap: 10,
                 padding: "12px 14px", background: "none", border: "none", borderRadius: 12,
@@ -389,6 +392,7 @@ export default function Navbar() {
               }}>
                 <FiPackage size={16} /> View Orders
               </Link>
+              )}
 
               <button onClick={() => { handleLogout(); setMobileOpen(false); }}
                 style={{

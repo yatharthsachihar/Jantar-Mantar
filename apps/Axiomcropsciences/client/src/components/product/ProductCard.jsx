@@ -23,7 +23,7 @@ const StarRating = React.memo(function StarRating({ rating = 4.5 }) {
 });
 
 const ProductCard = React.memo(function ProductCard({ product = {} }) {
-  const { showPrice, showCart, showEnquiry } = useSettings();
+  const { showPrice, showCart, showEnquiry, activeMode } = useSettings();
   const { addToCart, cart, updateQty, lineKey } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const navigate = useNavigate();
@@ -146,10 +146,12 @@ const ProductCard = React.memo(function ProductCard({ product = {} }) {
           {badge     && <span className="site-product-badge hot">{badge}</span>}
         </div>
 
-        <button className={`site-product-card-wish${wished ? " active" : ""}`}
-          onClick={handleToggleWishlist} aria-label="Wishlist">
-          <FiHeart size={15} fill={wished ? "currentColor" : "none"} />
-        </button>
+        {activeMode === "b2c" && (
+          <button className={`site-product-card-wish${wished ? " active" : ""}`}
+            onClick={handleToggleWishlist} aria-label="Wishlist">
+            <FiHeart size={15} fill={wished ? "currentColor" : "none"} />
+          </button>
+        )}
 
         <div className="site-product-card-hover-actions">
           <button className="site-product-card-hover-btn" onClick={handleView} title="View">

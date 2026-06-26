@@ -17,7 +17,7 @@ const DEFAULTS = {
   announcementActive: true,
   heroTitle: 'Grow More. Worry Less. Harvest Better.',
   heroSubtitle: 'From certified seeds to organic fertilizers — everything your farm needs, delivered to your door.',
-  heroCTA1Text: 'Shop Now',
+  heroCTA1Text: 'Products',
   heroCTA1Link: '/products',
   heroCTA2Text: 'Explore Categories',
   heroCTA2Link: '/categories',
