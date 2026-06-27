@@ -231,7 +231,11 @@ export default function SettingsPage() {
             ].map(mode => (
               <div 
                 key={mode.id}
-                onClick={() => set("storeMode", mode.id)}
+                onClick={() => {
+                  set("storeMode", mode.id);
+                  if (mode.id === "b2c") set("showBestSellers", true);
+                  if (mode.id === "b2b") set("showBestSellers", false);
+                }}
                 style={{
                   border: `2px solid ${form.storeMode === mode.id ? "var(--primary)" : "var(--border)"}`,
                   background: form.storeMode === mode.id ? "rgba(15,77,35,0.05)" : "var(--bg)",
