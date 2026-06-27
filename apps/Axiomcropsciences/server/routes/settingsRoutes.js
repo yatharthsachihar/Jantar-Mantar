@@ -1,7 +1,28 @@
 const express = require('express');
 const Settings      = require('../models/Settings');
 const StoreSettings = require('../models/StoreSettings');
+const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
+
+// Fields that must never reach an unauthenticated/public response — payment
+// secrets, API tokens, SMTP credentials, analytics IDs, etc. Everything else
+// on Settings is safe to expose (theme, hero copy, social links, toggles...).
+const SECRET_FIELDS = [
+  'razorpaySecret', 'razorpayWebhookSecret', 'razorpayKey',
+  'phonepeMerchantId', 'phonepeSaltKey', 'phonepeSaltIndex',
+  'cloudinaryApiKey', 'cloudinaryApiSecret', 'cloudinaryUploadPreset',
+  'whatsappApiToken',
+  'smtp', 'smtpFromEmail',
+  'seoGoogleVerify', 'seoBingVerify',
+  'gaId', 'gtmId', 'fbPixelId', 'hotjarId',
+];
+
+function sanitizePublicSettings(settings) {
+  const obj = settings.toObject ? settings.toObject() : settings;
+  const clean = { ...obj };
+  SECRET_FIELDS.forEach((f) => delete clean[f]);
+  return clean;
+}
 
 // Sync Settings → StoreSettings (keeps the orphaned collection in sync)
 async function syncStoreSettings(settings) {
@@ -32,24 +53,31 @@ async function syncStoreSettings(settings) {
   }
 }
 
-const optionalAuth = (req, res, next) => {
-  const { protect } = require('../middleware/authMiddleware');
-  const token = req.headers.authorization?.split(' ')[1];
-  if (token) return protect(req, res, next);
-  next();
-};
-
-// GET /api/settings
+// GET /api/settings — public (sanitized) or full (admin token)
 router.get('/', async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) settings = await Settings.create({});
-    res.json(settings);
+
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.json(sanitizePublicSettings(settings));
+
+    // Verify the token without short-circuiting the request on failure —
+    // an expired/invalid token on a GET should just fall back to public data.
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const Admin = require('../models/Admin');
+      const admin = await Admin.findById(decoded.id).select('-password');
+      if (admin) return res.json(settings);
+    } catch (_) { /* falls through to public response below */ }
+
+    res.json(sanitizePublicSettings(settings));
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// PUT /api/settings
-router.put('/', async (req, res) => {
+// PUT /api/settings — admin only
+router.put('/', protect, async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) settings = new Settings();
@@ -91,6 +119,11 @@ router.put('/', async (req, res) => {
     allowed.forEach(key => {
       if (req.body[key] !== undefined) settings[key] = req.body[key];
     });
+
+    console.log("=== SETTINGS UPDATE ===");
+    console.log("req.body.storeMode:", req.body.storeMode);
+    console.log("settings.storeMode:", settings.storeMode);
+
 
     ['homeTestimonials','contactOffices','homeBrands','aboutWhyUs','aboutTeam','aboutMilestones'].forEach(key => {
       if (req.body[key] !== undefined) settings.markModified(key);

@@ -7,6 +7,9 @@ const categorySchema = new mongoose.Schema({
   description: { type: String, default: '' },
   displayOrder: { type: Number, default: 0 },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  deletedAt: { type: Date, default: null },
+  deletedBy: { type: String, default: null },
+  deleteReason: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Category', categorySchema);

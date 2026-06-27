@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import toast from "react-hot-toast";
-import { FiPlus, FiEdit, FiTrash2, FiGrid, FiX, FiSearch } from "react-icons/fi";
+import { FiPlus, FiEdit, FiTrash2, FiGrid, FiX, FiSearch, FiRotateCcw } from "react-icons/fi";
 import { categoryApi } from "../../../api/categoryApi";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
@@ -209,14 +209,16 @@ function CategoryForm({ category, onSuccess }) {
 
 export default function CategoriesPage() {
   const pageRef = useRef();
+  const queryClient = useQueryClient();
   const { hasPermission } = useAuthStore();
   const [modal,    setModal]    = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [search,   setSearch]   = useState("");
+  const [view,     setView]     = useState("active"); // "active" | "trash"
 
   const { data: categories = [], isLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => categoryApi.getAll().then(r => r.data),
+    queryKey: ["categories", view],
+    queryFn: () => categoryApi.getAll(view === "trash" ? { deleted: "true" } : {}).then(r => r.data),
   });
 
   useGSAP(() => {
@@ -234,15 +236,38 @@ export default function CategoriesPage() {
   }, { scope: pageRef, dependencies: [isLoading] });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => categoryApi.remove(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey:["categories"] }); toast.success("Deleted"); setDeleting(null); },
+    mutationFn: ({ id, force }) => categoryApi.remove(id, { force }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey:["categories"] }); toast.success("Moved to trash"); setDeleting(null); },
+    onError: (err) => {
+      // 409 = active products still reference this category. Surface the
+      // count and let the admin force it instead of just failing silently.
+      const data = err?.response?.data;
+      if (err?.response?.status === 409 && data?.activeProductCount) {
+        toast.error(data.message);
+        setDeleting((d) => d ? { ...d, blockedCount: data.activeProductCount } : d);
+      } else {
+        toast.error(data?.message || "Failed to delete");
+        setDeleting(null);
+      }
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id) => categoryApi.restore(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["categories"] }); toast.success("Category restored"); },
+    onError: (err) => toast.error(err?.response?.data?.message || "Failed to restore"),
   });
 
   return (
     <div ref={pageRef} className="dash-section">
-      <PageHeader title="Categories" subtitle={`${categories.length} categories`}
-        actions={<Button size="sm" onClick={() => setModal("create")}><FiPlus /> Add Category</Button>}
+      <PageHeader title="Categories" subtitle={`${categories.length} ${view === "trash" ? "trashed" : ""} categories`}
+        actions={view === "active" && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> Add Category</Button>}
       />
+
+      <div className="admin-tab-switch" style={{ marginBottom: 16 }}>
+        <button className={view === "active" ? "active" : ""} onClick={() => setView("active")}>Active</button>
+        <button className={view === "trash" ? "active" : ""} onClick={() => setView("trash")}>Trash</button>
+      </div>
 
       {/* Search bar */}
       <div style={{ position:"relative", maxWidth:360, marginBottom:20 }}>
@@ -284,9 +309,9 @@ export default function CategoriesPage() {
         return filtered.length === 0 ? (
           <div className="table-wrap">
             <div className="empty-state"><FiGrid />
-              <h3>{search ? `No categories match "${search}"` : "No Categories Yet"}</h3>
-              <p>{search ? "Try a different keyword" : "Create your first product category"}</p>
-              {!search && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> Add Category</Button>}
+              <h3>{view === "trash" ? "Trash is empty" : search ? `No categories match "${search}"` : "No Categories Yet"}</h3>
+              {view === "active" && <p>{search ? "Try a different keyword" : "Create your first product category"}</p>}
+              {view === "active" && !search && <Button size="sm" onClick={() => setModal("create")}><FiPlus /> Add Category</Button>}
               {search && <button onClick={() => setSearch("")} style={{ padding:"8px 18px", borderRadius:10, border:"1px solid var(--border)", background:"var(--bg)", color:"var(--text-muted)", cursor:"pointer", fontFamily:"inherit", fontSize:13 }}>Clear search</button>}
             </div>
           </div>
@@ -310,10 +335,14 @@ export default function CategoriesPage() {
                     🌿
                   </div>
                 )}
-                <span className={`badge ${cat.status === "active" ? "badge-success" : "badge-muted"}`}
-                  style={{ position:"absolute", top:12, right:12 }}>
-                  {cat.status}
-                </span>
+                {view === "trash" ? (
+                  <span className="badge badge-danger" style={{ position:"absolute", top:12, right:12 }}>Deleted</span>
+                ) : (
+                  <span className={`badge ${cat.status === "active" ? "badge-success" : "badge-muted"}`}
+                    style={{ position:"absolute", top:12, right:12 }}>
+                    {cat.status}
+                  </span>
+                )}
               </div>
 
               {/* Info */}
@@ -326,15 +355,29 @@ export default function CategoriesPage() {
                     {cat.description}
                   </div>
                 )}
+                {view === "trash" && cat.deletedAt && (
+                  <div style={{ fontSize:12, color:"var(--text-muted)", marginTop:8 }}>
+                    Deleted {new Date(cat.deletedAt).toLocaleDateString()}
+                    {cat.deleteReason && ` — ${cat.deleteReason}`}
+                  </div>
+                )}
                 <div style={{ display:"flex", gap:8, marginTop:14 }}>
-                  <Button variant="secondary" size="sm" style={{ flex:1 }}
-                    onClick={() => setModal(cat)}>
-                    <FiEdit /> Edit
-                  </Button>
-                  <Button variant="danger" size="sm"
-                    onClick={() => setDeleting(cat)}>
-                    <FiTrash2 />
-                  </Button>
+                  {view === "trash" ? (
+                    <Button size="sm" style={{ flex:1 }} onClick={() => restoreMutation.mutate(cat._id)}>
+                      <FiRotateCcw /> Restore
+                    </Button>
+                  ) : (
+                    <>
+                      <Button variant="secondary" size="sm" style={{ flex:1 }}
+                        onClick={() => setModal(cat)}>
+                        <FiEdit /> Edit
+                      </Button>
+                      <Button variant="danger" size="sm"
+                        onClick={() => setDeleting(cat)}>
+                        <FiTrash2 />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -360,12 +403,16 @@ export default function CategoriesPage() {
         <div className="confirm-dialog">
           <div className="confirm-icon"><FiTrash2 /></div>
           <h3>Delete "{deleting?.name}"?</h3>
-          <p>All products in this category will become uncategorized.</p>
+          {deleting?.blockedCount ? (
+            <p>{deleting.blockedCount} active product(s) still use this category. Delete anyway and leave them uncategorized?</p>
+          ) : (
+            <p>The category will be moved to Trash. You can restore it from the Trash tab.</p>
+          )}
           <div className="confirm-actions">
             <Button variant="secondary" onClick={() => setDeleting(null)}>Cancel</Button>
             <Button variant="danger" loading={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(deleting._id)}>
-              Delete
+              onClick={() => deleteMutation.mutate({ id: deleting._id, force: !!deleting.blockedCount })}>
+              {deleting?.blockedCount ? "Delete Anyway" : "Delete"}
             </Button>
           </div>
         </div>

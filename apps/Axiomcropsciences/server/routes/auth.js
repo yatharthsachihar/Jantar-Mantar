@@ -2,17 +2,20 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const { protect } = require('../middleware/authMiddleware');
+const { authLimiter } = require('../middleware/rateLimiters');
 const router = express.Router();
 
-const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+const generateToken = (id) => jwt.sign({ id, type: 'admin' }, process.env.JWT_SECRET, { expiresIn: '4h' });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const admin = await Admin.findOne({ email: email.toLowerCase() });
     if (!admin || !(await admin.matchPassword(password)))
       return res.status(401).json({ message: 'Invalid email or password' });
+    if (admin.isActive === false)
+      return res.status(403).json({ message: 'This admin account has been deactivated' });
     res.json({ token: generateToken(admin._id), admin: { id: admin._id, name: admin.name, email: admin.email, role: admin.role } });
   } catch (err) {
     res.status(500).json({ message: err.message });

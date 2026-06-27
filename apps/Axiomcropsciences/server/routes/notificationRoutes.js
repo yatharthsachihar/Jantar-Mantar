@@ -1,5 +1,7 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
+const Admin = require('../models/Admin');
 const { protect } = require('../middleware/authMiddleware');
 const {
   streamNotifications,
@@ -10,12 +12,22 @@ const {
   clearNotifications
 } = require('../controllers/notificationController');
 
-// All notification routes are protected and require admin privileges
-// Note: /stream might not be easily protected with a Bearer token if using native EventSource in browser.
-// If using native EventSource, it sends cookies but not custom headers like Authorization.
-// In this project we'll mount it and protect if possible, or handle auth differently.
-// To keep it simple and working with fetch/EventSource:
-router.get('/stream', streamNotifications);
+// All notification routes require admin privileges. Native EventSource can't
+// set custom headers, so /stream takes the admin token as a query param
+// instead of an Authorization header (the client appends ?token=...).
+const protectStream = async (req, res, next) => {
+  try {
+    const token = req.query.token;
+    if (!token) return res.status(401).json({ message: 'No token, unauthorized' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const admin = await Admin.findById(decoded.id).select('-password');
+    if (!admin) return res.status(401).json({ message: 'Admin not found, unauthorized' });
+    next();
+  } catch (err) {
+    res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
+router.get('/stream', protectStream, streamNotifications);
 
 router.use(protect);
 

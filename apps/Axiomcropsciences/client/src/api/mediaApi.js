@@ -4,5 +4,6 @@ export const mediaApi = {
   upload: (formData) => API.post('/media/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  remove: (id) => API.delete(`/media/${id}`),
+  remove: (id, { force, reason } = {}) => API.delete(`/media/${id}`, { params: { force }, data: { reason } }),
+  restore: (id) => API.patch(`/media/${id}/restore`),
 };

@@ -39,6 +39,9 @@ const productSchema = new mongoose.Schema({
   lowStockThreshold: { type: Number, default: 10 },
   warehouseLocation: { type: String, default: '' },
   trackInventory:    { type: Boolean, default: true },
+  deletedAt: { type: Date, default: null },
+  deletedBy: { type: String, default: null },
+  deleteReason: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

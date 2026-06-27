@@ -6,7 +6,7 @@ import Topbar from "../components/navigation/Topbar";
 import { useAdminTheme } from "../store/themeStore";
 
 export default function AdminLayout() {
-  const { loading, token, admin, init, refreshMatrix } = useAuthStore();
+  const { loading, token, admin, init, refreshMatrix, logout } = useAuthStore();
   const { theme } = useAdminTheme();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -19,7 +19,17 @@ export default function AdminLayout() {
     const intervalId = setInterval(() => {
       refreshMatrix();
     }, 30000);
-    return () => clearInterval(intervalId);
+
+    // Admin tokens are short-lived (4h) — when any API call comes back 401,
+    // axios dispatches this so we log out and redirect instead of leaving
+    // the panel stuck silently failing requests.
+    const handleExpired = () => logout();
+    window.addEventListener('admin-auth-expired', handleExpired);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('admin-auth-expired', handleExpired);
+    };
   }, []); // eslint-disable-line
 
   useEffect(() => {

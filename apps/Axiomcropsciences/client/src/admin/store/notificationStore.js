@@ -28,7 +28,8 @@ const useNotificationStore = create((set, get) => ({
     if (get().isConnected || get().eventSource) return;
 
     const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
-    const es = new EventSource(`${baseUrl}/notifications/stream`);
+    const token = localStorage.getItem('axiomcropsciences_token') || '';
+    const es = new EventSource(`${baseUrl}/notifications/stream?token=${encodeURIComponent(token)}`);
 
     es.onopen = () => set({ isConnected: true, eventSource: es });
 

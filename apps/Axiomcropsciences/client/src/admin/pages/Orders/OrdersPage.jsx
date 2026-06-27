@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import toast from "react-hot-toast";
-import { FiEye, FiEdit, FiCheck, FiX, FiTrash2 } from "react-icons/fi";
+import { FiEye, FiEdit, FiCheck, FiX, FiTrash2, FiRotateCcw } from "react-icons/fi";
 import { orderApi } from "../../../api/orderApi";
 import PageHeader from "../../components/common/PageHeader";
 import Select from "../../components/common/Select";
@@ -39,6 +39,7 @@ export default function OrdersPage() {
   const [search, setSearch]     = useState("");
   const [filter, setFilter]     = useState("");
   const [viewOrder, setViewOrder] = useState(null);
+  const [view, setView]         = useState("active"); // "active" | "trash"
 
   useGSAP(() => {
     gsap.from(".page-header", { y: -20, duration: 0.5, clearProps: "opacity,transform" });
@@ -46,8 +47,8 @@ export default function OrdersPage() {
   }, { scope: pageRef });
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["orders", filter],
-    queryFn: () => orderApi.getAll({ status: filter }).then(r => r.data),
+    queryKey: ["orders", filter, view],
+    queryFn: () => orderApi.getAll({ status: filter, deleted: view === "trash" ? "true" : undefined }).then(r => r.data),
   });
 
   const updateMutation = useMutation({
@@ -57,7 +58,14 @@ export default function OrdersPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => orderApi.remove(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["orders"] }); toast.success("Order deleted"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["orders"] }); toast.success("Order moved to trash"); },
+    onError: (err) => toast.error(err?.response?.data?.message || "Failed to delete order"),
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id) => orderApi.restore(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["orders"] }); toast.success("Order restored"); },
+    onError: (err) => toast.error(err?.response?.data?.message || "Failed to restore order"),
   });
 
   const filtered = orders.filter(o =>
@@ -67,11 +75,15 @@ export default function OrdersPage() {
 
   return (
     <div ref={pageRef} className="dash-section">
-      <PageHeader title="Orders" subtitle={`${filtered.length} orders`} />
+      <PageHeader title="Orders" subtitle={`${filtered.length} ${view === "trash" ? "trashed" : ""} orders`} />
 
-      <div className="page-toolbar">
+      <div className="page-toolbar" style={{ flexWrap: "wrap", gap: 12 }}>
+        <div className="admin-tab-switch">
+          <button className={view === "active" ? "active" : ""} onClick={() => setView("active")}>Active</button>
+          <button className={view === "trash" ? "active" : ""} onClick={() => setView("trash")}>Trash</button>
+        </div>
         <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or ID..." />
-        <Select options={STATUS_OPTIONS} value={filter} onChange={e => setFilter(e.target.value)} />
+        {view === "active" && <Select options={STATUS_OPTIONS} value={filter} onChange={e => setFilter(e.target.value)} />}
       </div>
 
       <div className="table-wrap">
@@ -108,37 +120,57 @@ export default function OrdersPage() {
                   <td style={{ fontWeight: 700, color: "var(--primary)" }}>₹{order.totalAmount?.toLocaleString()}</td>
                   <td><span className="badge badge-muted">{order.paymentMethod || "COD"}</span></td>
                   <td>
-                    <span className={`badge ${STATUS_BADGE[order.status] || "badge-muted"}`}>
-                      {order.status}
-                    </span>
+                    {view === "trash" ? (
+                      <span className="badge badge-danger">Deleted</span>
+                    ) : (
+                      <span className={`badge ${STATUS_BADGE[order.status] || "badge-muted"}`}>
+                        {order.status}
+                      </span>
+                    )}
                   </td>
                   <td style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {view === "trash" ? (
+                      <>
+                        <div>{order.deletedAt ? new Date(order.deletedAt).toLocaleDateString() : "—"}</div>
+                        {order.deleteReason && <div style={{ fontSize: 11 }}>{order.deleteReason}</div>}
+                      </>
+                    ) : (
+                      new Date(order.createdAt).toLocaleDateString()
+                    )}
                   </td>
                   <td>
-                    <div className="table-actions">
-                      <button className="btn-view" onClick={() => setViewOrder(order)}><FiEye /></button>
-                      <select
-                        style={{ height: 34, borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", padding: "0 8px", fontSize: 12, cursor: "pointer" }}
-                        value={order.status}
-                        onChange={e => updateMutation.mutate({ id: order._id, status: e.target.value })}
-                      >
-                        {STATUS_OPTIONS.filter(s => s.value).map(s => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
-                        ))}
-                      </select>
-                      <button 
-                        className="btn-delete" 
-                        onClick={() => {
-                          if (window.confirm("Are you sure you want to delete this order?")) {
-                            deleteMutation.mutate(order._id);
-                          }
-                        }}
-                        title="Delete Order"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
+                    {view === "trash" ? (
+                      <div className="table-actions">
+                        <button className="btn-view" onClick={() => setViewOrder(order)}><FiEye /></button>
+                        <Button size="sm" onClick={() => restoreMutation.mutate(order._id)}>
+                          <FiRotateCcw /> Restore
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="table-actions">
+                        <button className="btn-view" onClick={() => setViewOrder(order)}><FiEye /></button>
+                        <select
+                          style={{ height: 34, borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", padding: "0 8px", fontSize: 12, cursor: "pointer" }}
+                          value={order.status}
+                          onChange={e => updateMutation.mutate({ id: order._id, status: e.target.value })}
+                        >
+                          {STATUS_OPTIONS.filter(s => s.value).map(s => (
+                            <option key={s.value} value={s.value}>{s.label}</option>
+                          ))}
+                        </select>
+                        <button
+                          className="btn-delete"
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this order?")) {
+                              deleteMutation.mutate(order._id);
+                            }
+                          }}
+                          title="Delete Order"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -161,7 +193,7 @@ export default function OrdersPage() {
           ) : filtered.length === 0 ? (
             <div className="empty-state" style={{ padding: 40 }}>
               <FiEye style={{ fontSize: 32, opacity: 0.3 }} />
-              <h3>No Orders Found</h3>
+              <h3>{view === "trash" ? "Trash is empty" : "No Orders Found"}</h3>
             </div>
           ) : filtered.map(order => (
             <div key={order._id} style={{
@@ -173,9 +205,13 @@ export default function OrdersPage() {
                 <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--text-muted)" }}>
                   #{order._id?.slice(-8).toUpperCase()}
                 </span>
-                <span className={`badge ${STATUS_BADGE[order.status] || "badge-muted"}`}>
-                  {order.status}
-                </span>
+                {view === "trash" ? (
+                  <span className="badge badge-danger">Deleted</span>
+                ) : (
+                  <span className={`badge ${STATUS_BADGE[order.status] || "badge-muted"}`}>
+                    {order.status}
+                  </span>
+                )}
               </div>
 
               {/* Customer + Amount */}
@@ -194,7 +230,9 @@ export default function OrdersPage() {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 <span className="badge badge-muted" style={{ fontSize: 10 }}>{order.paymentMethod || "COD"}</span>
                 <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                  {new Date(order.createdAt).toLocaleDateString()}
+                  {view === "trash"
+                    ? `Deleted ${order.deletedAt ? new Date(order.deletedAt).toLocaleDateString() : ""}`
+                    : new Date(order.createdAt).toLocaleDateString()}
                 </span>
               </div>
 
@@ -203,27 +241,35 @@ export default function OrdersPage() {
                 <Button variant="secondary" size="sm" style={{ flex: 1 }} onClick={() => setViewOrder(order)}>
                   <FiEye /> View
                 </Button>
-                <select
-                  style={{
-                    flex: 1, height: 48, borderRadius: 12,
-                    border: "1px solid var(--border)", background: "var(--bg)",
-                    color: "var(--text)", padding: "0 10px", fontSize: 13,
-                    cursor: "pointer", fontFamily: "inherit",
-                  }}
-                  value={order.status}
-                  onChange={e => updateMutation.mutate({ id: order._id, status: e.target.value })}
-                >
-                  {STATUS_OPTIONS.filter(s => s.value).map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
-                <button
-                  className="btn-delete"
-                  style={{ width: 48, height: 48, borderRadius: 12 }}
-                  onClick={() => { if (window.confirm("Delete this order?")) deleteMutation.mutate(order._id); }}
-                >
-                  <FiTrash2 />
-                </button>
+                {view === "trash" ? (
+                  <Button size="sm" style={{ flex: 1 }} onClick={() => restoreMutation.mutate(order._id)}>
+                    <FiRotateCcw /> Restore
+                  </Button>
+                ) : (
+                  <>
+                    <select
+                      style={{
+                        flex: 1, height: 48, borderRadius: 12,
+                        border: "1px solid var(--border)", background: "var(--bg)",
+                        color: "var(--text)", padding: "0 10px", fontSize: 13,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}
+                      value={order.status}
+                      onChange={e => updateMutation.mutate({ id: order._id, status: e.target.value })}
+                    >
+                      {STATUS_OPTIONS.filter(s => s.value).map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                    <button
+                      className="btn-delete"
+                      style={{ width: 48, height: 48, borderRadius: 12 }}
+                      onClick={() => { if (window.confirm("Delete this order?")) deleteMutation.mutate(order._id); }}
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}

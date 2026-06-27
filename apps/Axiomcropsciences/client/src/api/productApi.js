@@ -22,8 +22,11 @@ export const productApi = {
   // Admin — toggle collection flags only (featured / bestseller / etc.)
   updateFlags: (id, flags) => API.patch(`/products/${id}/flags`, flags),
 
-  // Admin — delete by _id
-  remove: (id) => API.delete(`/products/${id}`),
+  // Admin — soft delete by _id
+  remove: (id, reason) => API.delete(`/products/${id}`, { data: { reason } }),
+
+  // Admin — restore a soft-deleted product
+  restore: (id) => API.patch(`/products/${id}/restore`),
 
   // Admin — bulk import from CSV (+ optional image files), multipart form-data
   importCsv: (formData) => API.post('/products/import', formData),

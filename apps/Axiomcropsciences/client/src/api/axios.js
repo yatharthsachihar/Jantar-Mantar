@@ -47,14 +47,23 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 403) {
-      // If we receive a 403 Forbidden, dispatch event so UserContext can navigate
-      // instead of a hard reload which penalizes performance.
-      if (typeof window !== 'undefined') {
-        const isAdminPanel = window.location.pathname.startsWith('/admin');
-        if (!isAdminPanel) {
-          window.dispatchEvent(new Event('auth-error-403'));
-        }
+    if (error.response && typeof window !== 'undefined') {
+      const isAdminPanel = window.location.pathname.startsWith('/admin');
+      const status = error.response.status;
+
+      if (status === 403 && !isAdminPanel) {
+        // If we receive a 403 Forbidden, dispatch event so UserContext can navigate
+        // instead of a hard reload which penalizes performance.
+        window.dispatchEvent(new Event('auth-error-403'));
+      }
+
+      // Admin token expired/invalid — clear it and let AdminLayout redirect to
+      // login. Only the authoritative /auth/me check triggers this; a 401 from
+      // any other single endpoint must NOT nuke the whole session (that turned
+      // a one-off endpoint failure into a full logout loop).
+      const url = error.config?.url || '';
+      if (status === 401 && isAdminPanel && url.includes('/auth/me')) {
+        window.dispatchEvent(new Event('admin-auth-expired'));
       }
     }
     return Promise.reject(error);

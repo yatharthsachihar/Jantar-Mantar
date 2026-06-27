@@ -1,10 +1,11 @@
 const express = require('express');
 const Enquiry = require('../models/Enquiry');
 const { protect } = require('../middleware/authMiddleware');
+const { formLimiter } = require('../middleware/rateLimiters');
 const router = express.Router();
 
 // Public — submit enquiry
-router.post('/', async (req, res) => {
+router.post('/', formLimiter, async (req, res) => {
   try {
     const enquiry = await Enquiry.create(req.body);
     res.status(201).json(enquiry);

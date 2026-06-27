@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import {
   FiPlus, FiEdit, FiTrash2, FiPackage,
   FiDownload, FiUpload, FiRefreshCw, FiChevronDown, FiChevronUp,
-  FiAlertTriangle, FiExternalLink, FiEyeOff, FiCheckCircle, FiXCircle, FiImage, FiFileText, FiCopy
+  FiAlertTriangle, FiExternalLink, FiEyeOff, FiCheckCircle, FiXCircle, FiImage, FiFileText, FiCopy, FiRotateCcw
 } from "react-icons/fi";
 
 import { productApi } from "../../../api/productApi";
@@ -88,6 +88,7 @@ export default function ProductsPage() {
   const [importCsvFile,  setImportCsvFile]  = useState(null);
   const [importImages,   setImportImages]   = useState([]);
   const [importResult,   setImportResult]   = useState(null);
+  const [view,           setView]           = useState("active"); // "active" | "trash"
   const PER_PAGE = 10;
 
   useGSAP(() => {
@@ -97,13 +98,14 @@ export default function ProductsPage() {
   }, { scope: pageRef });
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["products", search, statusFilter, categoryFilter, lowStockOnly, page],
+    queryKey: ["products", search, statusFilter, categoryFilter, lowStockOnly, page, view],
     queryFn: () =>
       productApi.getAll({
         search,
-        status: statusFilter,
+        status: view === "trash" ? undefined : statusFilter,
         category: categoryFilter,
         lowStock: lowStockOnly ? "true" : undefined,
+        deleted: view === "trash" ? "true" : undefined,
         page,
         limit: PER_PAGE,
       }).then(r => r.data),
@@ -126,16 +128,25 @@ export default function ProductsPage() {
   // admin can no longer even see on screen.
   useEffect(() => {
     setSelected([]);
-  }, [search, statusFilter, categoryFilter, lowStockOnly, page]);
+  }, [search, statusFilter, categoryFilter, lowStockOnly, page, view]);
 
   const deleteMutation = useMutation({
     mutationFn: (id) => productApi.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success("Product deleted");
+      toast.success("Product moved to trash");
       setDeleteTarget(null);
     },
     onError: (err) => toast.error(err?.response?.data?.message || "Failed to delete"),
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id) => productApi.restore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product restored");
+    },
+    onError: (err) => toast.error(err?.response?.data?.message || "Failed to restore"),
   });
 
   // Duplicate: fetch the full product, then create a copy. Slug & SKU are
@@ -167,7 +178,7 @@ export default function ProductsPage() {
     mutationFn: (ids) => productApi.bulkDelete(ids),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success(`${res.data.deletedCount || selected.length} product${selected.length === 1 ? "" : "s"} deleted`);
+      toast.success(`${res.data.deletedCount || selected.length} product${selected.length === 1 ? "" : "s"} moved to trash`);
       setSelected([]);
       setBulkDeleteOpen(false);
     },
@@ -269,6 +280,10 @@ export default function ProductsPage() {
 
       {/* Toolbar */}
       <div className="page-toolbar">
+        <div className="admin-tab-switch">
+          <button className={view === "active" ? "active" : ""} onClick={() => setView("active")}>Active</button>
+          <button className={view === "trash" ? "active" : ""} onClick={() => setView("trash")}>Trash</button>
+        </div>
         <SearchInput
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
@@ -282,26 +297,30 @@ export default function ProductsPage() {
           value={categoryFilter}
           onChange={e => { setCategoryFilter(e.target.value); setPage(1); }}
         />
-        <Select
-          options={[
-            { label: "All Status",  value: "" },
-            { label: "Active",      value: "active" },
-            { label: "Inactive",    value: "inactive" },
-          ]}
-          value={statusFilter}
-          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-        />
-        <label style={{
-          display: "flex", alignItems: "center", gap: 8, fontSize: 13,
-          color: "var(--text-muted)", cursor: "pointer", whiteSpace: "nowrap", padding: "0 4px",
-        }}>
-          <input
-            type="checkbox"
-            checked={lowStockOnly}
-            onChange={e => { setLowStockOnly(e.target.checked); setPage(1); }}
-          />
-          Low stock only
-        </label>
+        {view === "active" && (
+          <>
+            <Select
+              options={[
+                { label: "All Status",  value: "" },
+                { label: "Active",      value: "active" },
+                { label: "Inactive",    value: "inactive" },
+              ]}
+              value={statusFilter}
+              onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+            />
+            <label style={{
+              display: "flex", alignItems: "center", gap: 8, fontSize: 13,
+              color: "var(--text-muted)", cursor: "pointer", whiteSpace: "nowrap", padding: "0 4px",
+            }}>
+              <input
+                type="checkbox"
+                checked={lowStockOnly}
+                onChange={e => { setLowStockOnly(e.target.checked); setPage(1); }}
+              />
+              Low stock only
+            </label>
+          </>
+        )}
         <Button variant="ghost" size="sm"
           onClick={() => queryClient.invalidateQueries({ queryKey: ["products"] })}
           title="Refresh"
@@ -311,7 +330,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Bulk actions bar — only when something is selected */}
-      {canEdit && selected.length > 0 && (
+      {canEdit && view === "active" && selected.length > 0 && (
         <div style={{
           display: "flex", alignItems: "center", gap: 12,
           padding: "10px 16px", marginBottom: 16,
@@ -375,11 +394,13 @@ export default function ProductsPage() {
                   <td colSpan={8}>
                     <div className="empty-state">
                       <FiPackage />
-                      <h3>No Products Found</h3>
-                      <p>Add your first product to get started</p>
+                      <h3>{view === "trash" ? "Trash is empty" : "No Products Found"}</h3>
+                      {view === "active" && <p>Add your first product to get started</p>}
+                      {view === "active" && (
                       <Button size="sm" onClick={() => navigate("/admin/products/create")}>
                         <FiPlus /> Add Product
                       </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -387,12 +408,14 @@ export default function ProductsPage() {
                 <React.Fragment key={p.parentGroupId || p._id}>
                 <tr>
                   <td className="col-check">
-                    <input
-                      type="checkbox"
-                      className="row-checkbox"
-                      checked={selected.includes(p._id)}
-                      onChange={() => toggleSelect(p._id)}
-                    />
+                    {view === "active" && (
+                      <input
+                        type="checkbox"
+                        className="row-checkbox"
+                        checked={selected.includes(p._id)}
+                        onChange={() => toggleSelect(p._id)}
+                      />
+                    )}
                   </td>
                   <td>
                     <div className="table-product">
@@ -440,25 +463,41 @@ export default function ProductsPage() {
                     </div>
                   </td>
                   <td>
-                    <span className={STATUS_BADGE[p.status] || "badge badge-muted"}>
-                      {p.status}
-                    </span>
+                    {view === "trash" ? (
+                      <>
+                        <span className="badge badge-danger">Deleted</span>
+                        {p.deletedAt && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>{new Date(p.deletedAt).toLocaleDateString()}</div>}
+                        {p.deleteReason && <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{p.deleteReason}</div>}
+                      </>
+                    ) : (
+                      <span className={STATUS_BADGE[p.status] || "badge badge-muted"}>
+                        {p.status}
+                      </span>
+                    )}
                   </td>
                   <td>
-                    <div className="table-actions">
-                      <button className="btn-view" onClick={() => window.open(`/products/${p.slug || p._id}`, '_blank')} title="View on Site">
-                        <FiExternalLink />
-                      </button>
-                      <button className="btn-edit" onClick={() => navigate(`/admin/products/edit/${p._id}`)} title="Edit">
-                        <FiEdit />
-                      </button>
-                      <button className="btn-view" onClick={() => duplicateMutation.mutate(p._id)} title="Duplicate" disabled={duplicateMutation.isPending}>
-                        <FiCopy />
-                      </button>
-                      <button className="btn-delete" onClick={() => setDeleteTarget(p)} title="Delete">
-                        <FiTrash2 />
-                      </button>
-                    </div>
+                    {view === "trash" ? (
+                      <div className="table-actions">
+                        <Button size="sm" onClick={() => restoreMutation.mutate(p._id)}>
+                          <FiRotateCcw /> Restore
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="table-actions">
+                        <button className="btn-view" onClick={() => window.open(`/products/${p.slug || p._id}`, '_blank')} title="View on Site">
+                          <FiExternalLink />
+                        </button>
+                        <button className="btn-edit" onClick={() => navigate(`/admin/products/edit/${p._id}`)} title="Edit">
+                          <FiEdit />
+                        </button>
+                        <button className="btn-view" onClick={() => duplicateMutation.mutate(p._id)} title="Duplicate" disabled={duplicateMutation.isPending}>
+                          <FiCopy />
+                        </button>
+                        <button className="btn-delete" onClick={() => setDeleteTarget(p)} title="Delete">
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
                 {expandedGroup === p._id && p.variations && (
@@ -514,24 +553,28 @@ export default function ProductsPage() {
           ) : products.length === 0 ? (
              <div className="empty-state">
                <FiPackage />
-               <h3>No Products Found</h3>
-               <p>Add your first product to get started</p>
+               <h3>{view === "trash" ? "Trash is empty" : "No Products Found"}</h3>
+               {view === "active" && <p>Add your first product to get started</p>}
+               {view === "active" && (
                <Button size="sm" onClick={() => navigate("/admin/products/create")}>
                  <FiPlus /> Add Product
                </Button>
+               )}
              </div>
           ) : products.map(p => (
              <div key={p.parentGroupId || p._id} className="mobile-product-card">
                 <div className="mobile-product-header">
                   <div style={{ display: "flex", gap: 12, flex: 1, minWidth: 0 }}>
                     <div style={{ position: "relative" }}>
-                      <input
-                        type="checkbox"
-                        className="row-checkbox"
-                        style={{ position: "absolute", top: -8, left: -8, zIndex: 10, width: 22, height: 22, background: "var(--card)", borderRadius: 4, cursor: "pointer" }}
-                        checked={selected.includes(p._id)}
-                        onChange={() => toggleSelect(p._id)}
-                      />
+                      {view === "active" && (
+                        <input
+                          type="checkbox"
+                          className="row-checkbox"
+                          style={{ position: "absolute", top: -8, left: -8, zIndex: 10, width: 22, height: 22, background: "var(--card)", borderRadius: 4, cursor: "pointer" }}
+                          checked={selected.includes(p._id)}
+                          onChange={() => toggleSelect(p._id)}
+                        />
+                      )}
                       {p.images?.[0] ? (
                         <img className="mobile-product-img" src={mediaUrl(p.images[0])} alt={p.name} />
                       ) : (
@@ -550,26 +593,42 @@ export default function ProductsPage() {
                         </div>
                       </div>
                       <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                         <span className={STATUS_BADGE[p.status] || "badge badge-muted"} style={{ padding: "2px 8px", fontSize: 10 }}>{p.status}</span>
-                         {p.visibleInB2B && <span className="badge badge-info" style={{ padding: "2px 8px", fontSize: 10 }}>B2B</span>}
-                         {p.visibleInB2C && <span className="badge badge-primary" style={{ padding: "2px 8px", fontSize: 10 }}>B2C</span>}
+                         {view === "trash" ? (
+                           <span className="badge badge-danger" style={{ padding: "2px 8px", fontSize: 10 }}>
+                             Deleted {p.deletedAt ? new Date(p.deletedAt).toLocaleDateString() : ""}
+                           </span>
+                         ) : (
+                           <>
+                             <span className={STATUS_BADGE[p.status] || "badge badge-muted"} style={{ padding: "2px 8px", fontSize: 10 }}>{p.status}</span>
+                             {p.visibleInB2B && <span className="badge badge-info" style={{ padding: "2px 8px", fontSize: 10 }}>B2B</span>}
+                             {p.visibleInB2C && <span className="badge badge-primary" style={{ padding: "2px 8px", fontSize: 10 }}>B2C</span>}
+                           </>
+                         )}
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="mobile-product-actions">
-                  <Button variant="secondary" size="sm" onClick={() => window.open(`/products/${p.slug || p._id}`, '_blank')}>
-                    <FiExternalLink /> View
-                  </Button>
-                  <Button variant="secondary" size="sm" onClick={() => navigate(`/admin/products/edit/${p._id}`)}>
-                    <FiEdit /> Edit
-                  </Button>
-                  <Button variant="secondary" size="sm" onClick={() => duplicateMutation.mutate(p._id)} disabled={duplicateMutation.isPending}>
-                    <FiCopy /> Duplicate
-                  </Button>
-                  <Button variant="danger" size="sm" onClick={() => setDeleteTarget(p)}>
-                    <FiTrash2 /> Delete
-                  </Button>
+                  {view === "trash" ? (
+                    <Button size="sm" onClick={() => restoreMutation.mutate(p._id)} style={{ width: "100%" }}>
+                      <FiRotateCcw /> Restore
+                    </Button>
+                  ) : (
+                    <>
+                      <Button variant="secondary" size="sm" onClick={() => window.open(`/products/${p.slug || p._id}`, '_blank')}>
+                        <FiExternalLink /> View
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => navigate(`/admin/products/edit/${p._id}`)}>
+                        <FiEdit /> Edit
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => duplicateMutation.mutate(p._id)} disabled={duplicateMutation.isPending}>
+                        <FiCopy /> Duplicate
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => setDeleteTarget(p)}>
+                        <FiTrash2 /> Delete
+                      </Button>
+                    </>
+                  )}
                 </div>
              </div>
           ))}
@@ -694,7 +753,7 @@ export default function ProductsPage() {
         <div className="confirm-dialog">
           <div className="confirm-icon"><FiTrash2 /></div>
           <h3>Delete "{deleteTarget?.name}"?</h3>
-          <p>This action cannot be undone. The product will be permanently removed.</p>
+          <p>The product will be moved to Trash and hidden from the storefront. You can restore it from the Trash tab.</p>
           <div className="confirm-actions">
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
             <Button
@@ -717,7 +776,7 @@ export default function ProductsPage() {
         <div className="confirm-dialog">
           <div className="confirm-icon"><FiTrash2 /></div>
           <h3>Delete {selected.length} Products?</h3>
-          <p>This will permanently remove the selected products from the catalog. This action cannot be undone.</p>
+          <p>The selected products will be moved to Trash and hidden from the storefront. You can restore them from the Trash tab.</p>
           <div className="confirm-actions">
             <Button variant="secondary" onClick={() => setBulkDeleteOpen(false)}>Cancel</Button>
             <Button

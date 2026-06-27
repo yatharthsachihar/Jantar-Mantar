@@ -213,6 +213,15 @@ router.get('/', softAuth, async (req, res) => {
     let filter = {};
     const isAdmin = !!req.admin;
 
+    // Soft-deleted products are excluded from every normal listing. Admin can
+    // pass ?deleted=true to view the trash instead (mutually exclusive with
+    // the live catalog — never mixed together).
+    if (isAdmin && req.query.deleted === 'true') {
+      filter.deletedAt = { $ne: null };
+    } else {
+      filter.deletedAt = null;
+    }
+
     // Status filter
     if (status) {
       filter.status = status;             // explicit status (admin passing "inactive")
@@ -286,15 +295,18 @@ router.post('/bulk-delete', protect, async (req, res) => {
       return res.status(400).json({ message: 'No valid product IDs provided' });
     }
 
-    const result = await Product.deleteMany({ _id: { $in: validIds } });
+    const result = await Product.updateMany(
+      { _id: { $in: validIds }, deletedAt: null },
+      { $set: { deletedAt: new Date(), deletedBy: req.admin.email, deleteReason: req.body?.reason || null } }
+    );
 
     sseManager.dispatch({
       type: 'product',
       title: 'Products Deleted',
-      message: `${result.deletedCount} product${result.deletedCount === 1 ? '' : 's'} removed from the catalog.`,
+      message: `${result.modifiedCount} product${result.modifiedCount === 1 ? '' : 's'} moved to trash.`,
     });
 
-    res.json({ message: 'Products deleted', deletedCount: result.deletedCount });
+    res.json({ message: 'Products moved to trash', deletedCount: result.modifiedCount });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -435,7 +447,7 @@ router.get('/:slugOrId', async (req, res) => {
       : { slug: id };
 
     const product = await Product.findOne(query).populate('category', 'name slug');
-    if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!product || product.deletedAt) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -493,21 +505,44 @@ router.put('/:id', protect, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────
-// DELETE /api/products/:id — delete (admin only)
+// DELETE /api/products/:id — soft delete (admin only)
 // ─────────────────────────────────────────────────
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Product not found' });
-    
-    // Dispatch Notification
+    const product = await Product.findById(req.params.id);
+    if (!product || product.deletedAt) return res.status(404).json({ message: 'Product not found' });
+
+    product.deletedAt = new Date();
+    product.deletedBy = req.admin.email;
+    product.deleteReason = req.body?.reason || null;
+    await product.save();
+
     sseManager.dispatch({
       type: 'product',
       title: 'Product Deleted',
-      message: `${product.name} was removed from the catalog.`,
+      message: `${product.name} was moved to trash.`,
     });
 
-    res.json({ message: 'Product deleted' });
+    res.json({ message: 'Product moved to trash' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────
+// PATCH /api/products/:id/restore — restore a soft-deleted product
+// ─────────────────────────────────────────────────
+router.patch('/:id/restore', protect, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product || !product.deletedAt) return res.status(404).json({ message: 'Product not found in trash' });
+
+    product.deletedAt = null;
+    product.deletedBy = null;
+    product.deleteReason = null;
+    await product.save();
+
+    res.json(product);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

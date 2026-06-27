@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   FiUpload, FiTrash2, FiCopy, FiGrid, FiList,
-  FiImage, FiFile, FiSearch, FiX, FiCheck
+  FiImage, FiFile, FiSearch, FiX, FiCheck, FiRotateCcw
 } from "react-icons/fi";
 import { mediaApi } from "../../../api/mediaApi";
 import PageHeader from "../../components/common/PageHeader";
@@ -30,6 +30,7 @@ export default function MediaLibraryPage() {
   const qc          = useQueryClient();
   const fileRef     = useRef(null);
   const [view,      setView]      = useState("grid");
+  const [trashTab,  setTrashTab]  = useState("active"); // "active" | "trash"
   const [filter,    setFilter]    = useState("All");
   const [search,    setSearch]    = useState("");
   const [selected,  setSelected]  = useState(null);
@@ -37,18 +38,38 @@ export default function MediaLibraryPage() {
   const [copied,    setCopied]    = useState(null);
 
   const { data: files = [], isLoading } = useQuery({
-    queryKey: ["media"],
-    queryFn: () => mediaApi.getAll().then(r => r.data),
+    queryKey: ["media", trashTab],
+    queryFn: () => mediaApi.getAll(trashTab === "trash" ? { deleted: "true" } : {}).then(r => r.data),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => mediaApi.remove(id),
+    mutationFn: ({ id, force }) => mediaApi.remove(id, { force }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["media"] });
-      toast.success("File deleted");
+      toast.success("File moved to trash");
       setSelected(null);
     },
-    onError: () => toast.error("Delete failed"),
+    onError: (err, variables) => {
+      const data = err?.response?.data;
+      if (err?.response?.status === 409 && data?.references) {
+        const used = data.references.total ?? 0;
+        if (window.confirm(`${data.message}\n\nStill in use in ${used} place(s). Delete anyway?`)) {
+          deleteMutation.mutate({ id: variables.id, force: true });
+        }
+      } else {
+        toast.error(data?.message || "Delete failed");
+      }
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id) => mediaApi.restore(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["media"] });
+      toast.success("File restored");
+      setSelected(null);
+    },
+    onError: (err) => toast.error(err?.response?.data?.message || "Failed to restore"),
   });
 
   const handleUpload = async (e) => {
@@ -109,6 +130,11 @@ export default function MediaLibraryPage() {
         }
       />
 
+      <div className="admin-tab-switch" style={{ marginBottom: 16 }}>
+        <button className={trashTab === "active" ? "active" : ""} onClick={() => { setTrashTab("active"); setSelected(null); }}>Active</button>
+        <button className={trashTab === "trash" ? "active" : ""} onClick={() => { setTrashTab("trash"); setSelected(null); }}>Trash</button>
+      </div>
+
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         {[
@@ -155,8 +181,16 @@ export default function MediaLibraryPage() {
             </div>
           </div>
 
+          {/* Empty state */}
+          {!isLoading && filtered.length === 0 && trashTab === "trash" && (
+            <div style={{ border: "2px dashed var(--border)", borderRadius: 20, padding: "60px 40px", textAlign: "center", color: "var(--text-muted)" }}>
+              <FiTrash2 size={36} style={{ marginBottom: 16, opacity: 0.5 }} />
+              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>Trash is empty</div>
+            </div>
+          )}
+
           {/* Drop zone when empty */}
-          {!isLoading && filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && trashTab === "active" && (
             <div onClick={() => fileRef.current?.click()}
               style={{ border: "2px dashed var(--border)", borderRadius: 20, padding: "60px 40px", textAlign: "center", cursor: "pointer", transition: "border-color 0.2s", color: "var(--text-muted)" }}
               onDragOver={e => e.preventDefault()}
@@ -227,9 +261,15 @@ export default function MediaLibraryPage() {
                               <button className="btn-view" title="Copy URL" onClick={e => { e.stopPropagation(); copyUrl(f.url); }}>
                                 {copied === f.url ? <FiCheck /> : <FiCopy />}
                               </button>
-                              <button className="btn-delete" title="Delete" onClick={e => { e.stopPropagation(); deleteMutation.mutate(f._id); }}>
-                                <FiTrash2 />
-                              </button>
+                              {trashTab === "trash" ? (
+                                <button className="btn-view" title="Restore" onClick={e => { e.stopPropagation(); restoreMutation.mutate(f._id); }}>
+                                  <FiRotateCcw />
+                                </button>
+                              ) : (
+                                <button className="btn-delete" title="Delete" onClick={e => { e.stopPropagation(); deleteMutation.mutate({ id: f._id, force: false }); }}>
+                                  <FiTrash2 />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -275,10 +315,17 @@ export default function MediaLibraryPage() {
               <Button size="sm" variant="secondary" onClick={() => copyUrl(selected.url)}>
                 {copied === selected.url ? <><FiCheck /> Copied!</> : <><FiCopy /> Copy URL</>}
               </Button>
+              {trashTab === "trash" ? (
+                <Button size="sm" loading={restoreMutation.isPending}
+                  onClick={() => restoreMutation.mutate(selected._id)}>
+                  <FiRotateCcw /> Restore File
+                </Button>
+              ) : (
               <Button size="sm" variant="danger" loading={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate(selected._id)}>
+                onClick={() => deleteMutation.mutate({ id: selected._id, force: false })}>
                 <FiTrash2 /> Delete File
               </Button>
+              )}
             </div>
           </div>
         )}

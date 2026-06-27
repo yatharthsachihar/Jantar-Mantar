@@ -178,7 +178,7 @@ router.get('/my-orders', protectUser, async (req, res) => {
     const orConditions = [{ customerEmail: req.user.email }];
     if (req.user.mobile) orConditions.push({ customerPhone: req.user.mobile });
 
-    const orders = await Order.find({ $or: orConditions }).sort({ createdAt: -1 });
+    const orders = await Order.find({ $or: orConditions, deletedAt: null }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -187,8 +187,8 @@ router.get('/my-orders', protectUser, async (req, res) => {
 router.put('/:id/cancel', protectUser, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: 'Order not found' });
-    
+    if (!order || order.deletedAt) return res.status(404).json({ message: 'Order not found' });
+
     // Check if the order belongs to this user
     const isOwner = (order.customerEmail === req.user.email) ||
                     (req.user.mobile && order.customerPhone === req.user.mobile);
@@ -232,11 +232,19 @@ router.put('/:id/cancel', protectUser, async (req, res) => {
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
-// Public — get single order details
-router.get('/:id', async (req, res) => {
+// Protected User — get single order details (owner only, same check as /pay)
+router.get('/:id', protectUser, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (!order || order.deletedAt) return res.status(404).json({ message: 'Order not found' });
+
+    const isOwner = (order.customerEmail === req.user.email) ||
+                    (req.user.mobile && order.customerPhone === req.user.mobile) ||
+                    req.user.isAdminAccount;
+    if (!isOwner) {
+      return res.status(403).json({ message: 'Unauthorized to view this order' });
+    }
+
     res.json(order);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -246,7 +254,7 @@ router.put('/:id/pay', protectUser, async (req, res) => {
   try {
     const { paymentMethod, transactionId } = req.body;
     const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (!order || order.deletedAt) return res.status(404).json({ message: 'Order not found' });
 
     // Only the customer who placed the order may confirm its payment, so an
     // attacker can't flip an arbitrary order id to "paid".
@@ -275,10 +283,11 @@ router.put('/:id/pay', protectUser, async (req, res) => {
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
-// Admin — get all orders
+// Admin — get all orders. ?deleted=true returns the trash instead of live orders.
 router.get('/', protect, async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
+    const filter = req.query.deleted === 'true' ? { deletedAt: { $ne: null } } : { deletedAt: null };
+    const orders = await Order.find(filter).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -311,12 +320,33 @@ router.put('/:id', protect, async (req, res) => {
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
-// Admin — delete order
+// Admin — soft delete order (moves to trash, never physically removed)
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const order = await Order.findByIdAndDelete(req.params.id);
-    if (!order) return res.status(404).json({ message: 'Order not found' });
-    res.json({ message: 'Order deleted successfully' });
+    const order = await Order.findById(req.params.id);
+    if (!order || order.deletedAt) return res.status(404).json({ message: 'Order not found' });
+
+    order.deletedAt = new Date();
+    order.deletedBy = req.admin.email;
+    order.deleteReason = req.body?.reason || null;
+    await order.save();
+
+    res.json({ message: 'Order moved to trash' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Admin — restore a soft-deleted order
+router.patch('/:id/restore', protect, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order || !order.deletedAt) return res.status(404).json({ message: 'Order not found in trash' });
+
+    order.deletedAt = null;
+    order.deletedBy = null;
+    order.deleteReason = null;
+    await order.save();
+
+    res.json(order);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

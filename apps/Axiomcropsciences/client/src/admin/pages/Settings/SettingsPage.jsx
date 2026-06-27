@@ -232,9 +232,12 @@ export default function SettingsPage() {
               <div 
                 key={mode.id}
                 onClick={() => {
-                  set("storeMode", mode.id);
-                  if (mode.id === "b2c") set("showBestSellers", true);
-                  if (mode.id === "b2b") set("showBestSellers", false);
+                  setForm(prev => {
+                    const next = { ...prev, storeMode: mode.id };
+                    if (mode.id === "b2c") next.showBestSellers = true;
+                    if (mode.id === "b2b") next.showBestSellers = false;
+                    return next;
+                  });
                 }}
                 style={{
                   border: `2px solid ${form.storeMode === mode.id ? "var(--primary)" : "var(--border)"}`,

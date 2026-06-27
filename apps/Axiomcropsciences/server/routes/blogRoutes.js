@@ -1,14 +1,23 @@
 const express = require('express');
 const Blog    = require('../models/Blog');
 const { protect } = require('../middleware/authMiddleware');
+const { isAdminRequest } = require('../middleware/isAdminRequest');
 const router  = express.Router();
 
-// GET /api/blogs  — public, supports ?status= and ?search=
+// GET /api/blogs  — supports ?status= and ?search=; non-"published" status
+// values are only honored for an authenticated admin request.
 router.get('/', async (req, res) => {
   try {
     const { status, search } = req.query;
     const filter = {};
-    if (status) filter.status = status;
+    if (status === 'published') {
+      filter.status = 'published';
+    } else if (await isAdminRequest(req)) {
+      if (status) filter.status = status;
+    } else {
+      // Non-admin caller requesting drafts/everything = silently restrict to published.
+      filter.status = 'published';
+    }
     if (search) filter.$or = [
       { title:   { $regex: search, $options: 'i' } },
       { excerpt: { $regex: search, $options: 'i' } },

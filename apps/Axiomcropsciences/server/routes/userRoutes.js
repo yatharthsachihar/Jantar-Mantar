@@ -4,6 +4,7 @@ const User    = require('../models/User');
 const Admin   = require('../models/Admin');
 const router  = express.Router();
 const sseManager = require('../utils/sse');
+const { authLimiter } = require('../middleware/rateLimiters');
 
 const sign = (id) =>
   jwt.sign({ id, type: 'user' }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -29,7 +30,7 @@ const adminToPublicUser = (admin) => ({
 /* ─────────────────────────────────────────
    POST /api/users/register
 ───────────────────────────────────────── */
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { fullName, mobile, email, password, accountType, state, district, city } = req.body;
 
@@ -76,7 +77,7 @@ router.post('/register', async (req, res) => {
 /* ─────────────────────────────────────────
    POST /api/users/login
 ───────────────────────────────────────── */
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { identifier, password } = req.body;
 

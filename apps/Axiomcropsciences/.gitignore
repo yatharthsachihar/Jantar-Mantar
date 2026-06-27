@@ -14,6 +14,9 @@ pnpm-debug.log*
 .vscode/
 coverage/
 # uploads/
+
+# Local DB backups (contains live customer/order data — never commit)
+server/backups/
   
 # Local folders to ignore  
 .claude/  

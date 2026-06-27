@@ -6,7 +6,8 @@ export const orderApi = {
   getOne:       (id)         => API.get(`/orders/${id}`),
   updateStatus: (id, data)   => API.put(`/orders/${id}`, data),
   pay:          (id, data)   => API.put(`/orders/${id}/pay`, data),
-  remove:       (id)         => API.delete(`/orders/${id}`),
+  remove:       (id, reason) => API.delete(`/orders/${id}`, { data: { reason } }),
+  restore:      (id)         => API.patch(`/orders/${id}/restore`),
   getMyOrders:  ()           => API.get('/orders/my-orders'),
   cancel:       (id)         => API.put(`/orders/${id}/cancel`),
 

@@ -16,15 +16,17 @@ const storage = multer.diskStorage({
   },
 });
 
-const ALLOWED_EXT  = /\.(jpe?g|png|gif|webp|svg|pdf)$/i;
-const ALLOWED_MIME = /^(image\/(jpeg|png|gif|webp|svg\+xml)|application\/pdf)$/;
+// SVG deliberately excluded — it can embed <script>/event-handler XSS and is
+// served back statically with no sanitization.
+const ALLOWED_EXT  = /\.(jpe?g|png|gif|webp|pdf)$/i;
+const ALLOWED_MIME = /^(image\/(jpeg|png|gif|webp)|application\/pdf)$/;
 
 const fileFilter = (_req, file, cb) => {
   const extOk  = ALLOWED_EXT.test(path.extname(file.originalname));
   const mimeOk = ALLOWED_MIME.test(file.mimetype);
   if (extOk && mimeOk) return cb(null, true);
   // Multer 2: pass an Error with `status` so Express can forward it
-  const err = new Error('Only images (jpg, png, gif, webp, svg) and PDFs are allowed');
+  const err = new Error('Only images (jpg, png, gif, webp) and PDFs are allowed');
   err.status = 400;
   cb(err, false);
 };

@@ -9,7 +9,30 @@ const { activityLogger } = require('./middleware/activityLogger');
 const app = express();
 connectDB();
 
-app.use(cors({ origin: '*' }));
+// Restrict CORS to known frontend origins. Set ALLOWED_ORIGINS in .env as a
+// comma-separated list for production (e.g. "https://axiomseeds.in,https://www.axiomseeds.in").
+// Local dev defaults cover both "localhost" and "127.0.0.1" on the common
+// Vite ports — they are different CORS origins even though they resolve to
+// the same machine, and Vite falls back to 5174/5175/etc if 5173 is busy.
+const DEFAULT_DEV_ORIGINS = [5173, 5174, 5175, 5176].flatMap((p) => [
+  `http://localhost:${p}`, `http://127.0.0.1:${p}`,
+]);
+const allowedOrigins = (process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+  : DEFAULT_DEV_ORIGINS);
+app.use(cors({
+  origin: (origin, callback) => {
+    // No origin = same-origin/server-to-server/curl — allow.
+    // Unknown origin = callback(null, false), NOT an Error — cors() just
+    // omits the CORS headers so the browser cleanly blocks the response,
+    // instead of throwing into Express's generic handler and returning an
+    // opaque 500 for every request (including legitimate ones, if anything
+    // upstream double-fires this).
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(null, false);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

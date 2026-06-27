@@ -1,5 +1,6 @@
 const express = require('express');
 const { protect } = require('../middleware/authMiddleware');
+const { formLimiter } = require('../middleware/rateLimiters');
 const {
   getActiveCoupons,
   getAllCoupons,
@@ -12,7 +13,7 @@ const {
 const router = express.Router();
 
 router.get('/active', getActiveCoupons);
-router.post('/validate', validateCoupon);
+router.post('/validate', formLimiter, validateCoupon);
 
 router.get('/', protect, getAllCoupons);
 router.post('/', protect, createCoupon);

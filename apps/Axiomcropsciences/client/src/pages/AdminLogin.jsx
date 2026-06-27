@@ -43,8 +43,20 @@ export default function AdminLogin() {
     try {
       await login(form.email, form.password);
       navigate('/admin', { replace: true });
-    } catch {
-      setError('Invalid email or password. Please try again.');
+    } catch (err) {
+      // Surface the real server message (e.g. "Too many attempts", "account
+      // deactivated") instead of always blaming the password — otherwise a
+      // rate-limit or CORS failure looks like a wrong credential.
+      const status = err?.response?.status;
+      if (status === 429) {
+        setError('Too many login attempts. Please wait a few minutes and try again.');
+      } else if (err?.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err?.response) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError('Could not reach the server. Check your connection and try again.');
+      }
     } finally {
       setLoading(false);
     }

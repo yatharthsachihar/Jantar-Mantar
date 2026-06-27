@@ -1,13 +1,15 @@
 const express = require('express');
 const Banner = require('../models/Banner');
 const { protect } = require('../middleware/authMiddleware');
+const { isAdminRequest } = require('../middleware/isAdminRequest');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    // Admin can pass ?all=true to get all banners including inactive
-    // Frontend (public) gets only active banners
-    const filter = req.query.all === 'true' ? {} : { isActive: true };
+    // ?all=true (inactive banners included) only honored for an authenticated
+    // admin request — otherwise the public storefront always gets active-only.
+    const wantsAll = req.query.all === 'true' && await isAdminRequest(req);
+    const filter = wantsAll ? {} : { isActive: true };
     const banners = await Banner.find(filter).sort({ displayOrder: 1 });
     res.json(banners);
   } catch (err) { res.status(500).json({ message: err.message }); }

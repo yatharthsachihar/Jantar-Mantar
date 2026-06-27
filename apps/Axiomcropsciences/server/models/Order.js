@@ -27,6 +27,9 @@ const orderSchema = new mongoose.Schema({
   transactionId: { type: String, default: '' },
   couponCode: { type: String, default: null },
   discountAmount: { type: Number, default: 0 },
+  deletedAt: { type: Date, default: null },
+  deletedBy: { type: String, default: null },
+  deleteReason: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

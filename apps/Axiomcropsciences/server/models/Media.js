@@ -8,6 +8,9 @@ const mediaSchema = new mongoose.Schema({
   size:       { type: Number, default: 0 },        // bytes
   folder:     { type: String, default: 'general' }, // logical grouping: products, banners, blog, general
   uploadedBy: { type: String, default: 'admin' },
+  deletedAt: { type: Date, default: null },
+  deletedBy: { type: String, default: null },
+  deleteReason: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Media', mediaSchema);
