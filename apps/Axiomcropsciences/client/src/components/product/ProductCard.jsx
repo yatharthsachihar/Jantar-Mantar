@@ -248,7 +248,7 @@ const ProductCard = React.memo(function ProductCard({ product = {} }) {
           </button>
         )}
         {activeMode === "b2b" && (() => {
-          const waLink = settings.storePhone;
+          const waLink = settings.whatsappNumber || settings.socialLinks?.whatsapp || settings.storePhone;
           if (!waLink) return null;
           const waMessage = (settings.whatsappDefaultMessage || "").replace("{{product}}", name);
           const justDigits = waLink.replace(/\D/g, "");

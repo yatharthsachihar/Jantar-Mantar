@@ -61,7 +61,7 @@ export default function Footer() {
 
   const getSocialUrl = (key) => {
     if (key === 'socialWhatsapp') {
-      const waLink = settings.storePhone;
+      const waLink = settings.whatsappNumber || settings.socialLinks?.whatsapp || settings.storePhone;
       if (waLink) {
         const justDigits = waLink.replace(/\D/g, "");
         return `https://api.whatsapp.com/send?phone=${justDigits}`;

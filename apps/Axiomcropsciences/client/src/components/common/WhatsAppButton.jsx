@@ -4,7 +4,7 @@ import "./WhatsAppButton.css";
 
 /**
  * Floating WhatsApp icon — fixed to the bottom-right of the viewport.
- * Reads its link from admin settings (socialWhatsapp or socialLinks.whatsapp).
+ * Reads its link from admin settings using the shared WhatsApp fallback chain.
  * Only renders when a WhatsApp link has been configured in the admin panel.
  *
  * Uses api.whatsapp.com/send instead of wa.me to avoid the intermediate
@@ -13,8 +13,7 @@ import "./WhatsAppButton.css";
 export default function WhatsAppButton() {
   const { settings } = useSettings();
 
-  // Strictly use the Store Phone (mobile number) for WhatsApp
-  const link = settings.storePhone || "";
+  const link = settings.whatsappNumber || settings.socialLinks?.whatsapp || settings.storePhone || "";
 
   if (!link) return null;
 
@@ -36,4 +35,3 @@ export default function WhatsAppButton() {
     </a>
   );
 }
-

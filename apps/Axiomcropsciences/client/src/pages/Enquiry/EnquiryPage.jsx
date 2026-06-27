@@ -348,7 +348,7 @@ export default function EnquiryPage() {
                 <div style={{ fontSize:32, marginBottom:10 }}>💬</div>
                 <div className="enq-sidebar-card-title">WhatsApp Us</div>
                 <p style={{ fontSize:13, color:"var(--site-text-muted)", marginBottom:14 }}>Send your product list for a faster response</p>
-                <a href={`https://wa.me/${(settings.storePhone || "917340008599").replace(/\D/g, "")}?text=Hi%20Axiom%20Seeds%2C%20I%20need%20a%20bulk%20quote`}
+                <a href={`https://api.whatsapp.com/send?phone=${(settings.whatsappNumber || settings.socialLinks?.whatsapp || settings.storePhone || "917340008599").replace(/\D/g, "")}&text=Hi%20Axiom%20Seeds%2C%20I%20need%20a%20bulk%20quote`}
                   target="_blank" rel="noopener noreferrer" className="enq-whatsapp-btn">
                   💬 Chat on WhatsApp
                 </a>

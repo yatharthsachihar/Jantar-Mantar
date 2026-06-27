@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { settingsApi } from "../../../api/settingsApi";
+import { useSettings } from "../../../context/SettingsContext";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Skeleton from "../../components/common/Skeleton";
@@ -141,6 +142,7 @@ export default function SettingsPage() {
   const { hasPermission } = useAuthStore();
   const canEdit = hasPermission('settings', 'full');
   const queryClient = useQueryClient();
+  const { setSettings } = useSettings();
   const [form, setForm] = useState(null);
 
   useGSAP(() => {
@@ -162,8 +164,10 @@ export default function SettingsPage() {
     mutationFn: (data) => settingsApi.update(data),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
-      // Also update SettingsContext cache so frontend reflects immediately
+      // Also update both settings caches so the storefront reflects the saved WhatsApp number immediately.
       queryClient.setQueryData(["settings"], res.data);
+      setSettings(res.data);
+      setForm(JSON.parse(JSON.stringify(res.data)));
       toast.success("Settings saved! Frontend will reflect changes on next load.");
     },
     onError: (err) => {
@@ -655,7 +659,14 @@ export default function SettingsPage() {
                 </div>
               </div>
             ))}
-            <div style={{ gridColumn: "1 / -1" }}>
+            <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 18 }}>
+              <Field
+                label="WhatsApp Number for Enquiries"
+                value={form.whatsappNumber}
+                onChange={e => set("whatsappNumber", e.target.value)}
+                placeholder="919876543210"
+                hint="Enter the phone number (with country code, e.g., 91 for India) that receives WhatsApp messages."
+              />
               <TextareaField
                 label="WhatsApp Default Message"
                 value={form.whatsappDefaultMessage}

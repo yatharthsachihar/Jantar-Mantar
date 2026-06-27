@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { FiSave, FiCheck, FiRefreshCw, FiExternalLink, FiToggleLeft, FiToggleRight } from "react-icons/fi";
 import { settingsApi } from "../../../api/settingsApi";
+import { useSettings } from "../../../context/SettingsContext";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Skeleton from "../../components/common/Skeleton";
@@ -77,6 +78,7 @@ function IntegrationCard({ emoji, bg, name, description, docsUrl, enabled, onTog
 
 export default function IntegrationsPage() {
   const qc = useQueryClient();
+  const { setSettings } = useSettings();
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
 
@@ -89,8 +91,11 @@ export default function IntegrationsPage() {
 
   const saveMutation = useMutation({
     mutationFn: (data) => settingsApi.update(data),
-    onSuccess: () => {
+    onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["settings"] });
+      qc.setQueryData(["settings"], res.data);
+      setSettings(res.data);
+      setForm({ ...res.data });
       toast.success("Integration settings saved!");
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);

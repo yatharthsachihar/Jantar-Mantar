@@ -54,7 +54,11 @@ const DEFAULTS = {
   codActive: true,
   razorpayActive: true,
   phonepeActive: true,
-  socialLinks: {},
+  socialLinks: {
+    whatsapp: '',
+  },
+  whatsappNumber: '',
+  whatsappDefaultMessage: 'Hello! I am interested in your agricultural products and would like to know more.',
   // Axiom Seeds brand palette (matched to logo: forest green + lime accent)
   colorPrimary:   '#1B7A3D',
   colorSecondary: '#A8D95C',
