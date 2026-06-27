@@ -34,16 +34,40 @@ const SOCIAL_ICONS = {
 };
 
 export default function Footer() {
-  const { settings } = useSettings();
+  const { settings, isB2B } = useSettings();
 
   const name    = settings.storeName    || "Axiom Seeds";
-  const tagline = settings.footerTagline || settings.tagline || "The Ancient Remedy brings time-tested natural ingredients into everyday wellness with care, purity, and simplicity.";
+  const script  = settings.footerScript  || "Sown with science";
+  const heading = settings.footerHeading || "QUALITY SEEDS & INPUTS FOR THE SELF-RELIANT FARMER";
+  const tagline = settings.footerTagline || settings.tagline || "From certified seeds to organic fertilizers — everything your farm needs, delivered to your door. Trusted by 50,000+ farmers across India.";
   
   const brandLinks = settings.footerCompanyLinks?.length ? settings.footerCompanyLinks : BRAND_LINKS;
-  const usefulLinks = settings.footerSupportLinks?.length ? settings.footerSupportLinks : USEFUL_LINKS;
+  const usefulLinksBase = settings.footerSupportLinks?.length ? settings.footerSupportLinks : USEFUL_LINKS;
+  // In B2B (enquiry) mode there's no order tracking or wishlist: drop Wishlist
+  // and turn "Track order" into "Enquire Now" pointing at the contact form.
+  const usefulLinks = usefulLinksBase
+    .filter((l) => {
+      const k = `${l.label || ""} ${l.href || l.to || ""}`.toLowerCase();
+      return !(isB2B && /wishlist/.test(k));
+    })
+    .map((l) => {
+      const k = `${l.label || ""} ${l.href || l.to || ""}`.toLowerCase();
+      if (isB2B && /track order|account\/orders/.test(k)) {
+        return { label: "Enquire Now", to: "/contact", href: "/contact" };
+      }
+      return l;
+    });
   const copyright = settings.footerCopyright || `© ${new Date().getFullYear()} ${name} Pvt. Ltd. All rights reserved.`;
 
   const getSocialUrl = (key) => {
+    if (key === 'socialWhatsapp') {
+      const waLink = settings.storePhone;
+      if (waLink) {
+        const justDigits = waLink.replace(/\D/g, "");
+        return `https://api.whatsapp.com/send?phone=${justDigits}`;
+      }
+      return "";
+    }
     return settings[key] || (settings.socialLinks && settings.socialLinks[key.replace('social', '').toLowerCase()]);
   };
 
@@ -63,11 +87,11 @@ export default function Footer() {
           </div>
 
           <div className="site-footer-script">
-            Stay radiant
+            {script}
           </div>
 
           <h2 className="site-footer-giant-heading">
-            RITUAL-LED BOTANICAL CARE FOR MODERN LIVING
+            {heading}
           </h2>
 
           <p className="site-footer-desc">
@@ -109,7 +133,7 @@ export default function Footer() {
                 {activeSocials.map(([key, { icon, label, color }]) => (
                   <a key={key} href={getSocialUrl(key)} target="_blank" rel="noopener noreferrer"
                     className="site-footer-social" aria-label={label}
-                    style={{ color: color }}
+                    style={{ background: color, color: "#ffffff" }}
                   >
                     {icon}
                   </a>

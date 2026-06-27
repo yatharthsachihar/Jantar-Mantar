@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { FiUser, FiPackage, FiLogOut } from "react-icons/fi";
@@ -8,6 +8,7 @@ import Footer from "../../components/navigation/Footer";
 import { useUser } from "../../context/UserContext";
 import API from "../../api/axios";
 import "../../styles/site.css";
+import "./ProfilePage.css";
 
 export default function ProfilePage() {
   const { user, logout, loading } = useUser();
@@ -49,91 +50,81 @@ export default function ProfilePage() {
   return (
     <div className="site-root">
       <Navbar />
-      <div className="site-container" style={{ padding: "120px 0 60px", minHeight: "60vh", display: "grid", gridTemplateColumns: "300px 1fr", gap: 40 }}>
+      <div className="site-container profile-page-container">
         
         {/* Sidebar */}
-        <aside style={{ background: "var(--site-bg)", padding: 20, borderRadius: 12, border: "1px solid var(--site-border)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 30 }}>
-            <div style={{ width: 50, height: 50, borderRadius: 25, background: "var(--site-primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: "bold" }}>
+        <aside className="profile-sidebar">
+          <div className="profile-sidebar-user">
+            <div className="profile-sidebar-avatar">
               {user.fullName?.[0]?.toUpperCase()}
             </div>
-            <div>
-              <div style={{ fontWeight: 700 }}>{user.fullName}</div>
-              <div style={{ fontSize: 13, color: "var(--site-text-muted)" }}>{user.email}</div>
+            <div className="profile-sidebar-info">
+              <div className="profile-sidebar-name">{user.fullName}</div>
+              <div className="profile-sidebar-email">{user.email}</div>
             </div>
           </div>
           
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <button style={{ 
-              textAlign: "left", padding: "12px 16px", background: "var(--site-green-light)", 
-              color: "var(--site-primary)", border: "none", borderRadius: 10, 
-              fontWeight: 600, display: "flex", alignItems: "center", gap: 10 
-            }}>
+          <div className="profile-sidebar-nav">
+            <button className="profile-sidebar-btn active">
               <FiUser size={16} /> My Profile
             </button>
-            <button onClick={() => navigate("/account/orders")} style={{ 
-              textAlign: "left", padding: "12px 16px", background: "transparent", 
-              color: "var(--site-text)", border: "none", borderRadius: 10, 
-              fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 
-            }}>
+            <button onClick={() => navigate("/account/orders")} className="profile-sidebar-btn">
               <FiPackage size={16} /> My Orders
             </button>
-            <button onClick={logout} style={{ 
-              textAlign: "left", padding: "12px 16px", background: "transparent", 
-              color: "var(--site-red, #dc2626)", border: "none", borderRadius: 10, 
-              fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 
-            }}>
+            <button onClick={logout} className="profile-sidebar-btn logout">
               <FiLogOut size={16} /> Logout
             </button>
           </div>
         </aside>
 
         {/* Main Content */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
+        <div className="profile-main">
           
-          <section style={{ background: "var(--site-bg)", padding: 30, borderRadius: 12, border: "1px solid var(--site-border)" }}>
-            <h2 style={{ marginBottom: 20 }}>Edit Profile</h2>
-            <form onSubmit={handleSubmit(onUpdateProfile)} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <label style={{ fontSize: 13, fontWeight: 600 }}>Full Name</label>
-                <input {...register("fullName")} style={{ padding: 12, borderRadius: 8, border: "1px solid var(--site-border)" }} />
+          <section className="profile-section">
+            <h2 className="profile-section-title">Edit Profile</h2>
+            <form onSubmit={handleSubmit(onUpdateProfile)} className="profile-form">
+              <div className="profile-form-row">
+                <div className="profile-form-field">
+                  <label className="profile-form-label">Full Name</label>
+                  <input {...register("fullName")} className="profile-form-input" />
+                </div>
+                <div className="profile-form-field">
+                  <label className="profile-form-label">Mobile</label>
+                  <input {...register("mobile")} className="profile-form-input" />
+                </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <label style={{ fontSize: 13, fontWeight: 600 }}>Mobile</label>
-                <input {...register("mobile")} style={{ padding: 12, borderRadius: 8, border: "1px solid var(--site-border)" }} />
+              <div className="profile-form-field profile-form-field-full">
+                <label className="profile-form-label">Email Address</label>
+                <input {...register("email")} disabled className="profile-form-input disabled" />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, gridColumn: "1/-1" }}>
-                <label style={{ fontSize: 13, fontWeight: 600 }}>Email Address</label>
-                <input {...register("email")} disabled style={{ padding: 12, borderRadius: 8, border: "1px solid var(--site-border)", background: "var(--site-border)" }} />
-              </div>
-              <button type="submit" disabled={isSubmitting} className="site-btn-primary" style={{ width: "fit-content", gridColumn: "1/-1" }}>
+              <button type="submit" disabled={isSubmitting} className="site-btn-primary profile-save-btn">
                 {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </form>
           </section>
 
-          <section style={{ background: "var(--site-bg)", padding: 30, borderRadius: 12, border: "1px solid var(--site-border)" }}>
-            <h2 style={{ marginBottom: 20 }}>Order History</h2>
+          <section className="profile-section">
+            <h2 className="profile-section-title">Order History</h2>
             {ordersLoading ? (
               <p>Loading orders...</p>
             ) : orders.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+              <div className="profile-orders-list">
                 {orders.map(order => (
-                  <div key={order._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 15, border: "1px solid var(--site-border)", borderRadius: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 15 }}>Order #{order._id.slice(-8).toUpperCase()}</div>
-                      <div style={{ fontSize: 12, color: "var(--site-text-muted)" }}>{new Date(order.createdAt).toLocaleDateString()}</div>
+                  <div key={order._id} className="profile-order-card">
+                    <div className="profile-order-info">
+                      <div className="profile-order-id">Order #{order._id.slice(-8).toUpperCase()}</div>
+                      <div className="profile-order-date">{new Date(order.createdAt).toLocaleDateString()}</div>
                     </div>
-                    <div>
-                      <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: 4, background: "var(--site-green-light)", color: "var(--site-green)", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>{order.status}</span>
+                    <div className="profile-order-status">
+                      <span className={`profile-order-badge ${order.status?.toLowerCase()}`}>{order.status}</span>
                     </div>
-                    <div style={{ fontWeight: 700, fontSize: 16 }}>₹{order.totalAmount.toLocaleString()}</div>
+                    <div className="profile-order-amount">₹{order.totalAmount.toLocaleString()}</div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ padding: 40, textAlign: "center", border: "1px dashed var(--site-border)", borderRadius: 8 }}>
-                <p style={{ color: "var(--site-text-muted)", marginBottom: 15 }}>You haven't placed any orders yet.</p>
+              <div className="profile-orders-empty">
+                <p>You haven't placed any orders yet.</p>
                 <button onClick={() => navigate("/products")} className="site-btn-secondary">Start Shopping</button>
               </div>
             )}

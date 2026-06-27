@@ -171,6 +171,9 @@
   .site-footer {
     padding: 60px 0 0;
   }
+  .site-footer-logo img {
+    height: 80px !important; /* Force match with header logo on mobile */
+  }
   .site-footer-inner { 
     padding: 0 20px; 
   }

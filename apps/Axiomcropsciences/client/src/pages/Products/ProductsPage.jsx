@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { FiSearch, FiX } from "react-icons/fi";
+import { FiSearch, FiX, FiGrid } from "react-icons/fi";
 import Navbar       from "../../components/navigation/Navbar";
 import Footer       from "../../components/navigation/Footer";
 import ProductCard  from "../../components/product/ProductCard";
 import SearchDropdown from "../../components/common/SearchDropdown";
-import API          from "../../api/axios";
+import API, { mediaUrl } from "../../api/axios";
 import "../../styles/site.css";
 import "./ProductsPage.css";
 
@@ -29,13 +29,15 @@ export default function SiteProductsPage() {
   const [sort,           setSort]           = useState(urlSort);
   const [allProducts,    setAllProducts]    = useState([]);
   const [apiLoading,     setApiLoading]     = useState(true);
-  const [categories,     setCategories]     = useState(["All", "Seeds", "Fertilizers", "Pesticides", "Irrigation", "Tools", "Organic"]);
+  const [categories,     setCategories]     = useState([
+    { name: "All", isAll: true }
+  ]);
 
   /* ── Fetch categories ── */
   useEffect(() => {
     API.get("/categories").then(res => {
       if (res.data && res.data.length > 0) {
-        setCategories(["All", ...res.data.map(c => c.name)]);
+        setCategories([{ name: "All", isAll: true }, ...res.data]);
       }
     }).catch(() => {});
   }, []);
@@ -59,7 +61,8 @@ export default function SiteProductsPage() {
   /* ── URL sync ── */
   useEffect(() => { setQuery(prev => prev !== urlQuery ? urlQuery : prev); }, [urlQuery]);
   useEffect(() => { 
-    const newCat = categories.includes(urlCategory) ? urlCategory : "All";
+    const catNames = categories.map(c => typeof c === 'string' ? c : c.name);
+    const newCat = catNames.includes(urlCategory) ? urlCategory : "All";
     setActiveCategory(prev => prev !== newCat ? newCat : prev); 
   }, [urlCategory, categories]);
   useEffect(() => { setSort(prev => prev !== urlSort ? urlSort : prev); }, [urlSort]);
@@ -126,53 +129,31 @@ export default function SiteProductsPage() {
 
       <div className="site-container">
         {/* ── Toolbar ── */}
-        <div className="plp-toolbar">
-          {/* Search */}
-          <div style={{ position:"relative" }}>
-            <form className="plp-search-box" onSubmit={handleSearch} style={{ minWidth:260 }}>
-              <FiSearch size={14} />
-              <input placeholder="Search products…" value={query} onChange={e => setQuery(e.target.value)} />
-              {query && <button type="button" onClick={handleClearSearch}><FiX size={13} /></button>}
-            </form>
-            <SearchDropdown
-              query={query}
-              allProducts={allProducts}
-              onSelect={() => setQuery("")}
-              onClose={() => {}}
-            />
-          </div>
-
-          {/* Category chips */}
+        <div className="plp-toolbar" style={{ justifyContent: "center" }}>
+          {/* Category circles */}
           <div className="plp-cats">
-            {categories.map(cat => (
-              <button key={cat}
-                className={`plp-cat-chip${activeCategory === cat ? " active" : ""}`}
-                onClick={() => handleCategory(cat)}>
-                {cat}
-                <span className="plp-chip-count">{catCount(cat)}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Sort */}
-          <div className="plp-sort" style={{ marginLeft:"auto", flexShrink:0 }}>
-            <label>Sort:</label>
-            <select value={sort} onChange={e => handleSort(e.target.value)}>
-              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            {categories.map(catObj => {
+              const catName = typeof catObj === 'string' ? catObj : catObj.name;
+              const catImage = typeof catObj === 'string' ? null : catObj.image;
+              const isAll = typeof catObj === 'string' ? false : catObj.isAll;
+              
+              return (
+                <button key={catName}
+                  className={`plp-cat-item${activeCategory === catName ? " active" : ""}`}
+                  onClick={() => handleCategory(catName)}>
+                  <div className="plp-cat-circle">
+                    {catImage ? (
+                      <img src={mediaUrl(catImage)} alt={catName} loading="lazy" />
+                    ) : (
+                      isAll ? <FiGrid size={24} color="#777" /> : <span style={{ fontSize: 24 }}>📦</span>
+                    )}
+                  </div>
+                  <span className="plp-cat-name">{catName}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
-
-        {/* Search indicator */}
-        {urlQuery && (
-          <div className="plp-search-bar">
-            <FiSearch size={13} />
-            Results for <strong>"{urlQuery}"</strong>
-            <button onClick={handleClearSearch} className="plp-search-bar-clear">
-              <FiX size={13} /> Clear
-            </button>
-          </div>
-        )}
 
         {/* Product Grid */}
         {apiLoading ? (

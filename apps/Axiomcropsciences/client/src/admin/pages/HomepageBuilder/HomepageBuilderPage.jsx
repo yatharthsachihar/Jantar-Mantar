@@ -115,8 +115,8 @@ export default function HomepageBuilderPage() {
     if (!form) return;
     // Only clear the animated props. `clearProps: "all"` (the old value) wiped
     // the cards' inline border/background/radius too, making the borders vanish.
-    gsap.from(".page-header", { opacity: 0, y: -20, duration: 0.5, clearProps: "opacity,transform" });
-    gsap.from(".hpb-card",    { opacity: 0, y: 30, stagger: 0.08, duration: 0.5, delay: 0.1, clearProps: "opacity,transform" });
+    gsap.from(".page-header", { y: -20, duration: 0.5, clearProps: "opacity,transform" });
+    gsap.from(".hpb-card",    { y: 30, stagger: 0.08, duration: 0.5, delay: 0.1, clearProps: "opacity,transform" });
   }, { scope: pageRef, dependencies: [!!form] });
 
   const { data: settings, isLoading } = useQuery({

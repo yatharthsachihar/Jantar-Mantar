@@ -77,7 +77,7 @@ router.put('/', async (req, res) => {
       'codActive','freeShippingAbove','taxRate',
       'smtpEnabled','smtpFromName','smtpFromEmail',
       'cloudinaryEnabled','cloudinaryCloudName','cloudinaryApiKey','cloudinaryApiSecret','cloudinaryUploadPreset',
-      'whatsappEnabled','whatsappNumber','whatsappApiToken',
+      'whatsappEnabled','whatsappNumber','whatsappApiToken','whatsappDefaultMessage',
       'seoSiteName','seoTitle','seoDescription','seoCanonical','seoKeywords','seoGoogleVerify','seoBingVerify',
       'ogTitle','ogDescription','ogImage','twitterCard','twitterHandle','twitterTitle','twitterDescription',
       'schemaOrgName','schemaOrgUrl','schemaOrgLogo','schemaOrgFounded','schemaOrgPhone','schemaOrgEmail',

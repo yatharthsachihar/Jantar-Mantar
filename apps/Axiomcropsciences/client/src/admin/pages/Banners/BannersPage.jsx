@@ -122,9 +122,9 @@ export default function BannersPage() {
 
   useGSAP(() => {
     if (isLoading) return;
-    gsap.from(".page-header",   { opacity: 0, y: -20, duration: 0.5, clearProps: "opacity,transform" });
+    gsap.from(".page-header",   { y: -20, duration: 0.5, clearProps: "opacity,transform" });
     if (banners && banners.length > 0) {
-      gsap.from(".banner-item",   { opacity: 0, y: 30, stagger: 0.07, duration: 0.6, delay: 0.15, clearProps: "opacity,transform" });
+      gsap.from(".banner-item",   { y: 30, stagger: 0.07, duration: 0.6, delay: 0.15, clearProps: "opacity,transform" });
     }
   }, { scope: pageRef, dependencies: [isLoading] });
 

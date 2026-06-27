@@ -15,6 +15,7 @@ import Skeleton from "../../components/common/Skeleton";
 import { useForm } from "react-hook-form";
 import ImageInput from "../../components/common/ImageInput";
 import { mediaUrl } from "../../../api/axios";
+import { useAuthStore } from "../../store/authStore";
 
 
 /* ───────────────────────────────────────────────────────────────

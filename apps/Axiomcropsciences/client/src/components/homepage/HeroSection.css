@@ -447,8 +447,10 @@
      a lower min-height lets the hero hug its content instead of leaving a big
      band of empty soil below the stats on phones. */
   .site-hero-v2 { min-height: calc(48vh + var(--site-nav-offset, 110px)); }
-  .hero-inner { padding: calc(var(--site-nav-offset, 110px) + 30px) 20px 90px; }
-  .hero-controls { bottom: 20px; }
+  /* Reserve room at the bottom so the stats box never collides with the
+     absolutely-positioned carousel controls below it. */
+  .hero-inner { padding: calc(var(--site-nav-offset, 110px) + 30px) 20px 104px; }
+  .hero-controls { bottom: 16px; }
   .hero-headline { font-size: 1.5rem; }
   .hero-stats { padding: 10px 14px; }
   .hero-stat { padding: 0 12px; }

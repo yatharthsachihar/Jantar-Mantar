@@ -4,7 +4,7 @@
    ============================================================ */
 
 .plp-header {
-  padding: var(--page-pad-top) 0 40px;
+  padding: var(--page-pad-top) 0 24px;
   background: var(--site-card);
   border-bottom: 1px solid var(--site-border);
 }
@@ -29,41 +29,112 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 24px 0 16px;
+  padding: 12px 0 16px;
   flex-wrap: wrap;
+  width: 100%;
+  min-width: 0; /* CRITICAL for nested flexbox scrolling */
 }
 
-.plp-cats { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+.plp-cats { 
+  display: flex; 
+  gap: 14px; 
+  flex-wrap: nowrap; 
+  overflow-x: auto;
+  width: 100%;
+  padding: 16px 8px; /* Padding for the glow effect shadow on top/bottom/sides */
+  
+  /* Momentum scrolling for iOS */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  
+  /* Use flex-start inside */
+  justify-content: flex-start;
+}
 
-.plp-cat-chip {
+/* Show a tiny, subtle scrollbar so mobile users know they can swipe */
+.plp-cats::-webkit-scrollbar {
+  height: 4px;
+}
+.plp-cats::-webkit-scrollbar-track {
+  background: transparent;
+}
+.plp-cats::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 10px;
+}
+.plp-cats:hover::-webkit-scrollbar-thumb {
+  background: #ccc;
+}
+
+/* On mobile, ensure it touches edges gracefully */
+@media (max-width: 1024px) {
+  .plp-cats {
+    padding-left: 20px;
+    padding-right: 20px;
+    /* Pull container slightly wide to counteract site-container padding and make scroll natural */
+    width: calc(100% + 40px);
+    margin-left: -20px;
+    margin-right: -20px;
+  }
+}
+
+.plp-cat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex: 0 0 auto; /* Prevent shrinking in scroll container */
+}
+
+.plp-cat-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid #ccc; /* Gray border so it looks clickable */
+  background: var(--site-card);
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: var(--site-card);
-  border: 1.5px solid var(--site-border);
-  border-radius: 100px;
-  padding: 7px 14px;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.plp-cat-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.plp-cat-name {
   font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--site-text-muted);
-  transition: 0.2s;
-  font-family: var(--site-font-body);
-  white-space: nowrap;
+  font-weight: 600;
+  color: var(--site-text);
+  transition: color 0.2s ease;
 }
 
-.plp-cat-chip.active,
-.plp-cat-chip:hover {
+/* Hover & Active States */
+.plp-cat-item:hover .plp-cat-circle {
+  transform: translateY(-4px);
   border-color: var(--site-primary);
-  color: var(--site-primary);
-  background: var(--site-green-light);
+  box-shadow: 0 6px 16px rgba(var(--site-primary-rgb), 0.15);
 }
 
-.plp-chip-count {
-  font-size: 11px;
-  background: var(--site-bg);
-  padding: 1px 7px;
-  border-radius: 100px;
+.plp-cat-item:hover .plp-cat-name {
+  color: var(--site-primary);
+}
+
+.plp-cat-item.active .plp-cat-circle {
+  border-color: var(--site-primary);
+  box-shadow: 0 0 14px rgba(var(--site-primary-rgb), 0.5), 0 0 4px rgba(var(--site-primary-rgb), 0.3);
+  transform: scale(1.05);
+}
+
+.plp-cat-item.active .plp-cat-name {
+  color: var(--site-primary);
 }
 
 /* Search box in toolbar */
@@ -188,4 +259,4 @@
 @media (max-width: 1400px) { .plp-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 1100px) { .plp-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px)  { .plp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
-@media (max-width: 480px)  { .plp-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .plp-cats { display: none; } }
+@media (max-width: 480px)  { .plp-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }

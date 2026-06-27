@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { FiShoppingCart, FiMessageSquare, FiStar, FiPackage } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 import toast from "react-hot-toast";
 import Navbar from "../../components/navigation/Navbar";
 import Footer from "../../components/navigation/Footer";
@@ -14,7 +15,7 @@ import "./ProductDetail.css";
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { showPrice, showCart, showEnquiry } = useSettings();
+  const { showPrice, showCart, showEnquiry, activeMode, settings } = useSettings();
   const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [variations, setVariations] = useState([]);
@@ -212,7 +213,10 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              <p className="pd-desc">{product.shortDescription || product.description}</p>
+              <div 
+                className="pd-desc pd-rich-text" 
+                dangerouslySetInnerHTML={{ __html: product.shortDescription || product.description }} 
+              />
 
               <div className="pd-b2b-meta">
                 <div className="pd-meta-row">
@@ -267,11 +271,30 @@ export default function ProductDetail() {
                     }}>Buy Now</button>
                   </div>
                 )}
-                {showEnquiry && (
-                  <button className="pd-btn-enquiry" onClick={() => setEnquiryOpen(true)}>
-                    <FiMessageSquare /> Enquire Now
-                  </button>
-                )}
+                <div className="pd-enquiry-row">
+                  {showEnquiry && (
+                    <button className="pd-btn-enquiry" onClick={() => setEnquiryOpen(true)}>
+                      <FiMessageSquare /> Enquire Now
+                    </button>
+                  )}
+                  {activeMode === "b2b" && (() => {
+                    const waLink = settings.storePhone;
+                    if (!waLink) return null;
+                    const waMessage = (settings.whatsappDefaultMessage || "").replace("{{product}}", product.name);
+                    const justDigits = waLink.replace(/\D/g, "");
+                    const finalWaUrl = `https://api.whatsapp.com/send?phone=${justDigits}&text=${encodeURIComponent(waMessage)}`;
+                    return (
+                      <a
+                        href={finalWaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pd-btn-whatsapp"
+                      >
+                        <FaWhatsapp size={20} /> Inquire on WhatsApp
+                      </a>
+                    );
+                  })()}
+                </div>
               </div>
 
               {/* Specs */}

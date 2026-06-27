@@ -304,6 +304,7 @@
 .pd-btn-enquiry {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 13px 28px;
   background: var(--site-primary);
@@ -318,6 +319,55 @@
 }
 
 .pd-btn-enquiry:hover { background: #185f30; transform: translateY(-1px); }
+
+/* Enquiry + WhatsApp side-by-side row */
+.pd-enquiry-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pd-enquiry-row .pd-btn-enquiry {
+  flex: 1;
+  margin: 0;
+}
+
+/* WhatsApp Enquiry Button */
+.pd-btn-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: none;
+  background: #25D366;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 6px 20px rgba(37, 211, 102, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.pd-btn-whatsapp:hover {
+  background: #20bd5a;
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 28px rgba(37, 211, 102, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.12);
+  color: #ffffff;
+}
+
+.pd-btn-whatsapp:active {
+  transform: translateY(0);
+}
 
 /* Specs */
 .pd-specs { margin-top: 28px; }
@@ -463,6 +513,8 @@
   .pd-form-row { grid-template-columns: 1fr; }
   .pd-actions-grid { grid-template-columns: 1fr; }
   .pd-qty-wrapper { grid-column: auto; }
+  .pd-enquiry-row { flex-direction: column; }
+  .pd-btn-whatsapp { white-space: normal; }
 }
 
 /* Rich Text content formatting */

@@ -60,8 +60,8 @@ export default function DashboardPage() {
     const tl = gsap.timeline({
       defaults: { ease: "power3.out", clearProps: "opacity,transform" },
     });
-    tl.from(".stat-card",       { opacity: 0, y: 40, stagger: 0.08, duration: 0.7 })
-      .from(".dashboard-widget", { opacity: 0, y: 50, stagger: 0.1,  duration: 0.8 }, "-=0.4");
+    tl.from(".stat-card",       { y: 40, stagger: 0.08, duration: 0.7 })
+      .from(".dashboard-widget", { y: 50, stagger: 0.1,  duration: 0.8 }, "-=0.4");
 
     // Safety net: if the component unmounts mid-tween (fast nav away),
     // make sure nothing is left stuck at a partial opacity for next time.

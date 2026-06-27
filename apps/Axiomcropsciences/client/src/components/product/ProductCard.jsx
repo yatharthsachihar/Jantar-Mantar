@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiHeart, FiShoppingCart, FiStar, FiMessageCircle, FiEye, FiMinus, FiPlus } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 import { useSettings } from "../../context/SettingsContext";
 import { useCart }     from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
@@ -23,7 +24,7 @@ const StarRating = React.memo(function StarRating({ rating = 4.5 }) {
 });
 
 const ProductCard = React.memo(function ProductCard({ product = {} }) {
-  const { showPrice, showCart, showEnquiry, activeMode } = useSettings();
+  const { showPrice, showCart, showEnquiry, activeMode, settings } = useSettings();
   const { addToCart, cart, updateQty, lineKey } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const navigate = useNavigate();
@@ -152,12 +153,6 @@ const ProductCard = React.memo(function ProductCard({ product = {} }) {
             <FiHeart size={15} fill={wished ? "currentColor" : "none"} />
           </button>
         )}
-
-        <div className="site-product-card-hover-actions">
-          <button className="site-product-card-hover-btn" onClick={handleView} title="View">
-            <FiEye size={15} />
-          </button>
-        </div>
       </Link>
 
       {/* Body */}
@@ -252,6 +247,24 @@ const ProductCard = React.memo(function ProductCard({ product = {} }) {
             {showCart ? "Enquire" : "Send Enquiry"}
           </button>
         )}
+        {activeMode === "b2b" && (() => {
+          const waLink = settings.storePhone;
+          if (!waLink) return null;
+          const waMessage = (settings.whatsappDefaultMessage || "").replace("{{product}}", name);
+          const justDigits = waLink.replace(/\D/g, "");
+          const finalWaUrl = `https://api.whatsapp.com/send?phone=${justDigits}&text=${encodeURIComponent(waMessage)}`;
+          return (
+            <a
+              href={finalWaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="site-product-card-whatsapp"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FaWhatsapp size={18} /> Inquire on WhatsApp
+            </a>
+          );
+        })()}
       </div>
 
       {/* Enquiry modal — opens directly without navigating away */}

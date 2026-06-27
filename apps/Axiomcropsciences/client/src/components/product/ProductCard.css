@@ -12,6 +12,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .site-product-card:hover {
@@ -265,7 +266,8 @@
 }
 
 .site-product-card-enquire {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -340,6 +342,43 @@
   left: 120%;
 }
 
+/* ── "Inquire on WhatsApp" B2B button ── */
+.site-product-card-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 18px;
+  margin-top: 10px;
+  border-radius: 14px;
+  border: none;
+  background: #25D366;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 6px 20px rgba(37, 211, 102, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.site-product-card-whatsapp:hover {
+  background: #20bd5a;
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 28px rgba(37, 211, 102, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.12);
+  color: #ffffff;
+}
+
+.site-product-card-whatsapp:active {
+  transform: translateY(0);
+}
+
 /* ── Responsive Mobile Card ── */
 @media (max-width: 560px) {
   .site-product-card {
@@ -402,4 +441,11 @@
   .site-product-card-rcount {
     font-size: 10px;
   }
+  .site-product-card-whatsapp {
+    padding: 8px 12px;
+    font-size: 11px;
+    border-radius: 50px;
+    gap: 6px;
+  }
 }
+

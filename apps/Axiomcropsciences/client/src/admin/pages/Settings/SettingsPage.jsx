@@ -145,8 +145,8 @@ export default function SettingsPage() {
 
   useGSAP(() => {
     if (!form) return;
-    gsap.from(".page-header",      { opacity: 0, y: -20, duration: 0.5, clearProps: "opacity,transform" });
-    gsap.from(".settings-section", { opacity: 0, y: 30, stagger: 0.1, duration: 0.6, delay: 0.15, clearProps: "opacity,transform" });
+    gsap.from(".page-header",      { y: -20, duration: 0.5, clearProps: "opacity,transform" });
+    gsap.from(".settings-section", { y: 30, stagger: 0.1, duration: 0.6, delay: 0.15, clearProps: "opacity,transform" });
   }, { scope: pageRef, dependencies: [!!form] });
 
   const { data: settings, isLoading } = useQuery({
@@ -613,7 +613,7 @@ export default function SettingsPage() {
               placeholder="axiomcropsciences@gmail.com"
             />
             <Field
-              label="Store Phone"
+              label="Store Phone (Mobile Number)"
               type="tel"
               value={form.storePhone}
               onChange={e => set("storePhone", e.target.value)}

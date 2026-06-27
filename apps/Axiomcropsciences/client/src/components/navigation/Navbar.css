@@ -464,6 +464,7 @@
   .site-navbar-inner { 
     padding: 0 16px; 
     position: relative; 
+    height: 86px; /* Taller on mobile to fit the larger logo */
   }
 
   .site-nav-brand {
@@ -476,9 +477,8 @@
     transform: translate(-50%, -50%) !important;
     margin: 0;
   }
-  /* On mobile, make the logo as large as the navbar allows (navbar is 72px
-     tall) without overflowing it — overrides the desktop inline height. */
-  .site-nav-logo-img { height: 62px !important; max-height: 62px; max-width: 70vw; }
+  /* On mobile, set a professional middle-ground size that matches the footer */
+  .site-nav-logo-img { height: 80px !important; max-height: 80px !important; max-width: 70vw; }
 
   .site-nav-hamburger { 
     display: flex; 
@@ -493,6 +493,10 @@
 
   .hide-on-mobile {
     display: none !important;
+  }
+  
+  .site-root {
+    padding-top: 122px; /* 86px navbar + 36px announcement */
   }
 }
 

@@ -6,26 +6,22 @@ import "./WhatsAppButton.css";
  * Floating WhatsApp icon — fixed to the bottom-right of the viewport.
  * Reads its link from admin settings (socialWhatsapp or socialLinks.whatsapp).
  * Only renders when a WhatsApp link has been configured in the admin panel.
+ *
+ * Uses api.whatsapp.com/send instead of wa.me to avoid the intermediate
+ * "Starting chat" loading/redirect screen that causes a visible delay.
  */
 export default function WhatsAppButton() {
   const { settings } = useSettings();
 
-  // Support both flat key (socialWhatsapp) and nested (socialLinks.whatsapp)
-  const link =
-    settings.whatsappFloatingLink ||
-    settings.socialWhatsapp ||
-    settings.socialLinks?.whatsapp ||
-    "";
+  // Strictly use the Store Phone (mobile number) for WhatsApp
+  const link = settings.storePhone || "";
 
   if (!link) return null;
 
-  let finalLink = link;
-  const defaultMessage = settings.whatsappDefaultMessage || "Hello! I am interested in your agricultural products and would like to know more.";
+  const defaultMessage = settings.whatsappDefaultMessage || "";
 
-  if (link && !link.includes("text=")) {
-    const separator = link.includes("?") ? "&" : "?";
-    finalLink = `${link}${separator}text=${encodeURIComponent(defaultMessage)}`;
-  }
+  const justDigits = link.replace(/\D/g, "");
+  const finalLink = `https://api.whatsapp.com/send?phone=${justDigits}&text=${encodeURIComponent(defaultMessage)}`;
 
   return (
     <a
@@ -40,3 +36,4 @@ export default function WhatsAppButton() {
     </a>
   );
 }
+
