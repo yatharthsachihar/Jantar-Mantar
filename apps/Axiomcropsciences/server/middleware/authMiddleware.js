@@ -73,7 +73,7 @@ const protect = async (req, res, next) => {
 
     next();
   } catch (err) {
-    console.error("Auth Middleware Error:", err);
+    console.error("Auth Middleware Error:", err.message);
     res.status(401).json({ message: 'Invalid or expired token' });
   }
 };

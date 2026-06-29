@@ -13,7 +13,16 @@ import "./WhatsAppButton.css";
 export default function WhatsAppButton() {
   const { settings } = useSettings();
 
-  const link = settings.whatsappNumber || settings.socialLinks?.whatsapp || settings.storePhone || "";
+  // whatsappEnabled must be explicitly true (or absent/undefined for legacy configs)
+  // If the field exists and is false, respect it and hide the button.
+  if (settings.whatsappEnabled === false) return null;
+
+  const link =
+    settings.whatsappNumber ||
+    settings.socialLinks?.whatsapp ||
+    settings.socialWhatsapp ||
+    settings.storePhone ||
+    "";
 
   if (!link) return null;
 

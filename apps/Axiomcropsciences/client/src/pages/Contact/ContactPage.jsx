@@ -50,7 +50,7 @@ function PhoneWithCode({ value, onChange, error, name }) {
   };
 
   return (
-    <div style={{ display:"flex", gap:0 }}>
+    <div className="contact-phone-field" style={{ gap:0 }}>
       <select
         value={code}
         onChange={e => handleCode(e.target.value)}

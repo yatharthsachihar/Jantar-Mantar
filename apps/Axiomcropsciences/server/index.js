@@ -85,6 +85,7 @@ mount(app, '/api/seo',        './routes/seoRoutes');
 mount(app, '/api/settings',   './routes/settingsRoutes');
 mount(app, '/api/logs',       './routes/logsRoute');
 mount(app, '/api/notifications', './routes/notificationRoutes');
+mount(app, '/api/otp',          './routes/otpRoutes');
 
 // Health check
 app.get('/', (req, res) => res.json({ message: 'Axiom Seeds API running ✅', time: new Date() }));

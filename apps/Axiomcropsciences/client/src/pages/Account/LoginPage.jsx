@@ -7,12 +7,10 @@ import {
 import toast from "react-hot-toast";
 import { useUser } from "../../context/UserContext";
 import { useSettings } from "../../context/SettingsContext";
+import { otpApi } from "../../api/otpApi";
+import { COUNTRY_CODES } from "../../constants/countryCodes";
 import "../../styles/site.css";
 import "./AuthPage.css";
-
-// TEMP: mock OTP gate. The OTP is prefilled with this value until a real
-// SMS/OTP service is wired up — verifying it proves the flow works end-to-end.
-const MOCK_OTP = "123456";
 
 const STATS = [
   { icon: "👨‍🌾", val: "25,000+", label: "Happy Farmers" },
@@ -42,34 +40,50 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ── Mock OTP verification gate ──
+  // ── OTP verification gate (SwiftZap-backed) ──
+  const [countryCode, setCountryCode] = useState("+91");
   const [otpMobile, setOtpMobile] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpError, setOtpError] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
 
-  const handleSendOtp = () => {
-    if (!/^\d{10}$/.test(otpMobile)) {
-      setOtpError("Enter a valid 10-digit mobile number.");
+  const resetOtp = () => { setOtpSent(false); setOtpVerified(false); setOtp(""); };
+  const handleMobile = (v) => { setOtpMobile(v); if (otpSent || otpVerified) resetOtp(); };
+  const handleCountryCode = (cc) => { setCountryCode(cc); if (otpSent || otpVerified) resetOtp(); };
+
+  const handleSendOtp = async () => {
+    if (!/^\d{6,15}$/.test(otpMobile)) {
+      setOtpError("Enter a valid mobile number.");
       return;
     }
     setError("");
-    setOtpSent(true);
-    setOtp(MOCK_OTP);           // prefilled for now
-    setOtpVerified(false);
-    setOtpError("");
-    toast.success(`OTP sent to ${otpMobile} (demo OTP: ${MOCK_OTP})`);
+    setOtpSending(true);
+    try {
+      const { data } = await otpApi.send({ countryCode, mobile: otpMobile, purpose: "login" });
+      setOtpSent(true);
+      setOtpVerified(false);
+      setOtpError("");
+      setOtp("");
+      if (data.devOtp) { setOtp(data.devOtp); toast.success(`OTP (dev mode): ${data.devOtp}`); }
+      else toast.success(`OTP sent to ${countryCode} ${otpMobile}`);
+    } catch (err) {
+      setOtpError(err.response?.data?.message || "Could not send OTP. Try again.");
+    } finally {
+      setOtpSending(false);
+    }
   };
 
-  const handleVerifyOtp = () => {
-    if (otp.trim() === MOCK_OTP) {
+  const handleVerifyOtp = async () => {
+    try {
+      await otpApi.verify({ countryCode, mobile: otpMobile, otp, purpose: "login" });
       setOtpVerified(true);
       setOtpError("");
       toast.success("OTP verified!");
-    } else {
+    } catch (err) {
       setOtpVerified(false);
-      setOtpError("Incorrect OTP. Please try again.");
+      setOtpError(err.response?.data?.message || "Incorrect OTP. Please try again.");
     }
   };
 
@@ -208,23 +222,32 @@ export default function LoginPage() {
             {/* Mobile Number + OTP Verification */}
             <div className="auth-field">
               <label className="auth-label">Mobile Number (OTP) <span style={{ color:"#EF4444" }}>*</span></label>
-              <div className={`auth-input-wrap${otpError && !otpSent ? " error" : ""}`}>
-                <span className="auth-input-icon"><FiPhone size={17} /></span>
+              <div className={`auth-input-wrap auth-phone-wrap${otpError && !otpSent ? " error" : ""}`}>
+                <select
+                  className="auth-cc-select"
+                  value={countryCode}
+                  onChange={e => handleCountryCode(e.target.value)}
+                  disabled={otpVerified}
+                  aria-label="Country code"
+                >
+                  {COUNTRY_CODES.map(c => (
+                    <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                  ))}
+                </select>
                 <input
                   type="tel"
                   inputMode="numeric"
-                  maxLength={10}
-                  placeholder="Enter your 10-digit mobile number"
+                  maxLength={15}
+                  placeholder="Mobile number"
                   value={otpMobile}
-                  onChange={e => {
-                    setOtpMobile(e.target.value.replace(/\D/g, "").slice(0, 10));
-                    setOtpError(""); setOtpSent(false); setOtpVerified(false);
-                  }}
+                  onChange={e => { handleMobile(e.target.value.replace(/\D/g, "").slice(0, 15)); setOtpError(""); }}
                   autoComplete="tel"
                   disabled={otpVerified}
                 />
                 {!otpSent && !otpVerified && (
-                  <button type="button" className="auth-otp-verify" onClick={handleSendOtp}>Send OTP</button>
+                  <button type="button" className="auth-otp-verify" onClick={handleSendOtp} disabled={otpSending}>
+                    {otpSending ? "Sending…" : "Send OTP"}
+                  </button>
                 )}
                 {otpVerified && <FiCheckCircle size={18} style={{ color:"#16a34a", flexShrink:0 }} />}
               </div>
@@ -243,7 +266,7 @@ export default function LoginPage() {
                     />
                     <button type="button" className="auth-otp-verify" onClick={handleVerifyOtp}>Verify</button>
                   </div>
-                  <div className="auth-otp-hint">Demo OTP is prefilled ({MOCK_OTP}). Click Verify to continue.</div>
+                  <div className="auth-otp-hint">Enter the 6-digit code sent to your mobile, then tap Verify.</div>
                 </>
               )}
               {otpError && <div className="auth-field-error">{otpError}</div>}

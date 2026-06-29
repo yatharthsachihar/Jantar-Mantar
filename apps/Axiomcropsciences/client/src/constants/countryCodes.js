@@ -1,0 +1,21 @@
+// Shared country-code list for phone inputs (auth + contact).
+export const COUNTRY_CODES = [
+  { code: "+91",  flag: "🇮🇳", name: "India" },
+  { code: "+1",   flag: "🇺🇸", name: "USA" },
+  { code: "+44",  flag: "🇬🇧", name: "UK" },
+  { code: "+971", flag: "🇦🇪", name: "UAE" },
+  { code: "+966", flag: "🇸🇦", name: "Saudi Arabia" },
+  { code: "+92",  flag: "🇵🇰", name: "Pakistan" },
+  { code: "+880", flag: "🇧🇩", name: "Bangladesh" },
+  { code: "+94",  flag: "🇱🇰", name: "Sri Lanka" },
+  { code: "+977", flag: "🇳🇵", name: "Nepal" },
+  { code: "+60",  flag: "🇲🇾", name: "Malaysia" },
+  { code: "+65",  flag: "🇸🇬", name: "Singapore" },
+  { code: "+61",  flag: "🇦🇺", name: "Australia" },
+  { code: "+49",  flag: "🇩🇪", name: "Germany" },
+  { code: "+33",  flag: "🇫🇷", name: "France" },
+  { code: "+81",  flag: "🇯🇵", name: "Japan" },
+  { code: "+86",  flag: "🇨🇳", name: "China" },
+  { code: "+55",  flag: "🇧🇷", name: "Brazil" },
+  { code: "+27",  flag: "🇿🇦", name: "South Africa" },
+];

@@ -156,7 +156,24 @@
   gap: 16px;
 }
 
-@media (max-width: 600px) { .contact-form-row { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .contact-form-row { grid-template-columns: 1fr; gap: 18px; }
+  /* Tighter card padding so fields aren't cramped on narrow phones */
+  .contact-form-wrap { padding: 22px 18px; border-radius: 16px; }
+  .contact-form { gap: 18px; }
+  .contact-form-title { font-size: 1.4rem; }
+  /* 16px min on inputs stops iOS/Safari/Brave auto-zooming on focus */
+  .contact-form .site-input,
+  .contact-form .contact-textarea,
+  .contact-phone-field input,
+  .contact-phone-field select { font-size: 16px; }
+  .contact-submit-btn { width: 100%; align-self: stretch; justify-content: center; }
+}
+
+/* Country-code phone field: keep the picker from collapsing or overflowing */
+.contact-phone-field { display: flex; width: 100%; }
+.contact-phone-field select { flex: 0 0 auto; }
+.contact-phone-field input { min-width: 0; }
 
 .contact-textarea { height: 130px; resize: vertical; padding-top: 14px; }
 

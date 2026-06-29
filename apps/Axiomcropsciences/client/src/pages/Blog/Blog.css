@@ -339,6 +339,7 @@
   font-weight: 700;
   padding: 4px 12px;
   border-radius: 100px;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 

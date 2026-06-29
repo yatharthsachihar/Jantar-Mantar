@@ -37,6 +37,7 @@
 /* ── Navbar base ── */
 .site-navbar {
   background: rgba(250, 247, 242, 0.95);
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid transparent;
@@ -61,6 +62,7 @@
 /* ── Ghost — transparent background (all pages at very top) ── */
 .site-navbar.nav-ghost {
   background: transparent !important;
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border-color: transparent !important;
