@@ -2,3 +2,7 @@ apps/Zenwell/
 *.md
 
 apps/Axiomcropsciences/
+
+.claude/
+docs/
+Brain 1.0/
