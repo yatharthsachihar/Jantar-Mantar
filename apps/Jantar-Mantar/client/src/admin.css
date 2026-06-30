@@ -1,0 +1,58 @@
+.adm { display: flex; min-height: 100vh; background: var(--surface); }
+.adm-side { width: 230px; background: var(--navy); color: #cdd6e4; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+.adm-brand { padding: 18px 20px; font-weight: 800; color: #fff; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.adm-nav { flex: 1; overflow-y: auto; padding: 10px 0; }
+.adm-nav a { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: #aab6c9; font-size: 14px; font-weight: 500; }
+.adm-nav a:hover { background: rgba(255,255,255,.06); color: #fff; }
+.adm-nav a.active { background: var(--green); color: #fff; }
+.adm-side-foot { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,.1); }
+.adm-main { flex: 1; min-width: 0; }
+.adm-top { background: #fff; border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; }
+.adm-top h1 { margin: 0; font-size: 20px; }
+.adm-body { padding: 24px; }
+
+.adm-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+.adm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.adm-stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+.adm-stat .n { font-size: 28px; font-weight: 800; }
+.adm-stat .l { color: var(--navy-soft); font-size: 13px; }
+
+.adm-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.adm-table th, .adm-table td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+.adm-table th { background: var(--surface); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--navy-soft); }
+.adm-table tr:last-child td { border-bottom: none; }
+.adm-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--surface); }
+
+.adm-actions { display: flex; gap: 8px; }
+.adm-btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--navy); }
+.adm-btn-sm:hover { border-color: var(--green); color: var(--green); }
+.adm-btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+.switch input { display: none; }
+.switch span { position: absolute; inset: 0; background: #c9d2de; border-radius: 999px; transition: .2s; }
+.switch span::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.switch input:checked + span { background: var(--green); }
+.switch input:checked + span::before { transform: translateX(18px); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,28,51,.5); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 100; overflow-y: auto; }
+.modal { background: #fff; border-radius: 16px; width: 100%; max-width: 640px; box-shadow: var(--shadow); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-head h3 { margin: 0; }
+.modal-body { padding: 20px; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); }
+.modal-close { background: none; border: none; font-size: 22px; color: var(--navy-soft); line-height: 1; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.adm-login { min-height: 100vh; display: grid; place-items: center; background: var(--navy); padding: 20px; }
+.adm-login-card { background: #fff; border-radius: 18px; padding: 32px; width: 100%; max-width: 380px; box-shadow: var(--shadow); }
+.adm-login-card h1 { margin: 0 0 4px; font-size: 24px; }
+.adm-login-card p { margin: 0 0 20px; color: var(--navy-soft); font-size: 14px; }
+
+@media (max-width: 860px) {
+  .adm-side { position: fixed; z-index: 90; transform: translateX(-100%); transition: .2s; }
+  .adm-side.open { transform: none; }
+  .adm-stats { grid-template-columns: repeat(2, 1fr); }
+  .grid2 { grid-template-columns: 1fr; }
+}
